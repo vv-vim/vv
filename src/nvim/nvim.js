@@ -1,10 +1,10 @@
-import { initScreen, cmdPut, cmdCursorGoto, cmdEolClear } from './screen';
+import { initScreen, cmdPut, cmdCursorGoto, cmdEolClear, cmdHighlightSet, cmdUpdateFg, cmdUpdateBg, cmdClear } from './screen';
 
-// const { ipcRenderer } = window.require('electron');
+const { ipcRenderer } = window.require('electron');
 
 const handleNotification = (e, arg) => {
-  // console.log('nvim:notification', arg);
-  const d = Date.now()
+  console.log('nvim:notification', arg);
+  // const d = Date.now()
   if (arg.method === 'redraw') {
     for (let i = 0; i < arg.args.length; i += 1) {
       const [cmd, ...props] = arg.args[i];
@@ -15,10 +15,20 @@ const handleNotification = (e, arg) => {
         cmdCursorGoto(props);
       } else if (cmd === 'eol_clear') {
         cmdEolClear();
+      } else if (cmd === 'highlight_set') {
+        cmdHighlightSet(props);
+      } else if (cmd === 'update_fg') {
+        cmdUpdateFg(props);
+      } else if (cmd === 'update_bg') {
+        cmdUpdateBg(props);
+      } else if (cmd === 'clear') {
+        cmdClear();
+      } else {
+        // console.log('Unknown =========', cmd);
       }
     }
   }
-  console.log(`nvim:notification time=${Date.now() - d}`, arg);
+  // console.log(`nvim:notification time=${Date.now() - d}`, arg);
 };
 
 const handleKeydown = (event) => {
@@ -65,9 +75,9 @@ const getKey = (event) => {
 const initNvim = () => {
   // console.log('initvim');
   initScreen(150, 50);
-  // ipcRenderer.on('nvim:notification', handleNotification);
-  // ipcRenderer.send('nvim:init');
-  // document.addEventListener('keydown', handleKeydown);
+  ipcRenderer.on('nvim:notification', handleNotification);
+  ipcRenderer.send('nvim:init');
+  document.addEventListener('keydown', handleKeydown);
 };
 
 
