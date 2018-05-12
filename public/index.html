@@ -30,14 +30,9 @@
   height: 770px;
   font-family: SFMono-Light;
   font-size: 12px;
+    overflow: hidden;
 }
-#screen pre {
-  margin: 0;
-  padding: 0;
-  contain: strict;
-  width: 1175px;
-  height: 15px;
-}
+
 span {
   display: inline-block;
   height: 15px;
@@ -54,10 +49,15 @@ span {
   left: 0;
   z-index: 100;
 }
+#canvas {
+  transform-origin: 0 0;
+  transform: scale(0.5);
+}
 </style>
     <!-- <div id="root"></div> -->
-    <div id="screen"></div>
-    <div id="cache"></div>
+    <div id="screen">
+      <canvas id="canvas" width="2350" height="1540" />
+    </div>
     <script>
 
       // ipcRenderer.send('nvim:init');

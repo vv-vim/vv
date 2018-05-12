@@ -4350,6 +4350,10 @@ lodash.uniq@^4.5.0:
   version "4.17.10"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.10.tgz#1b7793cf7259ea38fb3661d4d38b3260af8ae4e7"
 
+lodash@^3.9.3:
+  version "3.10.1"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
+
 loglevel@^1.4.1:
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.6.1.tgz#e0fc95133b6ef276cdc8887cdaf24aa6f156f8fa"
@@ -4622,7 +4626,7 @@ msgpack5@^3.3.0:
     readable-stream "^2.3.3"
     safe-buffer "^5.1.1"
 
-msgpack5rpc@^1.1.0:
+msgpack5rpc@^1.0.2, msgpack5rpc@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/msgpack5rpc/-/msgpack5rpc-1.1.0.tgz#f4b7aa7f8b20b317b3d8f6d8b8b2c2436f716e90"
   dependencies:
@@ -5564,6 +5568,14 @@ promise@^7.1.1:
   resolved "https://registry.yarnpkg.com/promise/-/promise-7.3.1.tgz#064b72602b18f90f29192b8b1bc418ffd1ebd3bf"
   dependencies:
     asap "~2.0.3"
+
+promised-neovim-client@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/promised-neovim-client/-/promised-neovim-client-2.0.2.tgz#c03b4ef21049eb7a3ff3c0169731b7d9d9238921"
+  dependencies:
+    lodash "^3.9.3"
+    msgpack5rpc "^1.0.2"
+    traverse "^0.6.6"
 
 prop-types@^15.5.10, prop-types@^15.6.0:
   version "15.6.1"
