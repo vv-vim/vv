@@ -22,54 +22,40 @@
     <title>React App</title>
   </head>
   <body>
-<style>
-#screen {
-  text-rendering: optimizeSpeed;
-  contain: strict;
-  width: 1170px;
-  height: 770px;
-  font-family: SFMono-Light;
-  font-size: 12px;
-    overflow: hidden;
-}
-
-span {
-  display: inline-block;
-  height: 15px;
-  overflow: visible;
-  line-height: 15px;
-}
-#cursor {
-  display: block;
-  position: absolute;
-  height: 15px;
-  width: 7.201px;
-  border: 1px solid red;
-  top: 0;
-  left: 0;
-  z-index: 100;
-}
-#canvas {
-  transform-origin: 0 0;
-  transform: scale(0.5);
-}
-</style>
-    <!-- <div id="root"></div> -->
-    <div id="screen">
-      <canvas id="canvas" width="2350" height="1540" />
+  <style>
+    #screenContainer {
+      position: relative;
+    }
+    #screen {
+      contain: strict;
+      width: 1080px;
+      height: 750px;
+      overflow: hidden;
+    }
+    #cursor {
+      display: block;
+      position: absolute;
+      height: 15px;
+      width: 7.2px;
+      border: 1px solid red;
+      z-index: 100;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      transform: scale(0.5);
+    }
+  </style>
+    <div id="screenContainer">
+      <div id="cursor"></div>
+      <div id="screen">
+        <canvas id="canvas" width="2160" height="1500" />
+      </div>
     </div>
-    <script>
-
-      // ipcRenderer.send('nvim:init');
-
-      // ipcRenderer.on('nvim:notification', (e, arg) => {
-        // console.log('nvim:notification', e, arg);
-      // });
-
-      // const openFile = () => {
-      //   const ipcRenderer = require('electron').ipcRenderer;
-      //   ipcRenderer.send('nvim:input', ':echo \'hey\'<CR>');
-      // };
-    </script>
   </body>
 </html>
