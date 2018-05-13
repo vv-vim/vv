@@ -12,7 +12,6 @@ import { closeTaskWindow } from 'components/tasks/duck';
 
 import DiagramTask from './DiagramTask';
 import DiagramEdge from './DiagramEdge';
-ontrolMeta
 import ScrollHandler from './ScrollHandler';
 
 import { diagramScrollTo } from './duck';

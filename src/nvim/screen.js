@@ -6,8 +6,11 @@ let foregroundColor;
 let backgroundColor;
 let defaultFgColor;
 let defaultBgColor;
-let context;
-let scrollRect;
+const context = document
+  .getElementById('canvas')
+  .getContext('2d', { alpha: false });
+let scrollRect = new Array(4);
+let screenContainer = document.getElementById('screenContainer');
 
 const colorsCache = {};
 const charsCache = {};
@@ -21,6 +24,12 @@ const charWidth = targetCharWidth * scale;
 const charHeight = targetCharHeight * scale;
 const fontSize = targetFontSize * scale;
 const font = `${fontSize}px ${fontFamily}`;
+
+let currentScroll = 0;
+
+// const scrollContainer = document.getElementById('scrollContainer');
+// const scrollCanvas = document.getElementById('scroll');
+// const scrollContext = scrollCanvas.getContext('2d', { alpha: true });
 
 const getCharBitmap = (char) => {
   const key = `${char}${foregroundColor}${backgroundColor}`;
@@ -40,7 +49,20 @@ const getCharBitmap = (char) => {
   return charsCache[key];
 };
 
+const findScrollWindow = (i, j) => {
+  const keys = Object.keys(scrollWindow);
+  for (let i = 0; i < keys.length; i += 1) {
+    const win = scrollWindow[keys[i]];
+    const [top, bottom, left, right] = win.rect;
+    if (i > top && i < bottom && j > left && j < right) {
+      return win;
+    }
+  }
+}
+
 const printChar = (i, j, char) => {
+  // const win = findScrollWindow(i, j);
+  // console.log('hey win', win);
   context.drawImage(
     getCharBitmap(char),
     Math.floor(j * charWidth),
@@ -63,16 +85,72 @@ const getColorString = (rgb) => {
   return colorsCache[rgb];
 };
 
-const initCanvas = () => {
-  context = document
-    .getElementById('canvas')
-    .getContext('2d', { alpha: false });
-};
+const rectEq = (rect1, rect2) =>
+  rect1[0] === rect2[0] &&
+  rect1[1] === rect2[1] &&
+  rect1[2] === rect2[2] &&
+  rect1[3] === rect2[3];
 
 export const initScreen = (newCols, newRows) => {
   rows = newRows;
   cols = newCols;
-  initCanvas();
+  redrawCmd.clear();
+};
+
+let scrollWindows = {};
+const scrollWindow = (rect) => {
+  const [top, bottom, left, right] = rect;
+  const key = rect.join('-');
+
+  if (!scrollWindows[key]) {
+    const scrollContainer = document.createElement('div');
+    scrollContainer.classList.add('scrollContainer');
+    screenContainer.appendChild(scrollContainer);
+
+    const scrollCanvas = document.createElement('canvas');
+    scrollCanvas.classList.add('scroll');
+    scrollContainer.appendChild(scrollCanvas);
+    const scrollContext = scrollCanvas.getContext('2d', { alpha: true });
+
+    scrollContainer.style.transform = `translate(${
+      left * targetCharWidth}px, ${
+      top * targetCharHeight}px)`;
+    scrollContainer.style.width = `${(right - left + 1) * targetCharWidth}px`;
+    scrollContainer.style.height = `${(bottom - top + 1) * targetCharHeight}px`;
+
+    scrollCanvas.width = (right - left + 1) * charWidth;
+    scrollCanvas.height = (bottom - top + 1 + 50) * charHeight;
+
+    // const rectCopy = context.getImageData(
+    //   left * charWidth,
+    //   top * charHeight,
+    //   (right - left + 1) * charWidth,
+    //   (bottom - top + 1) * charHeight,
+    // );
+    // scrollContext.putImageData(rectCopy, 0, 0);
+    //
+    scrollWindows[key] = { scrollCanvas, scrollContainer, scrollContext, rect };
+  }
+  return scrollWindows[key];
+};
+
+export const refreshWindows = (windows) => {
+  for (let i = 0; i < windows.length; i += 1) {
+    scrollWindow(windows[i]);
+  }
+  const newKeys = windows.map(rect => rect.join('-'));
+  const keys = Object.keys(scrollWindows);
+  const newScrollWindows = {};
+  console.log('hey scrollWindows', scrollWindows);
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i];
+    if (newKeys.includes(key)) {
+      newScrollWindows[key] = scrollWindows[key];
+    } else {
+      scrollWindows[key].scrollContainer.parentNode.removeChild(scrollWindows[key].scrollContainer);
+    }
+  }
+  scrollWindows = newScrollWindows;
 };
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
@@ -86,21 +164,19 @@ export const redrawCmd = {
 
   cursor_goto: (props) => {
     [cursor] = props;
-    cursorElement.style.transform = `translate(${(cursor[1] * targetCharWidth) -
-      1}px, ${(cursor[0] * 15) - 1}px)`;
+    cursorElement.style.transform = `translate(${
+      (cursor[1] * targetCharWidth) - 1}px, ${
+      (cursor[0] * 15) - 1}px)`;
+  },
+
+  clear: () => {
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, Math.ceil(cols * charWidth), Math.ceil(rows * charHeight));
   },
 
   eol_clear: () => {
     for (let i = cursor[1]; i < cols; i += 1) {
       printChar(cursor[0], i, ' ');
-    }
-  },
-
-  clear: () => {
-    for (let i = 0; i < rows; i += 1) {
-      for (let j = 0; j < cols; j += 1) {
-        printChar(i, j, ' ');
-      }
     }
   },
 
@@ -124,43 +200,95 @@ export const redrawCmd = {
   },
 
   set_scroll_region: (props) => {
-    [scrollRect] = props;
     // top, bottom, left, right
+    if (
+      rectEq(props[0], [0, rows - 1, 0, cols - 1]) ||
+      rectEq(props[0], scrollRect)
+    ) {
+      return;
+    }
+
+    [scrollRect] = props;
+    const { scrollContainer, scrollCanvas, scrollContext } = scrollWindow(scrollRect);
+    const [top, bottom, left, right] = scrollRect;
+    // scrollContainer.style.transform = `translate(${top *
+    //   targetCharHeight}px, ${left * targetCharWidth}px)`;
+    // scrollContainer.style.width = `${(right - left + 1) * targetCharWidth}px`;
+    // scrollContainer.style.height = `${(bottom - top + 1) * targetCharHeight}px`;
+    //
+    // scrollCanvas.width = (right - left + 1) * charWidth;
+    // scrollCanvas.height = (bottom - top + 1 + 100) * charHeight;
+    console.log('rect init', scrollRect);
+
+    const rectCopy = context.getImageData(
+      left * charWidth,
+      top * charHeight,
+      (right - left + 1) * charWidth,
+      (bottom - top + 1) * charHeight,
+    );
+    scrollContext.putImageData(rectCopy, 0, 0);
+    currentScroll = 0;
   },
 
   scroll: (props) => {
     const scrollCount = props[0];
     const [top, bottom, left, right] = scrollRect;
-    // console.log('scroll count', scrollCount);
-    // console.log(top, bottom, left, right);
-    const rectCopy = context.getImageData(
+
+    currentScroll -= scrollCount;
+
+    const { scrollContainer, scrollCanvas, scrollContext } = scrollWindow(scrollRect);
+    scrollContainer.scrollTop = - currentScroll * targetCharHeight;
+    // scrollCanvas.style.transform = `translateY(${currentScroll * targetCharHeight}px) scale(0.5)`;
+
+    console.log(currentScroll)
+    // scrollCanvas.height = (bottom - top + 1 - currentScroll) * charHeight;
+
+    // const rectCopy = context.getImageData(
+    //   left * charWidth,
+    //   top * charHeight,
+    //   (right - left + 1) * charWidth,
+    //   (bottom - top + 1) * charHeight,
+    // );
+    // scrollContext.putImageData(rectCopy, 0, 0);
+
+    context.fillStyle = 'rgb(255,0,0)';//backgroundColor;
+    context.fillRect(
       left * charWidth,
-      (top + (scrollCount > 0 ? scrollCount : 0)) * charHeight,
+      (bottom - top + 1 - scrollCount) * charHeight,
       (right - left + 1) * charWidth,
-      (bottom - top + 1 - (scrollCount > 0 ? scrollCount : -scrollCount)) * charHeight,
+      scrollCount * charHeight,
     );
-    context.putImageData(
-      rectCopy,
-      left * charWidth,
-      (top + (scrollCount > 0 ? 0 : -scrollCount)) * charHeight,
-    );
-    if (scrollCount > 0) {
-      context.fillStyle = backgroundColor;
-      context.fillRect(
-        left,
-        (bottom + 1 - scrollCount) * charHeight,
-        (right - left + 1) * charWidth,
-        scrollCount * charHeight,
-      );
-    } else {
-      context.fillStyle = backgroundColor;
-      context.fillRect(
-        left,
-        top * charHeight,
-        (right - left + 1) * charWidth,
-        (top - scrollCount) * charHeight,
-      );
-    }
+
+    // const rectCopy = context.getImageData(
+    //   left * charWidth,
+    //   (top + (scrollCount > 0 ? scrollCount : 0)) * charHeight,
+    //   (right - left + 1) * charWidth,
+    //   (bottom - top + 1 - (scrollCount > 0 ? scrollCount : -scrollCount)) *
+    //     charHeight,
+    // );
+    // context.putImageData(
+    //   rectCopy,
+    //   left * charWidth,
+    //   (top + (scrollCount > 0 ? 0 : -scrollCount)) * charHeight,
+    // );
+    //
+    // if (scrollCount > 0) {
+    //   context.fillStyle = backgroundColor;
+    //   context.fillRect(
+    //     left,
+    //     (bottom + 1 - scrollCount) * charHeight,
+    //     (right - left + 1) * charWidth,
+    //     scrollCount * charHeight,
+    //   );
+    // } else {
+    //   context.fillStyle = backgroundColor;
+    //   context.fillRect(
+    //     left,
+    //     top * charHeight,
+    //     (right - left + 1) * charWidth,
+    //     (top - scrollCount) * charHeight,
+    //   );
+    // }
   },
 };
 
