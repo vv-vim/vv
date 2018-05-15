@@ -23,6 +23,11 @@
   </head>
   <body>
   <style>
+    body {
+      background: #FFFFFF;
+      margin: 0;
+      padding 0;
+    }
     #screenContainer {
       position: relative;
     }
@@ -50,28 +55,17 @@
       transform-origin: 0 0;
       transform: scale(0.5);
     }
-    .scrollContainer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 50;
-      overflow: hidden;
-      border: 1px solid blue
-    }
-    .scroll {
-      transform-origin: 0 0;
-      transform: scale(0.5);
-      position: absolute;
-      top: 0;
-      left: 0;
-      border: 1px solid red;
-    }
-  </style>
+    </style>
     <div id="screenContainer">
       <div id="cursor"></div>
       <div id="screen">
-        <canvas id="canvas" width="2160" height="1500" />
+        <canvas id="canvas" width="0" height="0" />
       </div>
     </div>
+
+    <script>
+      const { remote, BrowserWindow } = require('electron')
+      window.win = remote.getCurrentWindow()
+    </script>
   </body>
 </html>

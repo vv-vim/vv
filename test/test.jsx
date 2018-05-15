@@ -18,6 +18,7 @@ import { diagramScrollTo } from './duck';
 
 import './styles/diagram.css';
 
+// 😀эмоджи!
 
 const taskCoordinates = (props, monitor) => {
   const item = monitor.getItem();

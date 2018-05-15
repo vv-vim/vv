@@ -1,13 +1,15 @@
+const body = document.getElementsByTagName('body')[0];
+const cursorEl = document.getElementById('cursor');
+const screenEl = document.getElementById('screen');
+const canvasEl = document.getElementById('canvas');
+const context = canvasEl.getContext('2d', { alpha: false });
 let cursor = [0, 0];
-const cursorElement = document.getElementById('cursor');
 let cols;
 let rows;
 let foregroundColor;
 let backgroundColor;
 let defaultFgColor;
 let defaultBgColor;
-const canvasEl = document.getElementById('canvas');
-const context = canvasEl.getContext('2d', { alpha: false });
 let scrollRect = new Array(4);
 
 const colorsCache = {};
@@ -65,7 +67,7 @@ const getColorString = (rgb) => {
 };
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
-export const redrawCmd = {
+const redrawCmd = {
   put: (props) => {
     for (let i = 0; i < props.length; i += 1) {
       printChar(cursor[0], cursor[1], props[i][0]);
@@ -77,23 +79,21 @@ export const redrawCmd = {
     cursor = newCursor;
     const left = (cursor[1] * targetCharWidth) - 1;
     const top = (cursor[0] * 15) - 1;
-    cursorElement.style.transform = `translate(${left}px, ${top}px)`;
+    cursorEl.style.transform = `translate(${left}px, ${top}px)`;
   },
 
   clear: () => {
+    cursor = [0, 0];
     context.fillStyle = backgroundColor;
-    context.fillRect(
-      0,
-      0,
-      Math.ceil(cols * charWidth),
-      Math.ceil(rows * charHeight),
-    );
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
 
   eol_clear: () => {
-    for (let i = cursor[1]; i < cols; i += 1) {
-      printChar(cursor[0], i, ' ');
-    }
+    const left = cursor[1] * charWidth;
+    const top = cursor[0] * charHeight;
+    const width = canvasEl.width - left;
+    const height = charHeight;
+    context.fillRect(left, top, width, height);
   },
 
   highlight_set: (props) => {
@@ -102,13 +102,14 @@ export const redrawCmd = {
 
       const fg = getColorString(foreground);
       const bg = getColorString(background);
-      foregroundColor = reverse ? bg || defaultBgColor : fg || defaultFgColor;
-      backgroundColor = reverse ? fg || defaultFgColor : bg || defaultBgColor;
+      foregroundColor = reverse ? (bg || defaultBgColor) : (fg || defaultFgColor);
+      backgroundColor = reverse ? (fg || defaultFgColor) : (bg || defaultBgColor);
     }
   },
 
   update_bg: ([color]) => {
     defaultBgColor = getColorString(color);
+    body.style.background = defaultBgColor;
   },
 
   update_fg: ([color]) => {
@@ -160,12 +161,15 @@ export const redrawCmd = {
       );
     }
   },
+  resize: (props) => {
+    ([[cols, rows]] = props);
+    screenEl.style.width = `${cols * targetCharWidth}px`;
+    screenEl.style.height = `${rows * targetCharHeight}px`;
+    canvasEl.width = cols * charWidth;
+    canvasEl.height = rows * charHeight;
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+  },
 };
 
-export const initScreen = (newCols, newRows) => {
-  rows = newRows;
-  cols = newCols;
-  redrawCmd.clear();
-};
-
-export default initScreen;
+export default redrawCmd;
