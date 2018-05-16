@@ -1,8 +1,8 @@
 import screen from './screen';
+import { eventKeyCode } from './input';
 
 const childProcess = global.require('child_process');
 const { attach } = global.require('neovim');
-
 const { remote } = global.require('electron');
 
 let nvim;
@@ -10,52 +10,15 @@ const mainWindow = remote.getCurrentWindow();
 let cols;
 let rows;
 
-const getKey = (event) => {
-  // console.log('getkey', event);
-  const { key, ctrlKey, keyCode } = event;
-
-  switch (key) {
-    case 'Escape': {
-      if (ctrlKey && keyCode !== 27) {
-        // Note:
-        // When <C-[> is input
-        // XXX:
-        // Keycode of '[' is not available because it is 219 in OS X
-        // and it is not for '['.
-        return '[';
-      }
-      return '<Esc>';
-    }
-    case 'Backspace': {
-      if (ctrlKey && keyCode === 72) {
-        // Note:
-        // When <C-h> is input (72 is key code of 'h')
-        return 'h';
-      }
-      return '<BS>';
-    }
-    case 'Enter': {
-      return '<CR>';
-    }
-    case 'Shift': {
-      return null;
-    }
-    default: {
-      return key;
-    }
-  }
-};
-
-const handleKeydown = (event) => {
-  const key = getKey(event);
-  if (key) {
-    nvim.request('vim_input', [key]);
-  }
-};
-
 const charWidth = () => 7.2;
 const charHeight = () => 15;
 
+const handleKeydown = (event) => {
+  const key = eventKeyCode(event);
+  if (key) {
+    nvim.input(key);
+  }
+};
 
 const resize = () => {
   const newCols = Math.floor(window.innerWidth / charWidth());
@@ -63,7 +26,7 @@ const resize = () => {
   if (newCols !== cols || newRows !== rows) {
     cols = newCols;
     rows = newRows;
-    nvim.request('ui_try_resize', [cols, rows]);
+    nvim.uiTryResize(cols, rows);
   }
 };
 
@@ -94,6 +57,52 @@ const handleNotification = async (method, args) => {
   }
 };
 
+const handlePaste = async (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  const clipboardText = event.clipboardData.getData('text').replace('<', '<lt>');
+  const { mode } = await nvim.mode;
+  if (mode === 'i') {
+    await nvim.command('set paste');
+    await nvim.input(clipboardText);
+    await nvim.command('set nopaste');
+  } else {
+    nvim.input(mode === 'c' ? clipboardText : '"*p');
+  }
+};
+
+const handleCopy = async (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  const { mode } = await nvim.mode;
+  if (mode === 'v' || mode === 'V') {
+    nvim.input('"*y');
+  }
+};
+
+let mouseButtonDown;
+const handleMousedown = (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  mouseButtonDown = true;
+  nvim.input(`<LeftMouse><${Math.floor(event.clientX / 7.2)}, ${Math.floor(event.clientY / 15)}>`);
+};
+
+const handleMouseup = (event) => {
+  if (mouseButtonDown) {
+    event.preventDefault();
+    event.stopPropagation();
+    mouseButtonDown = false;
+  }
+};
+
+const handleMousemove = (event) => {
+  if (mouseButtonDown) {
+    event.preventDefault();
+    event.stopPropagation();
+    nvim.input(`<LeftDrag><${Math.floor(event.clientX / 7.2)}, ${Math.floor(event.clientY / 15)}>`);
+  }
+};
 
 async function initNvim(cols, rows) {
   // mainWindow.setSimpleFullScreen(true);
@@ -103,11 +112,13 @@ async function initNvim(cols, rows) {
 
   nvim = await attach({ proc: nvimProcess });
 
-  nvim.request('ui_attach', [cols, rows, true]);
+  nvim.uiAttach(cols, rows, { ext_cmdline: false });
 
   nvim.on('notification', (method, args) => {
     handleNotification(method, args);
   });
+
+  nvim.command('set mouse=a'); // Enable Mouse
 
   nvim.command('command Fu call rpcnotify(0, "vvim:fullscreen", 1)');
   nvim.command('command Nofu call rpcnotify(0, "vvim:fullscreen", 0)');
@@ -116,6 +127,11 @@ async function initNvim(cols, rows) {
   handleResize(cols, rows);
   window.nvim = nvim;
   document.addEventListener('keydown', handleKeydown);
+  document.addEventListener('mousedown', handleMousedown);
+  document.addEventListener('mouseup', handleMouseup);
+  document.addEventListener('mousemove', handleMousemove);
+  document.addEventListener('paste', handlePaste);
+  document.addEventListener('copy', handleCopy);
   window.addEventListener('resize', handleResize);
 }
 
