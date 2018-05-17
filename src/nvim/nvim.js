@@ -6,7 +6,7 @@ const { attach } = global.require('neovim');
 const { remote } = global.require('electron');
 
 let nvim;
-const mainWindow = remote.getCurrentWindow();
+const currentWindow = remote.getCurrentWindow();
 let cols;
 let rows;
 
@@ -50,8 +50,8 @@ const handleNotification = async (method, args) => {
       }
     }
   } else if (method === 'vvim:fullscreen') {
-    mainWindow.setSimpleFullScreen(!!args[0]);
-    mainWindow.webContents.focus();
+    currentWindow.setSimpleFullScreen(!!args[0]);
+    currentWindow.webContents.focus();
   } else {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
@@ -60,7 +60,9 @@ const handleNotification = async (method, args) => {
 const handlePaste = async (event) => {
   event.preventDefault();
   event.stopPropagation();
-  const clipboardText = event.clipboardData.getData('text').replace('<', '<lt>');
+  const clipboardText = event.clipboardData
+    .getData('text')
+    .replace('<', '<lt>');
   const { mode } = await nvim.mode;
   if (mode === 'i') {
     await nvim.command('set paste');
@@ -104,35 +106,45 @@ const handleMousemove = (event) => {
   }
 };
 
-async function initNvim(cols, rows) {
-  // mainWindow.setSimpleFullScreen(true);
+const closeWindow = () => {
+  currentWindow.close();
+};
+
+const initNvim = async (cols, rows) => {
+  // currentWindow.setSimpleFullScreen(true);
   const nvimProcess = childProcess.spawn('nvim', ['--embed', 'test/test.jsx'], {
     stdio: ['pipe', 'pipe', process.stderr],
   });
 
   nvim = await attach({ proc: nvimProcess });
 
-  nvim.uiAttach(cols, rows, { ext_cmdline: false });
+  nvim.uiAttach(100, 50, { ext_cmdline: false });
 
   nvim.on('notification', (method, args) => {
     handleNotification(method, args);
   });
 
+  nvim.on('disconnect', closeWindow);
+
   nvim.command('set mouse=a'); // Enable Mouse
+  nvim.command('map <D-w> :q<CR>'); // Enable Mouse
 
   nvim.command('command Fu call rpcnotify(0, "vvim:fullscreen", 1)');
   nvim.command('command Nofu call rpcnotify(0, "vvim:fullscreen", 0)');
   nvim.subscribe('vvim:fullscreen');
 
   handleResize(cols, rows);
+
   window.nvim = nvim;
+
   document.addEventListener('keydown', handleKeydown);
   document.addEventListener('mousedown', handleMousedown);
   document.addEventListener('mouseup', handleMouseup);
   document.addEventListener('mousemove', handleMousemove);
   document.addEventListener('paste', handlePaste);
   document.addEventListener('copy', handleCopy);
-  window.addEventListener('resize', handleResize);
-}
 
-document.addEventListener('DOMContentLoaded', () => initNvim(150, 50));
+  window.addEventListener('resize', handleResize);
+};
+
+document.addEventListener('DOMContentLoaded', () => initNvim());

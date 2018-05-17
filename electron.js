@@ -1,72 +1,114 @@
 const electron = require('electron');
 
-const { app, BrowserWindow } = electron;
+const {
+  app, Menu, BrowserWindow,
+} = electron;
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let mainWindow;
+const windows = [];
 
 function createWindow() {
   // Create the browser window.
-  // mainWindow = new BrowserWindow({
+  // win = new BrowserWindow({
   //   width: 800,
   //   height: 600,
-  //   // frame: false,
   //   // fullscreen: true,
   //   // simpleFullscreen: true,
   // });
 
-  mainWindow = new BrowserWindow({ show: false });
-  mainWindow.maximize();
-  mainWindow.show();
+  let win = new BrowserWindow({
+    frame: false,
+    transparent: true,
+    width: 800,
+    height: 600,
+    show: false,
+  });
+  // win.maximize();
+  win.show();
 
-  // and load the index.html of the app.
-  mainWindow.loadURL('http://localhost:3000');
+  win.loadURL('http://localhost:3000');
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
-
-  // Emitted when the window is closed.
-  mainWindow.on('closed', () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null;
+  win.on('closed', () => {
+    const i = windows.indexOf(win);
+    if (i !== -1) windows.splice(i, 1);
+    win = null;
   });
 
-  mainWindow.webContents.setFrameRate(30);
-  mainWindow.webContents.openDevTools({ mode: 'detach' });
+  win.webContents.setFrameRate(30);
+  win.webContents.openDevTools({ mode: 'detach' });
 
-  // setInterval(() => {
-  //   mainWindow.webContents.send('doorBell' , {msg:'hello from main process'});
-  // }, 500);
+  win.webContents.on('devtools-opened', () => {
+    win.webContents.focus();
+  });
+
+  windows.push(win);
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+const createMenu = () => {
+  const menuTemplate = [
+    {
+      label: 'Vvim',
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services', submenu: [] },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideothers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'New Window',
+          accelerator: 'CmdOrCtrl+N',
+          click() {
+            createWindow();
+          },
+        },
+      ],
+    },
+    {
+      label: 'Edit',
+      submenu: [{ role: 'copy' }, { role: 'paste' }],
+    },
+    {
+      role: 'window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        { type: 'separator' },
+        { role: 'front' },
+      ],
+    },
+  ];
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
+};
+
 app.on('ready', () => {
+  createMenu();
   createWindow();
 });
 
 app.on('before-quit', () => {
-  mainWindow.hide();
-  mainWindow.setSimpleFullScreen(false);
+  for (let i = 0; i < windows.length; i += 1) {
+    windows[i].hide();
+    windows[i].setSimpleFullScreen(false);
+  }
 });
 
-// Quit when all windows are closed.
 app.on('window-all-closed', () => {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
+  if (windows.length === 0) {
     createWindow();
   }
 });
