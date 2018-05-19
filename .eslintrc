@@ -16,6 +16,16 @@
     "no-mixed-operators": ["warn", {"allowSamePrecedence": true}],
     "no-shadow": "off",
     "react/require-default-props": "off",
+    "prefer-destructuring": ["warn", {
+      "VariableDeclarator": {
+        "object": true,
+        "array": true
+      },
+      "AssignmentExpression": {
+        "array": true,
+        "object":false
+      }
+    }],
     "commented": {
       "--comment--camelcase": "off",
       "--comment--react/prefer-stateless-function": [0],

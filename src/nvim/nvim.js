@@ -1,12 +1,10 @@
 import screen from './screen';
 import { eventKeyCode } from './input';
 
-const childProcess = global.require('child_process');
-const { attach } = global.require('neovim');
 const { remote } = global.require('electron');
 
-let nvim;
 const currentWindow = remote.getCurrentWindow();
+let nvim;
 let cols;
 let rows;
 
@@ -110,13 +108,9 @@ const closeWindow = () => {
   currentWindow.close();
 };
 
-const initNvim = async (cols, rows) => {
-  // currentWindow.setSimpleFullScreen(true);
-  const nvimProcess = childProcess.spawn('nvim', ['--embed', 'test/test.jsx'], {
-    stdio: ['pipe', 'pipe', process.stderr],
-  });
-
-  nvim = await attach({ proc: nvimProcess });
+const initNvim = async () => {
+  nvim = currentWindow.nvim;
+  // window.nvim = nvim;
 
   nvim.uiAttach(100, 50, { ext_cmdline: false });
 
@@ -133,9 +127,7 @@ const initNvim = async (cols, rows) => {
   nvim.command('command Nofu call rpcnotify(0, "vvim:fullscreen", 0)');
   nvim.subscribe('vvim:fullscreen');
 
-  handleResize(cols, rows);
-
-  window.nvim = nvim;
+  resize();
 
   document.addEventListener('keydown', handleKeydown);
   document.addEventListener('mousedown', handleMousedown);

@@ -1,33 +1,38 @@
-const electron = require('electron');
-
-const {
-  app, Menu, BrowserWindow,
-} = electron;
+const { app, Menu, BrowserWindow } = require('electron');
+const path = require('path');
+const fixPath = require('fix-path');
+const { spawn } = require('child_process');
+const { attach } = require('neovim');
 
 const windows = [];
 
-function createWindow() {
-  // Create the browser window.
-  // win = new BrowserWindow({
-  //   width: 800,
-  //   height: 600,
-  //   // fullscreen: true,
-  //   // simpleFullscreen: true,
-  // });
+const createWindow = async () => {
+  fixPath();
+
+  console.log(['--embed', ...process.argv.slice(process.env.ELECTRON_ENV === 'development' ? 2 : 1)]);
+
+  const nvimProcess = spawn('nvim', ['--embed', ...process.argv.slice(process.env.ELECTRON_ENV === 'development' ? 2 : 1)], {
+    stdio: ['pipe', 'pipe', process.stderr],
+  });
 
   let win = new BrowserWindow({
-    frame: false,
-    transparent: true,
     width: 800,
     height: 600,
     show: false,
   });
+
+  win.nvim = await attach({ proc: nvimProcess });
+
   // win.maximize();
   win.show();
 
-  win.loadURL('http://localhost:3000');
+  win.loadURL(process.env.ELECTRON_ENV === 'development'
+    ? 'http://localhost:3000'
+    : `file://${path.join(__dirname, '../build/index.html')}`);
 
-  win.on('closed', () => {
+  win.on('closed', async () => {
+    await win.hide();
+    await win.setSimpleFullScreen(false);
     const i = windows.indexOf(win);
     if (i !== -1) windows.splice(i, 1);
     win = null;
@@ -41,12 +46,12 @@ function createWindow() {
   });
 
   windows.push(win);
-}
+};
 
 const createMenu = () => {
   const menuTemplate = [
     {
-      label: 'Vvim',
+      label: 'VV',
       submenu: [
         { role: 'about' },
         { type: 'separator' },
@@ -89,15 +94,14 @@ const createMenu = () => {
   Menu.setApplicationMenu(menu);
 };
 
-app.on('ready', () => {
+app.on('ready', async () => {
   createMenu();
   createWindow();
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
   for (let i = 0; i < windows.length; i += 1) {
-    windows[i].hide();
-    windows[i].setSimpleFullScreen(false);
+    await windows[i].close(); // eslint-disable-line no-await-in-loop
   }
 });
 
@@ -107,7 +111,7 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('activate', () => {
+app.on('activate', async () => {
   if (windows.length === 0) {
     createWindow();
   }
