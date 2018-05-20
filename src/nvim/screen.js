@@ -20,8 +20,14 @@ let defaultBgColor;
 let defaultSpColor;
 let reverseColor;
 let scrollRect = new Array(4);
-let modeInfo;
-let charUnderCursor;
+let modeInfoSet;
+let mode;
+
+let curChar;
+let curBold;
+let curItalic;
+let curUnderline;
+let curUndercurl;
 
 const colorsCache = {};
 const charsCache = {};
@@ -54,19 +60,19 @@ const font = ({ hiItalic = false, hiBold = false }) =>
   ].join(' ');
 
 const getCharBitmap = (char, props = {}) => {
-  const p = Object.assign({
-    fgColor: fgColor(),
-    bgColor: bgColor(),
-    spColor: spColor(),
-    hiItalic,
-    hiBold,
-    hiUnderline,
-    hiUndercurl,
-  }, props);
-  const key = [
-    char,
-    ...Object.values(p),
-  ].join('-');
+  const p = Object.assign(
+    {
+      fgColor: fgColor(),
+      bgColor: bgColor(),
+      spColor: spColor(),
+      hiItalic,
+      hiBold,
+      hiUnderline,
+      hiUndercurl,
+    },
+    props,
+  );
+  const key = [char, ...Object.values(p)].join('-');
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
     c.width = charWidth;
@@ -77,7 +83,9 @@ const getCharBitmap = (char, props = {}) => {
     ctx.fillStyle = p.fgColor;
     ctx.font = font(p); // TODO
     ctx.textBaseline = 'top';
-    ctx.fillText(char, 0, 0);
+    if (char) {
+      ctx.fillText(char, 0, 0);
+    }
 
     if (p.hiUnderline) {
       ctx.strokeStyle = p.fgColor;
@@ -125,6 +133,43 @@ const getColorString = (rgb) => {
   return colorsCache[rgb];
 };
 
+const redrawCursor = () => {
+  const m = modeInfoSet && modeInfoSet[mode];
+  if (!m) return;
+  if (m.cursor_shape === 'block') {
+    const char = m.name.indexOf('cmdline') === -1 ? curChar : null;
+
+    cursorContext.drawImage(
+      getCharBitmap(char, {
+        bgColor: defaultFgColor,
+        fgColor: defaultBgColor,
+        hiBold: curBold,
+        hiItalic: curItalic,
+        hiUnderline: curUnderline,
+        hiUndercurl: curUndercurl,
+      }),
+      0,
+      0,
+    );
+  } else if (m.cursor_shape === 'vertical') {
+    const curWidth = m.cell_percentage
+      ? Math.max(scale, Math.round(charWidth / 100 * m.cell_percentage))
+      : scale;
+    cursorContext.clearRect(0, 0, charWidth, charHeight);
+    cursorContext.fillStyle = defaultFgColor;
+    cursorContext.fillRect(0, 0, curWidth, charHeight);
+  } else if (m.cursor_shape === 'horizontal') {
+    const curHeight = m.cell_percentage
+      ? Math.max(scale, Math.round(charHeight / 100 * m.cell_percentage))
+      : scale;
+    cursorContext.clearRect(0, 0, charWidth, charHeight);
+    cursorContext.fillStyle = defaultFgColor;
+    cursorContext.fillRect(0, charHeight - curHeight, charWidth, charHeight);
+  }
+
+  cursorEl.style.display = 'block';
+};
+
 const setCharUnderCursor = (
   char,
   bold = hiBold,
@@ -132,16 +177,20 @@ const setCharUnderCursor = (
   underline = hiUnderline,
   undercurl = hiUndercurl,
 ) => {
-  charUnderCursor = char;
-  cursorContext.drawImage(getCharBitmap(char, {
-    bgColor: defaultFgColor,
-    fgColor: defaultBgColor,
-    hiBold: bold,
-    hiItalic: italic,
-    hiUnderline: underline,
-    hiUndercurl: undercurl,
-  }), 0, 0);
-  cursorEl.style.display = 'block';
+  curChar = char;
+  curBold = bold;
+  curItalic = italic;
+  curUnderline = underline;
+  curUndercurl = undercurl;
+  redrawCursor();
+};
+
+const refreshCursor = () => {
+  const left = Math.floor(cursor[1] * targetCharWidth);
+  const top = cursor[0] * 15;
+  cursorEl.style.transform = `translate(${left}px, ${top}px)`;
+  cursorEl.style.display = 'none';
+  // redrawCursor();
 };
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
@@ -150,15 +199,13 @@ const redrawCmd = {
     for (let i = 0; i < props.length; i += 1) {
       printChar(cursor[0], cursor[1], props[i][0]);
       cursor[1] += 1;
+      refreshCursor();
     }
   },
 
   cursor_goto: ([newCursor]) => {
     cursor = newCursor;
-    const left = Math.floor(cursor[1] * targetCharWidth);
-    const top = cursor[0] * 15;
-    cursorEl.style.transform = `translate(${left}px, ${top}px)`;
-    cursorEl.style.display = 'none';
+    refreshCursor();
   },
 
   clear: () => {
@@ -263,15 +310,26 @@ const redrawCmd = {
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
 
+  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L75
   mode_info_set: ([props]) => {
-    modeInfo = props[1];
-    console.log('hey', modeInfo);
+    modeInfoSet = props[1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
+    refreshCursor();
+  },
+
+  mode_change: ([[newMode]]) => {
+    mode = newMode;
+    refreshCursor();
+    redrawCursor();
   },
 
   // VV specific commands
   vv_char_under_cursor: ([char, bold, italic, underline, undercurl]) => {
     setCharUnderCursor(char, bold, italic, underline, undercurl);
   },
+
+  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L128
+  mouse_on: () => {},
+  mouse_off: () => {},
 };
 
 export default redrawCmd;

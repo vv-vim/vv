@@ -1,7 +1,9 @@
+// :help keyCode
 const specialKey = ({ key }) =>
   ({
     Escape: 'Esc',
     Backspace: 'BS',
+    Delete: 'Del',
     Enter: 'CR',
     Tab: 'Tab',
     '<': '<lt>',
@@ -35,16 +37,16 @@ const skip = key =>
     Meta: true,
   }[key]);
 
-const modifierPrefix = ({
-  metaKey, altKey, ctrlKey,
-}) => `${metaKey ? 'D-' : ''}${altKey ? 'A-' : ''}${ctrlKey ? 'C-' : ''}`;
+const modifierPrefix = ({ metaKey, altKey, ctrlKey }) =>
+  `${metaKey ? 'D-' : ''}${altKey ? 'A-' : ''}${ctrlKey ? 'C-' : ''}`;
 
 const shiftPrefix = ({ shiftKey }) => (shiftKey ? 'S-' : '');
 
-const filterResult = result => (!{
-  '<D-v>': true,
-  '<D-c>': true,
-}[result] && result);
+const filterResult = result =>
+  !{
+    '<D-v>': true, // Cmd+C/Cmd+V
+    '<D-c>': true,
+  }[result] && result;
 
 export const eventKeyCode = (event) => {
   // console.log(event);
@@ -59,9 +61,10 @@ export const eventKeyCode = (event) => {
 
   const keyCode = special || key;
 
-  const result = (modifier || (special && special !== '<lt>')) ?
-    `<${modifier}${shift}${keyCode}>` :
-    keyCode;
+  const result =
+    modifier || (special && special !== '<lt>')
+      ? `<${modifier}${shift}${keyCode}>`
+      : keyCode;
 
   return filterResult(result);
 };

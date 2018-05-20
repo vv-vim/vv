@@ -49,8 +49,7 @@ const handleNotification = async (method, args) => {
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
-
-      if (cmd === 'cursor_goto') {
+      if (cmd === 'cursor_goto' || cmd === 'put') { // TODO: request char from screen maybe?
         debouncedCharUnderCursor();
       }
     }
