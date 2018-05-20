@@ -1,3 +1,6 @@
+import throttle from 'lodash/throttle';
+import debounce from 'lodash/debounce';
+
 import screen from './screen';
 import { eventKeyCode } from './input';
 
@@ -14,11 +17,15 @@ let rows;
 const charWidth = () => Math.floor(7.2);
 const charHeight = () => Math.floor(15);
 
+const charUnderCursor = () => {
+  nvim.command('call rpcnotify(0, "vv:char_under_cursor", matchstr(getline("."), \'\\%\' . col(\'.\') . \'c.\'), synIDattr(synIDtrans(synID(line("."), col("."), 1)), "bold"), synIDattr(synIDtrans(synID(line("."), col("."), 1)), "italic"), synIDattr(synIDtrans(synID(line("."), col("."), 1)), "underline"), synIDattr(synIDtrans(synID(line("."), col("."), 1)), "undercurl"))');
+};
+
+const debouncedCharUnderCursor = debounce(charUnderCursor, 10);
+
 const handleKeydown = (event) => {
   const key = eventKeyCode(event);
-  if (key) {
-    nvim.input(key);
-  }
+  if (key) nvim.input(key);
 };
 
 const resize = () => {
@@ -31,13 +38,7 @@ const resize = () => {
   }
 };
 
-let resizeTimeout;
-const handleResize = () => {
-  if (resizeTimeout) {
-    clearTimeout(resizeTimeout);
-  }
-  resizeTimeout = setTimeout(resize, 10);
-};
+const handleResize = throttle(resize, 100);
 
 const handleNotification = async (method, args) => {
   if (method === 'redraw') {
@@ -48,10 +49,16 @@ const handleNotification = async (method, args) => {
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
+
+      if (cmd === 'cursor_goto') {
+        debouncedCharUnderCursor();
+      }
     }
-  } else if (method === 'vvim:fullscreen') {
+  } else if (method === 'vv:fullscreen') {
     currentWindow.setSimpleFullScreen(!!args[0]);
     currentWindow.webContents.focus();
+  } else if (method === 'vv:char_under_cursor') {
+    screen.vv_char_under_cursor(args);
   } else {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
@@ -83,11 +90,26 @@ const handleCopy = async (event) => {
 };
 
 let mouseButtonDown;
+let mouseCoords = [];
+const mouseCoordsChanged = (event) => {
+  const newCoords = [
+    Math.floor(event.clientX / charWidth()),
+    Math.floor(event.clientY / charHeight()),
+  ];
+  if (newCoords[0] !== mouseCoords[0] || newCoords[1] !== mouseCoords[1]) {
+    mouseCoords = newCoords;
+    return true;
+  }
+  return false;
+};
+
 const handleMousedown = (event) => {
   event.preventDefault();
   event.stopPropagation();
-  mouseButtonDown = true;
-  nvim.input(`<LeftMouse><${event.clientX / charWidth()}, ${event.clientY / charHeight()}>`);
+  if (mouseCoordsChanged(event)) {
+    mouseButtonDown = true;
+    nvim.input(`<LeftMouse><${mouseCoords[0]}, ${mouseCoords[1]}>`);
+  }
 };
 
 const handleMouseup = (event) => {
@@ -98,13 +120,17 @@ const handleMouseup = (event) => {
   }
 };
 
-const handleMousemove = (event) => {
+const mousemove = (event) => {
   if (mouseButtonDown) {
     event.preventDefault();
     event.stopPropagation();
-    nvim.input(`<LeftDrag><${event.clientX / charWidth()}, ${event.clientY / charHeight()}>`);
+    if (mouseCoordsChanged(event)) {
+      nvim.input(`<LeftDrag><${mouseCoords[0]}, ${mouseCoords[1]}>`);
+    }
   }
 };
+
+const handleMousemove = throttle(mousemove, 50);
 
 const closeWindow = async () => {
   await currentWindow.hide();
@@ -113,14 +139,16 @@ const closeWindow = async () => {
 };
 
 const initNvim = async () => {
-  const { args, env } = currentWindow;
+  const { args, env, cwd } = currentWindow;
 
   const nvimProcess = spawn('nvim', ['--embed', ...args], {
     stdio: ['pipe', 'pipe', process.stderr],
     env,
+    cwd,
   });
 
   nvim = await attach({ proc: nvimProcess });
+  window.nvim = nvim;
 
   nvim.uiAttach(100, 50, { ext_cmdline: false });
 
@@ -134,9 +162,10 @@ const initNvim = async () => {
   nvim.command('map <D-w> :q<CR>');
   nvim.command('map <D-q> :qa<CR>');
 
-  nvim.command('command Fu call rpcnotify(0, "vvim:fullscreen", 1)');
-  nvim.command('command Nofu call rpcnotify(0, "vvim:fullscreen", 0)');
-  nvim.subscribe('vvim:fullscreen');
+  nvim.command('command Fu call rpcnotify(0, "vv:fullscreen", 1)');
+  nvim.command('command Nofu call rpcnotify(0, "vv:fullscreen", 0)');
+  nvim.subscribe('vv:fullscreen');
+  nvim.subscribe('vv:char_under_cursor');
 
   resize();
 

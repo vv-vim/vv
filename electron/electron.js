@@ -19,7 +19,7 @@ const openDeveloperTools = (win) => {
   });
 };
 
-const createWindow = async (args = []) => {
+const createWindow = async (args = [], cwd) => {
   let win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -30,6 +30,7 @@ const createWindow = async (args = []) => {
   fixPath();
   win.args = args;
   win.env = process.env;
+  win.cwd = cwd;
 
   // win.maximize();
   win.show();
@@ -75,11 +76,12 @@ app.on('activate', async () => {
   }
 });
 
-const shouldQuit = app.makeSingleInstance((args) => {
-  createWindow(cliArgs(args));
-});
+if (!isDev()) {
+  const shouldQuit = app.makeSingleInstance((args, cwd) => {
+    createWindow(cliArgs(args), cwd);
+  });
 
-if (shouldQuit) {
-  app.quit();
+  if (shouldQuit) {
+    app.quit();
+  }
 }
-

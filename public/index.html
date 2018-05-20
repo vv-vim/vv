@@ -41,12 +41,15 @@
       display: block;
       position: absolute;
       height: 15px;
-      width: 7.2px;
-      border: 1px solid red;
+      width: 7px;
       z-index: 100;
       position: absolute;
       top: 0;
       left: 0;
+    }
+    #cursorCanvas {
+      transform-origin: 0 0;
+      transform: scale(0.5);
     }
     #canvas {
       position: absolute;
@@ -57,7 +60,9 @@
     }
     </style>
     <div id="screenContainer">
-      <div id="cursor"></div>
+      <div id="cursor">
+        <canvas id="cursorCanvas" width="14" height="30" />
+      </div>
       <div id="screen">
         <canvas id="canvas" width="0" height="0" />
       </div>

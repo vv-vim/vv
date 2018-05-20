@@ -31,6 +31,7 @@
     "fs-extra": "3.0.1",
     "html-webpack-plugin": "2.29.0",
     "jest": "20.0.4",
+    "lodash": "^4.17.10",
     "msgpack-lite": "^0.1.26",
     "msgpack5rpc": "^1.1.0",
     "neovim": "^3.5.2",

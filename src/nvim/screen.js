@@ -1,8 +1,10 @@
 const [body] = document.getElementsByTagName('body');
 const cursorEl = document.getElementById('cursor');
+const cursorCanvasEl = document.getElementById('cursorCanvas');
 const screenEl = document.getElementById('screen');
 const canvasEl = document.getElementById('canvas');
 const context = canvasEl.getContext('2d', { alpha: false });
+const cursorContext = cursorCanvasEl.getContext('2d', { alpha: true });
 let cursor = [0, 0];
 let cols;
 let rows;
@@ -18,13 +20,15 @@ let defaultBgColor;
 let defaultSpColor;
 let reverseColor;
 let scrollRect = new Array(4);
+let modeInfo;
+let charUnderCursor;
 
 const colorsCache = {};
 const charsCache = {};
 
 // Math.floor to avoid sub-pixel draw
-const targetCharWidth = Math.floor(7.2);
-const targetCharHeight = Math.floor(15);
+const targetCharWidth = Math.round(7.2);
+const targetCharHeight = Math.round(15);
 const targetFontSize = 12;
 const fontFamily = 'SFMono-Light';
 const scale = 2;
@@ -41,7 +45,7 @@ const bgColor = () =>
 const spColor = () =>
   (reverseColor ? hiSpColor || defaultSpColor : hiSpColor || defaultSpColor);
 
-const font = () =>
+const font = ({ hiItalic = false, hiBold = false }) =>
   [
     hiItalic ? 'italic' : '',
     hiBold ? 'bold' : '',
@@ -49,31 +53,34 @@ const font = () =>
     fontFamily,
   ].join(' ');
 
-const getCharBitmap = (char) => {
-  const key = [
-    char,
-    fgColor(),
-    bgColor(),
-    spColor(),
+const getCharBitmap = (char, props = {}) => {
+  const p = Object.assign({
+    fgColor: fgColor(),
+    bgColor: bgColor(),
+    spColor: spColor(),
     hiItalic,
     hiBold,
     hiUnderline,
     hiUndercurl,
+  }, props);
+  const key = [
+    char,
+    ...Object.values(p),
   ].join('-');
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
     c.width = charWidth;
     c.height = charHeight;
     const ctx = c.getContext('2d', { alpha: false });
-    ctx.fillStyle = bgColor();
+    ctx.fillStyle = p.bgColor;
     ctx.fillRect(0, 0, charWidth, charHeight);
-    ctx.fillStyle = fgColor();
-    ctx.font = font();
+    ctx.fillStyle = p.fgColor;
+    ctx.font = font(p); // TODO
     ctx.textBaseline = 'top';
     ctx.fillText(char, 0, 0);
 
-    if (hiUnderline) {
-      ctx.strokeStyle = fgColor();
+    if (p.hiUnderline) {
+      ctx.strokeStyle = p.fgColor;
       ctx.lineWidth = scale;
       ctx.beginPath();
       ctx.moveTo(0, charHeight - scale);
@@ -81,16 +88,16 @@ const getCharBitmap = (char) => {
       ctx.stroke();
     }
 
-    if (hiUndercurl) {
-      ctx.strokeStyle = spColor();
+    if (p.hiUndercurl) {
+      ctx.strokeStyle = p.spColor;
       ctx.lineWidth = scale;
       const x = charWidth;
       const y = charHeight - scale / 2;
       const h = charWidth / 2; // Height of the wave
       ctx.beginPath();
-      ctx.moveTo(0, y - h / 2);
-      ctx.bezierCurveTo(x / 4, y - h / 2, x / 4, y, x / 2, y);
-      ctx.bezierCurveTo(x / 4 * 3, y, x / 4 * 3, y - h / 2, x, y - h / 2);
+      ctx.moveTo(0, y);
+      ctx.bezierCurveTo(x / 4, y, x / 4, y - h / 2, x / 2, y - h / 2);
+      ctx.bezierCurveTo(x / 4 * 3, y - h / 2, x / 4 * 3, y, x, y);
       ctx.stroke();
     }
 
@@ -118,6 +125,25 @@ const getColorString = (rgb) => {
   return colorsCache[rgb];
 };
 
+const setCharUnderCursor = (
+  char,
+  bold = hiBold,
+  italic = hiItalic,
+  underline = hiUnderline,
+  undercurl = hiUndercurl,
+) => {
+  charUnderCursor = char;
+  cursorContext.drawImage(getCharBitmap(char, {
+    bgColor: defaultFgColor,
+    fgColor: defaultBgColor,
+    hiBold: bold,
+    hiItalic: italic,
+    hiUnderline: underline,
+    hiUndercurl: undercurl,
+  }), 0, 0);
+  cursorEl.style.display = 'block';
+};
+
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
   put: (props) => {
@@ -129,9 +155,10 @@ const redrawCmd = {
 
   cursor_goto: ([newCursor]) => {
     cursor = newCursor;
-    const left = Math.floor(cursor[1] * targetCharWidth - 1);
-    const top = cursor[0] * 15 - 1;
+    const left = Math.floor(cursor[1] * targetCharWidth);
+    const top = cursor[0] * 15;
     cursorEl.style.transform = `translate(${left}px, ${top}px)`;
+    cursorEl.style.display = 'none';
   },
 
   clear: () => {
@@ -234,6 +261,16 @@ const redrawCmd = {
     canvasEl.height = rows * charHeight;
     context.fillStyle = bgColor();
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+  },
+
+  mode_info_set: ([props]) => {
+    modeInfo = props[1];
+    console.log('hey', modeInfo);
+  },
+
+  // VV specific commands
+  vv_char_under_cursor: ([char, bold, italic, underline, undercurl]) => {
+    setCharUnderCursor(char, bold, italic, underline, undercurl);
   },
 };
 
