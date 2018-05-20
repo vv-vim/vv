@@ -1,102 +1,60 @@
-const { app, Menu, BrowserWindow } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const fixPath = require('fix-path');
-const { spawn } = require('child_process');
-const { attach } = require('neovim');
+
+const createMenu = require('./menu');
 
 const windows = [];
 
-const createWindow = async () => {
-  fixPath();
+const isDev = (dev = true, notDev = false) => (
+  process.env.ELECTRON_ENV === 'development' ? dev : notDev
+);
 
-  console.log(['--embed', ...process.argv.slice(process.env.ELECTRON_ENV === 'development' ? 2 : 1)]);
+const cliArgs = args => (args || process.argv).slice(isDev(2, 1));
 
-  const nvimProcess = spawn('nvim', ['--embed', ...process.argv.slice(process.env.ELECTRON_ENV === 'development' ? 2 : 1)], {
-    stdio: ['pipe', 'pipe', process.stderr],
+const openDeveloperTools = (win) => {
+  win.webContents.openDevTools({ mode: 'detach' });
+  win.webContents.on('devtools-opened', () => {
+    win.webContents.focus();
   });
+};
 
+const createWindow = async (args = []) => {
   let win = new BrowserWindow({
     width: 800,
     height: 600,
     show: false,
   });
 
-  win.nvim = await attach({ proc: nvimProcess });
+
+  fixPath();
+  win.args = args;
+  win.env = process.env;
 
   // win.maximize();
   win.show();
 
-  win.loadURL(process.env.ELECTRON_ENV === 'development'
-    ? 'http://localhost:3000'
-    : `file://${path.join(__dirname, '../build/index.html')}`);
+  win.loadURL(isDev(
+    'http://localhost:3000',
+    `file://${path.join(__dirname, '../build/index.html')}`,
+  ));
 
   win.on('closed', async () => {
-    await win.hide();
-    await win.setSimpleFullScreen(false);
     const i = windows.indexOf(win);
     if (i !== -1) windows.splice(i, 1);
     win = null;
   });
 
-  win.webContents.setFrameRate(30);
-  win.webContents.openDevTools({ mode: 'detach' });
+  // if (isDev()) openDeveloperTools(win);
 
-  win.webContents.on('devtools-opened', () => {
-    win.webContents.focus();
-  });
+  win.focus();
 
   windows.push(win);
 };
 
-const createMenu = () => {
-  const menuTemplate = [
-    {
-      label: 'VV',
-      submenu: [
-        { role: 'about' },
-        { type: 'separator' },
-        { role: 'services', submenu: [] },
-        { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideothers' },
-        { role: 'unhide' },
-        { type: 'separator' },
-        { role: 'quit' },
-      ],
-    },
-    {
-      label: 'File',
-      submenu: [
-        {
-          label: 'New Window',
-          accelerator: 'CmdOrCtrl+N',
-          click() {
-            createWindow();
-          },
-        },
-      ],
-    },
-    {
-      label: 'Edit',
-      submenu: [{ role: 'copy' }, { role: 'paste' }],
-    },
-    {
-      role: 'window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        { type: 'separator' },
-        { role: 'front' },
-      ],
-    },
-  ];
-  const menu = Menu.buildFromTemplate(menuTemplate);
-  Menu.setApplicationMenu(menu);
-};
-
 app.on('ready', async () => {
-  createMenu();
-  createWindow();
+  createMenu({ createWindow, openDeveloperTools });
+  createWindow(cliArgs());
 });
 
 app.on('before-quit', async () => {
@@ -116,3 +74,12 @@ app.on('activate', async () => {
     createWindow();
   }
 });
+
+const shouldQuit = app.makeSingleInstance((args) => {
+  createWindow(cliArgs(args));
+});
+
+if (shouldQuit) {
+  app.quit();
+}
+

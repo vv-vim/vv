@@ -1,6 +1,9 @@
 import screen from './screen';
 import { eventKeyCode } from './input';
 
+const { spawn } = global.require('child_process');
+const { attach } = global.require('neovim');
+
 const { remote } = global.require('electron');
 
 const currentWindow = remote.getCurrentWindow();
@@ -8,8 +11,8 @@ let nvim;
 let cols;
 let rows;
 
-const charWidth = () => 7.2;
-const charHeight = () => 15;
+const charWidth = () => Math.floor(7.2);
+const charHeight = () => Math.floor(15);
 
 const handleKeydown = (event) => {
   const key = eventKeyCode(event);
@@ -33,17 +36,16 @@ const handleResize = () => {
   if (resizeTimeout) {
     clearTimeout(resizeTimeout);
   }
-  resizeTimeout = setTimeout(resize, 500);
+  resizeTimeout = setTimeout(resize, 10);
 };
 
 const handleNotification = async (method, args) => {
   if (method === 'redraw') {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
-      try {
-        // console.log(cmd, props);
+      if (screen[cmd]) {
         screen[cmd](props);
-      } catch (e) {
+      } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
     }
@@ -85,7 +87,7 @@ const handleMousedown = (event) => {
   event.preventDefault();
   event.stopPropagation();
   mouseButtonDown = true;
-  nvim.input(`<LeftMouse><${Math.floor(event.clientX / 7.2)}, ${Math.floor(event.clientY / 15)}>`);
+  nvim.input(`<LeftMouse><${event.clientX / charWidth()}, ${event.clientY / charHeight()}>`);
 };
 
 const handleMouseup = (event) => {
@@ -100,17 +102,25 @@ const handleMousemove = (event) => {
   if (mouseButtonDown) {
     event.preventDefault();
     event.stopPropagation();
-    nvim.input(`<LeftDrag><${Math.floor(event.clientX / 7.2)}, ${Math.floor(event.clientY / 15)}>`);
+    nvim.input(`<LeftDrag><${event.clientX / charWidth()}, ${event.clientY / charHeight()}>`);
   }
 };
 
-const closeWindow = () => {
+const closeWindow = async () => {
+  await currentWindow.hide();
+  await currentWindow.setSimpleFullScreen(false);
   currentWindow.close();
 };
 
 const initNvim = async () => {
-  nvim = currentWindow.nvim;
-  // window.nvim = nvim;
+  const { args, env } = currentWindow;
+
+  const nvimProcess = spawn('nvim', ['--embed', ...args], {
+    stdio: ['pipe', 'pipe', process.stderr],
+    env,
+  });
+
+  nvim = await attach({ proc: nvimProcess });
 
   nvim.uiAttach(100, 50, { ext_cmdline: false });
 
@@ -121,7 +131,8 @@ const initNvim = async () => {
   nvim.on('disconnect', closeWindow);
 
   nvim.command('set mouse=a'); // Enable Mouse
-  nvim.command('map <D-w> :q<CR>'); // Enable Mouse
+  nvim.command('map <D-w> :q<CR>');
+  nvim.command('map <D-q> :qa<CR>');
 
   nvim.command('command Fu call rpcnotify(0, "vvim:fullscreen", 1)');
   nvim.command('command Nofu call rpcnotify(0, "vvim:fullscreen", 0)');
@@ -139,4 +150,4 @@ const initNvim = async () => {
   window.addEventListener('resize', handleResize);
 };
 
-document.addEventListener('DOMContentLoaded', () => initNvim());
+document.addEventListener('DOMContentLoaded', initNvim);

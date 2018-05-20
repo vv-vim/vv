@@ -1,4 +1,4 @@
-const body = document.getElementsByTagName('body')[0];
+const [body] = document.getElementsByTagName('body');
 const cursorEl = document.getElementById('cursor');
 const screenEl = document.getElementById('screen');
 const canvasEl = document.getElementById('canvas');
@@ -6,49 +6,101 @@ const context = canvasEl.getContext('2d', { alpha: false });
 let cursor = [0, 0];
 let cols;
 let rows;
-let foregroundColor;
-let backgroundColor;
+let hiFgColor;
+let hiBgColor;
+let hiSpColor;
+let hiItalic;
+let hiBold;
+let hiUnderline;
+let hiUndercurl;
 let defaultFgColor;
 let defaultBgColor;
+let defaultSpColor;
+let reverseColor;
 let scrollRect = new Array(4);
 
 const colorsCache = {};
 const charsCache = {};
 
-const targetCharWidth = 7.2;
-const targetCharHeight = 15;
+// Math.floor to avoid sub-pixel draw
+const targetCharWidth = Math.floor(7.2);
+const targetCharHeight = Math.floor(15);
 const targetFontSize = 12;
 const fontFamily = 'SFMono-Light';
 const scale = 2;
 const charWidth = targetCharWidth * scale;
 const charHeight = targetCharHeight * scale;
 const fontSize = targetFontSize * scale;
-const font = `${fontSize}px ${fontFamily}`;
+
+const fgColor = () =>
+  (reverseColor ? hiBgColor || defaultBgColor : hiFgColor || defaultFgColor);
+
+const bgColor = () =>
+  (reverseColor ? hiFgColor || defaultFgColor : hiBgColor || defaultBgColor);
+
+const spColor = () =>
+  (reverseColor ? hiSpColor || defaultSpColor : hiSpColor || defaultSpColor);
+
+const font = () =>
+  [
+    hiItalic ? 'italic' : '',
+    hiBold ? 'bold' : '',
+    `${fontSize}px`,
+    fontFamily,
+  ].join(' ');
 
 const getCharBitmap = (char) => {
-  const key = `${char}${foregroundColor}${backgroundColor}`;
+  const key = [
+    char,
+    fgColor(),
+    bgColor(),
+    spColor(),
+    hiItalic,
+    hiBold,
+    hiUnderline,
+    hiUndercurl,
+  ].join('-');
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
-    c.width = Math.ceil(charWidth);
-    c.height = Math.ceil(charHeight);
+    c.width = charWidth;
+    c.height = charHeight;
     const ctx = c.getContext('2d', { alpha: false });
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, Math.ceil(charWidth), Math.ceil(charHeight));
-    ctx.fillStyle = foregroundColor;
-    ctx.font = font;
+    ctx.fillStyle = bgColor();
+    ctx.fillRect(0, 0, charWidth, charHeight);
+    ctx.fillStyle = fgColor();
+    ctx.font = font();
     ctx.textBaseline = 'top';
     ctx.fillText(char, 0, 0);
+
+    if (hiUnderline) {
+      ctx.strokeStyle = fgColor();
+      ctx.lineWidth = scale;
+      ctx.beginPath();
+      ctx.moveTo(0, charHeight - scale);
+      ctx.lineTo(charWidth, charHeight - scale);
+      ctx.stroke();
+    }
+
+    if (hiUndercurl) {
+      ctx.strokeStyle = spColor();
+      ctx.lineWidth = scale;
+      const x = charWidth;
+      const y = charHeight - scale / 2;
+      const h = charWidth / 2; // Height of the wave
+      ctx.beginPath();
+      ctx.moveTo(0, y - h / 2);
+      ctx.bezierCurveTo(x / 4, y - h / 2, x / 4, y, x / 2, y);
+      ctx.bezierCurveTo(x / 4 * 3, y, x / 4 * 3, y - h / 2, x, y - h / 2);
+      ctx.stroke();
+    }
+
     charsCache[key] = c;
   }
   return charsCache[key];
 };
 
 const printChar = (i, j, char) => {
-  context.drawImage(
-    getCharBitmap(char),
-    Math.floor(j * charWidth),
-    Math.floor(i * charHeight),
-  );
+  context.drawImage(getCharBitmap(char), j * charWidth, i * charHeight);
 };
 
 const getColorString = (rgb) => {
@@ -77,14 +129,14 @@ const redrawCmd = {
 
   cursor_goto: ([newCursor]) => {
     cursor = newCursor;
-    const left = (cursor[1] * targetCharWidth) - 1;
-    const top = (cursor[0] * 15) - 1;
+    const left = Math.floor(cursor[1] * targetCharWidth - 1);
+    const top = cursor[0] * 15 - 1;
     cursorEl.style.transform = `translate(${left}px, ${top}px)`;
   },
 
   clear: () => {
     cursor = [0, 0];
-    context.fillStyle = backgroundColor;
+    context.fillStyle = defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
 
@@ -98,12 +150,26 @@ const redrawCmd = {
 
   highlight_set: (props) => {
     for (let i = 0; i < props.length; i += 1) {
-      const { foreground, background, reverse } = props[i][0];
-
-      const fg = getColorString(foreground);
-      const bg = getColorString(background);
-      foregroundColor = reverse ? (bg || defaultBgColor) : (fg || defaultFgColor);
-      backgroundColor = reverse ? (fg || defaultFgColor) : (bg || defaultBgColor);
+      const [
+        {
+          foreground,
+          background,
+          special,
+          reverse,
+          italic,
+          bold,
+          underline,
+          undercurl,
+        },
+      ] = props[i];
+      reverseColor = reverse;
+      hiFgColor = getColorString(foreground);
+      hiBgColor = getColorString(background);
+      hiSpColor = getColorString(special);
+      hiItalic = italic;
+      hiBold = bold;
+      hiUnderline = underline;
+      hiUndercurl = undercurl;
     }
   },
 
@@ -116,58 +182,57 @@ const redrawCmd = {
     defaultFgColor = getColorString(color);
   },
 
+  update_sp: ([color]) => {
+    defaultSpColor = getColorString(color);
+  },
+
   set_scroll_region: ([rect]) => {
     // top, bottom, left, right
     scrollRect = rect;
   },
 
-  scroll: ([scrollCount]) => {
+  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L202
+  scroll: ([[scrollCount]]) => {
     const [top, bottom, left, right] = scrollRect;
 
-    const x = left * charWidth;
-    const y = (top + (scrollCount > 0 ? scrollCount : 0)) * charHeight;
-    const w = (right - left + 1) * charWidth;
-    const h =
-      (bottom - top + 1 - (scrollCount > 0 ? scrollCount : -scrollCount)) *
-      charHeight;
-
-    context.drawImage(
-      canvasEl,
-      x,
-      y,
-      w,
-      h,
-      left * charWidth,
-      (top + (scrollCount > 0 ? 0 : -scrollCount)) * charHeight,
-      w,
-      h,
-    );
-
+    const x = left * charWidth; // region left
+    let y; // region top
+    const w = (right - left + 1) * charWidth; // clipped part width
+    const h = (bottom - top + 1 - Math.abs(scrollCount)) * charHeight; // clipped part height
+    const X = x; // destination left
+    let Y; // destination top
+    const cx = x; // clear left
+    let cy; // clear top
+    const cw = w; // clear width
+    const ch = Math.abs(scrollCount) * charHeight; // clear height
     if (scrollCount > 0) {
-      context.fillStyle = backgroundColor;
-      context.fillRect(
-        left,
-        (bottom + 1 - scrollCount) * charHeight,
-        (right - left + 1) * charWidth,
-        scrollCount * charHeight,
-      );
+      // scroll up.
+      y = (top + scrollCount) * charHeight;
+      Y = top * charHeight;
+      cy = (bottom + 1 - scrollCount) * charHeight;
     } else {
-      context.fillStyle = backgroundColor;
-      context.fillRect(
-        left,
-        top * charHeight,
-        (right - left + 1) * charWidth,
-        (top - scrollCount) * charHeight,
-      );
+      // scroll down
+      y = top * charHeight;
+      Y = (top - scrollCount) * charHeight;
+      cy = top * charHeight;
     }
+
+    // Copy scrolled lines
+    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+    context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
+
+    // Clear lines under scroll
+    context.fillStyle = defaultBgColor;
+    context.fillRect(cx, cy, cw, ch);
   },
+
   resize: (props) => {
-    ([[cols, rows]] = props);
+    [[cols, rows]] = props;
     screenEl.style.width = `${cols * targetCharWidth}px`;
     screenEl.style.height = `${rows * targetCharHeight}px`;
     canvasEl.width = cols * charWidth;
     canvasEl.height = rows * charHeight;
-    context.fillStyle = backgroundColor;
+    context.fillStyle = bgColor();
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
 };

@@ -1,6 +1,6 @@
 {
-  "name": "vv",
-  "description": "Vim GUI",
+  "name": "VV",
+  "description": "NeoVim GUI",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
   "version": "0.1.0",
   "private": true,
@@ -58,10 +58,9 @@
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
     "postinstall": "electron-builder install-app-deps",
-
-    "preelectron-pack": "yarn build",
-    "electron-pack": "build -c.extraMetadata.main=electron/electron.js",
-    "postelectron-pack": "cp -r dist/mac/vv.app /Applications; ln -s -f /Applications/vv.app/Contents/Resources/bin/vv /usr/local/bin/vv"
+    "preelectron-build": "yarn build",
+    "electron-build": "build -c.extraMetadata.main=electron/electron.js",
+    "postelectron-build": "cp -r dist/mac/vv.app /Applications; ln -s -f /Applications/vv.app/Contents/Resources/bin/vv /usr/local/bin/vv"
   },
   "homepage": "./",
   "build": {
@@ -71,9 +70,7 @@
     },
     "files": [
       "build/**/*",
-      "electron/**/*",
-      "node_modules/**/*",
-      "package.json"
+      "electron/**/*"
     ],
     "extraResources": [
       "electron/bin/**/*"

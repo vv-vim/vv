@@ -13,7 +13,6 @@
     "import/no-extraneous-dependencies": "off",
     "import/no-unresolved": "off",
     "import/extensions": "off",
-    "no-mixed-operators": ["warn", {"allowSamePrecedence": true}],
     "no-shadow": "off",
     "react/require-default-props": "off",
     "prefer-destructuring": ["warn", {
@@ -26,6 +25,18 @@
         "object":false
       }
     }],
+    "no-mixed-operators": [
+      "warn",
+      {
+        "groups": [
+          ["&", "|", "^", "~", "<<", ">>", ">>>"],
+          ["==", "!=", "===", "!==", ">", ">=", "<", "<="],
+          ["&&", "||"],
+          ["in", "instanceof"]
+        ],
+        "allowSamePrecedence": true
+      }
+    ],
     "commented": {
       "--comment--camelcase": "off",
       "--comment--react/prefer-stateless-function": [0],
