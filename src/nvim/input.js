@@ -1,3 +1,4 @@
+
 // :help keyCode
 const specialKey = ({ key }) =>
   ({
@@ -46,7 +47,15 @@ const filterResult = result =>
   !{
     '<D-v>': true, // Cmd+C/Cmd+V
     '<D-c>': true,
+    '<D-a>': true,
   }[result] && result;
+
+// https://github.com/rhysd/NyaoVim/issues/87
+const replaceResult = result => ({
+  '<C-6>': '<C-^>',
+  '<C-->': '<C-_>',
+  '<C-2>': '<C-@>',
+}[result] || result);
 
 export const eventKeyCode = (event) => {
   // console.log(event);
@@ -66,5 +75,5 @@ export const eventKeyCode = (event) => {
       ? `<${modifier}${shift}${keyCode}>`
       : keyCode;
 
-  return filterResult(result);
+  return replaceResult(filterResult(result));
 };

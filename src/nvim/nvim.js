@@ -7,7 +7,7 @@ import { eventKeyCode } from './input';
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
 
-const { remote } = global.require('electron');
+const { remote, ipcRenderer } = global.require('electron');
 
 const currentWindow = remote.getCurrentWindow();
 let nvim;
@@ -131,6 +131,11 @@ const mousemove = (event) => {
 
 const handleMousemove = throttle(mousemove, 50);
 
+const handleSelectall = () => {
+  console.log('select all');
+  nvim.input('ggVG');
+};
+
 const closeWindow = async () => {
   await currentWindow.hide();
   await currentWindow.setSimpleFullScreen(false);
@@ -174,6 +179,7 @@ const initNvim = async () => {
   document.addEventListener('mousemove', handleMousemove);
   document.addEventListener('paste', handlePaste);
   document.addEventListener('copy', handleCopy);
+  ipcRenderer.on('selectAll', handleSelectall);
 
   window.addEventListener('resize', handleResize);
 };

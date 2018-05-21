@@ -1,6 +1,6 @@
 const { Menu } = require('electron');
 
-const createMenu = ({ createWindow, openDeveloperTools }) => {
+const createMenu = ({ createWindow, openDeveloperTools, selectAll }) => {
   const menuTemplate = [
     {
       label: 'VV',
@@ -28,7 +28,15 @@ const createMenu = ({ createWindow, openDeveloperTools }) => {
     },
     {
       label: 'Edit',
-      submenu: [{ role: 'copy' }, { role: 'paste' }],
+      submenu: [
+        { role: 'copy' },
+        { role: 'paste' },
+        {
+          label: 'Select All',
+          accelerator: 'CmdOrCtrl+A',
+          click: () => selectAll(),
+        },
+      ],
     },
     {
       label: 'Tools',

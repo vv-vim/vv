@@ -19,7 +19,7 @@ const openDeveloperTools = (win) => {
   });
 };
 
-const createWindow = async (args = [], cwd) => {
+const createWindow = (args = [], cwd) => {
   let win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -46,16 +46,22 @@ const createWindow = async (args = [], cwd) => {
     win = null;
   });
 
-  // if (isDev()) openDeveloperTools(win);
+  if (isDev()) openDeveloperTools(win);
 
   win.focus();
 
   windows.push(win);
+
+  return win;
+};
+
+const selectAll = win => () => {
+  win.webContents.send('selectAll');
 };
 
 app.on('ready', async () => {
-  createMenu({ createWindow, openDeveloperTools });
-  createWindow(cliArgs());
+  const win = createWindow(cliArgs());
+  createMenu({ createWindow, openDeveloperTools, selectAll: selectAll(win) });
 });
 
 app.on('before-quit', async () => {
