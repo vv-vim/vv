@@ -1,11 +1,89 @@
 const [body] = document.getElementsByTagName('body');
-const cursorEl = document.getElementById('cursor');
-const cursorCanvasEl = document.getElementById('cursorCanvas');
-const screenEl = document.getElementById('screen');
-const canvasEl = document.getElementById('canvas');
-const context = canvasEl.getContext('2d', { alpha: false });
-const cursorContext = cursorCanvasEl.getContext('2d', { alpha: true });
-let cursor = [0, 0];
+
+let screenContainer;
+
+let cursorEl;
+let cursorCanvasEl;
+let cursorContext;
+let cursor;
+
+let screenEl;
+let canvasEl;
+let context;
+
+let scale;
+let charWidth;
+let charHeight;
+
+let fontFamily;
+let fontSize;
+let lineHeight;
+let letterSpacing;
+
+const initCursor = (containerEl) => {
+  cursorEl = document.createElement('div');
+  cursorEl.style.display = 'block';
+  cursorEl.style.position = 'absolute';
+  cursorEl.style.zIndex = 100;
+  cursorEl.style.position = 'absolute';
+  cursorEl.style.top = 0;
+  cursorEl.style.left = 0;
+
+  cursorCanvasEl = document.createElement('canvas');
+
+  cursorContext = cursorCanvasEl.getContext('2d', { alpha: true });
+
+  cursorEl.appendChild(cursorCanvasEl);
+  containerEl.appendChild(cursorEl);
+
+  cursor = [0, 0];
+};
+
+const initScreen = (containerEl) => {
+  screenEl = document.createElement('div');
+
+  screenEl.style.contain = 'strict';
+  screenEl.style.overflow = 'hidden';
+
+  canvasEl = document.createElement('canvas');
+
+  canvasEl.style.position = 'absolute';
+  canvasEl.style.top = 0;
+  canvasEl.style.left = 0;
+
+  context = canvasEl.getContext('2d', { alpha: false });
+
+  screenEl.appendChild(canvasEl);
+  containerEl.appendChild(screenEl);
+};
+
+const measureCharSize = () => {
+  const char = document.createElement('span');
+  char.innerHTML = '0';
+  char.style.fontFamily = fontFamily;
+  char.style.fontSize = `${fontSize}px`;
+  char.style.lineHeight = `${lineHeight}px`;
+  char.style.position = 'absolute';
+  char.style.left = '-1000px';
+  char.style.top = 0;
+  screenEl.appendChild(char);
+
+  charWidth = char.offsetWidth + letterSpacing;
+  charHeight = char.offsetHeight;
+  cursorCanvasEl.width = charWidth;
+  cursorCanvasEl.height = charHeight;
+
+  screenEl.removeChild(char);
+};
+
+const setFontStyle = (newFontFamily = 'monospace', newFontSize = 12, newLineHeight, newLetterSpacing) => {
+  fontFamily = newFontFamily; // 'SFMono-Light';
+  fontSize = newFontSize * scale;
+  letterSpacing = (newLetterSpacing || 0);
+  lineHeight = Math.round((newLineHeight || newFontSize * 1.25) * scale);
+  measureCharSize();
+};
+
 let cols;
 let rows;
 let hiFgColor;
@@ -31,16 +109,6 @@ let curUndercurl;
 
 const colorsCache = {};
 const charsCache = {};
-
-// Math.floor to avoid sub-pixel draw
-const targetCharWidth = Math.round(7.2);
-const targetCharHeight = Math.round(15);
-const targetFontSize = 12;
-const fontFamily = 'SFMono-Light';
-const scale = 2;
-const charWidth = targetCharWidth * scale;
-const charHeight = targetCharHeight * scale;
-const fontSize = targetFontSize * scale;
 
 const fgColor = () =>
   (reverseColor ? hiBgColor || defaultBgColor : hiFgColor || defaultFgColor);
@@ -81,10 +149,11 @@ const getCharBitmap = (char, props = {}) => {
     ctx.fillStyle = p.bgColor;
     ctx.fillRect(0, 0, charWidth, charHeight);
     ctx.fillStyle = p.fgColor;
-    ctx.font = font(p); // TODO
-    ctx.textBaseline = 'top';
+    ctx.font = font(p);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
     if (char) {
-      ctx.fillText(char, 0, 0);
+      ctx.fillText(char, Math.round(letterSpacing / 2), charHeight / 2);
     }
 
     if (p.hiUnderline) {
@@ -164,7 +233,7 @@ const redrawCursor = () => {
       : scale;
     cursorContext.clearRect(0, 0, charWidth, charHeight);
     cursorContext.fillStyle = defaultFgColor;
-    cursorContext.fillRect(0, charHeight - curHeight, charWidth, charHeight);
+    cursorContext.fillRect(0, charHeight - curHeight, charWidth, curHeight);
   }
 
   cursorEl.style.display = 'block';
@@ -186,11 +255,10 @@ const setCharUnderCursor = (
 };
 
 const refreshCursor = () => {
-  const left = Math.floor(cursor[1] * targetCharWidth);
-  const top = cursor[0] * 15;
+  const left = Math.floor(cursor[1] * charWidth);
+  const top = cursor[0] * charHeight;
   cursorEl.style.transform = `translate(${left}px, ${top}px)`;
   cursorEl.style.display = 'none';
-  // redrawCursor();
 };
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
@@ -302,8 +370,8 @@ const redrawCmd = {
 
   resize: (props) => {
     [[cols, rows]] = props;
-    screenEl.style.width = `${cols * targetCharWidth}px`;
-    screenEl.style.height = `${rows * targetCharHeight}px`;
+    screenEl.style.width = `${cols * charWidth}px`;
+    screenEl.style.height = `${rows * charHeight}px`;
     canvasEl.width = cols * charWidth;
     canvasEl.height = rows * charHeight;
     context.fillStyle = bgColor();
@@ -322,14 +390,38 @@ const redrawCmd = {
     redrawCursor();
   },
 
+  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L128
+  mouse_on: () => {},
+  mouse_off: () => {},
+
   // VV specific commands
   vv_char_under_cursor: ([char, bold, italic, underline, undercurl]) => {
     setCharUnderCursor(char, bold, italic, underline, undercurl);
   },
 
-  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L128
-  mouse_on: () => {},
-  mouse_off: () => {},
+  vv_font_style: (newFontFamily, newFontSize, newLineHeight, newLetterSpacing) => {
+    setFontStyle(newFontFamily, newFontSize, newLineHeight, newLetterSpacing);
+  },
 };
 
-export default redrawCmd;
+const isRetina = () => true;
+
+const screen = (containerId) => {
+  screenContainer = document.getElementById(containerId);
+  if (!screenContainer) return false;
+
+  scale = isRetina() ? 2 : 1;
+
+  screenContainer.style.position = 'relative';
+  screenContainer.style.transformOrigin = '0 0';
+  screenContainer.style.transform = `scale(${1 / scale})`;
+
+  initCursor(screenContainer);
+  initScreen(screenContainer);
+
+  setFontStyle();
+
+  return redrawCmd;
+};
+
+export default screen;

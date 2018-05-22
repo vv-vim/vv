@@ -10,62 +10,25 @@
     -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    <title>VV</title>
   </head>
   <body>
   <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
     body {
       background: #FFFFFF;
       margin: 0;
       padding 0;
     }
-    #screenContainer {
-      position: relative;
-    }
     #screen {
-      contain: strict;
-      width: 1080px;
-      height: 750px;
-      overflow: hidden;
-    }
-    #cursor {
-      display: block;
       position: absolute;
-      height: 15px;
-      width: 7px;
-      z-index: 100;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    #cursorCanvas {
-      transform-origin: 0 0;
-      transform: scale(0.5);
-    }
-    #canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      transform-origin: 0 0;
-      transform: scale(0.5);
     }
     </style>
-    <div id="screenContainer">
-      <div id="cursor">
-        <canvas id="cursorCanvas" width="14" height="30" />
-      </div>
-      <div id="screen">
-        <canvas id="canvas" width="0" height="0" />
-      </div>
+    <div id="screen">
     </div>
   </body>
 </html>

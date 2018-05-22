@@ -1,7 +1,7 @@
 import throttle from 'lodash/throttle';
 import debounce from 'lodash/debounce';
 
-import screen from './screen';
+import initScreen from './screen';
 import { eventKeyCode } from './input';
 
 const { spawn } = global.require('child_process');
@@ -10,6 +10,7 @@ const { attach } = global.require('neovim');
 const { remote, ipcRenderer } = global.require('electron');
 
 const currentWindow = remote.getCurrentWindow();
+
 let nvim;
 let cols;
 let rows;
@@ -40,11 +41,12 @@ const resize = () => {
 
 const handleResize = throttle(resize, 100);
 
-const handleNotification = async (method, args) => {
+const handleNotification = async (screen, method, args) => {
   if (method === 'redraw') {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (screen[cmd]) {
+        // console.log(cmd, props);
         screen[cmd](props);
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
@@ -132,7 +134,6 @@ const mousemove = (event) => {
 const handleMousemove = throttle(mousemove, 50);
 
 const handleSelectall = () => {
-  console.log('select all');
   nvim.input('ggVG');
 };
 
@@ -143,6 +144,9 @@ const closeWindow = async () => {
 };
 
 const initNvim = async () => {
+  const screen = initScreen('screen');
+  screen.vv_font_style('SFMono-Light', 12, 15, -1);
+
   const { args, env, cwd } = currentWindow;
 
   const nvimProcess = spawn('nvim', ['--embed', ...args], {
@@ -157,7 +161,7 @@ const initNvim = async () => {
   nvim.uiAttach(100, 50, { ext_cmdline: false });
 
   nvim.on('notification', (method, args) => {
-    handleNotification(method, args);
+    handleNotification(screen, method, args);
   });
 
   nvim.on('disconnect', closeWindow);

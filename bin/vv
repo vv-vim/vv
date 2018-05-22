@@ -11,10 +11,10 @@ if [ -L "$0" ]; then
     cd "`dirname $self_path`"
     self_path=`basename $self_path`
   done
-  binary="`pwd -P`/../../MacOS/vv"
+  binary="`pwd -P`/../../MacOS/VV"
   cd "$curdir"
 else
-  binary="`dirname "$0"`/../../MacOS/vv"
+  binary="`dirname "$0"`/../../MacOS/VV"
 fi
 if ! [ -x "$binary" ]; then
   echo "Sorry, cannot find Vim executable."
@@ -25,6 +25,5 @@ if [ "$1" == "--log" ]; then
   shift
   exec "$binary" $opts "$@"
 else
-  echo "no log"
   exec "$binary" $opts "$@" &>/dev/null & disown
 fi

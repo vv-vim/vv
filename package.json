@@ -61,7 +61,7 @@
     "postinstall": "electron-builder install-app-deps",
     "preelectron-build": "yarn build",
     "electron-build": "build -c.extraMetadata.main=electron/electron.js",
-    "postelectron-build": "cp -r dist/mac/vv.app /Applications; ln -s -f /Applications/vv.app/Contents/Resources/bin/vv /usr/local/bin/vv"
+    "postelectron-build": "cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
   },
   "homepage": "./",
   "build": {
@@ -74,7 +74,7 @@
       "electron/**/*"
     ],
     "extraResources": [
-      "electron/bin/**/*"
+      "bin/**/*"
     ],
     "directories": {
       "buildResources": "assets"
