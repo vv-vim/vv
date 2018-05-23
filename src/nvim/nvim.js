@@ -4,6 +4,8 @@ import debounce from 'lodash/debounce';
 import initScreen from './screen';
 import { eventKeyCode } from './input';
 
+import path from 'path';
+
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
 
@@ -51,7 +53,8 @@ const handleNotification = async (screen, method, args) => {
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
-      if (cmd === 'cursor_goto' || cmd === 'put') { // TODO: request char from screen maybe?
+      if (cmd === 'cursor_goto' || cmd === 'put') {
+        // TODO: request char from screen maybe?
         debouncedCharUnderCursor();
       }
     }
@@ -147,7 +150,9 @@ const initNvim = async () => {
   const screen = initScreen('screen');
   screen.vv_font_style('SFMono-Light', 12, 15, -1);
 
-  const { args, env, cwd } = currentWindow;
+  const {
+    args, env, cwd, resourcesPath,
+  } = currentWindow;
 
   const nvimProcess = spawn('nvim', ['--embed', ...args], {
     stdio: ['pipe', 'pipe', process.stderr],
@@ -166,12 +171,14 @@ const initNvim = async () => {
 
   nvim.on('disconnect', closeWindow);
 
-  nvim.command('set mouse=a'); // Enable Mouse
-  nvim.command('map <D-w> :q<CR>');
-  nvim.command('map <D-q> :qa<CR>');
+  nvim.command(`source ${path.join(resourcesPath, 'bin/vv.vim')}`);
 
-  nvim.command('command Fu call rpcnotify(0, "vv:fullscreen", 1)');
-  nvim.command('command Nofu call rpcnotify(0, "vv:fullscreen", 0)');
+  // nvim.command('set mouse=a'); // Enable Mouse
+  // nvim.command('map <D-w> :q<CR>');
+  // nvim.command('map <D-q> :qa<CR>');
+
+  // nvim.command('command Fu call rpcnotify(0, "vv:fullscreen", 1)');
+  // nvim.command('command Nofu call rpcnotify(0, "vv:fullscreen", 0)');
   nvim.subscribe('vv:fullscreen');
   nvim.subscribe('vv:char_under_cursor');
 

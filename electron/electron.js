@@ -6,9 +6,8 @@ const createMenu = require('./menu');
 
 const windows = [];
 
-const isDev = (dev = true, notDev = false) => (
-  process.env.ELECTRON_ENV === 'development' ? dev : notDev
-);
+const isDev = (dev = true, notDev = false) =>
+  (process.env.ELECTRON_ENV === 'development' ? dev : notDev);
 
 const cliArgs = args => (args || process.argv).slice(isDev(2, 1));
 
@@ -26,11 +25,11 @@ const createWindow = (args = [], cwd) => {
     show: false,
   });
 
-
   fixPath();
   win.args = args;
   win.env = process.env;
   win.cwd = cwd;
+  win.resourcesPath = path.join(app.getAppPath(), isDev('', '../'));
 
   // win.maximize();
   win.show();
