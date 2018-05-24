@@ -107,6 +107,11 @@ let curItalic;
 let curUnderline;
 let curUndercurl;
 
+let showBold = true;
+let showItalic = true;
+let showUnderline = true;
+let showUndercurl = true;
+
 const colorsCache = {};
 const charsCache = {};
 
@@ -121,8 +126,8 @@ const spColor = () =>
 
 const font = ({ hiItalic = false, hiBold = false }) =>
   [
-    hiItalic ? 'italic' : '',
-    hiBold ? 'bold' : '',
+    showItalic && hiItalic ? 'italic' : '',
+    showBold && hiBold ? 'bold' : '',
     `${fontSize}px`,
     fontFamily,
   ].join(' ');
@@ -156,7 +161,7 @@ const getCharBitmap = (char, props = {}) => {
       ctx.fillText(char, Math.round(letterSpacing / 2), charHeight / 2);
     }
 
-    if (p.hiUnderline) {
+    if (showUnderline && p.hiUnderline) {
       ctx.strokeStyle = p.fgColor;
       ctx.lineWidth = scale;
       ctx.beginPath();
@@ -165,7 +170,7 @@ const getCharBitmap = (char, props = {}) => {
       ctx.stroke();
     }
 
-    if (p.hiUndercurl) {
+    if (showUndercurl && p.hiUndercurl) {
       ctx.strokeStyle = p.spColor;
       ctx.lineWidth = scale;
       const x = charWidth;
@@ -239,13 +244,13 @@ const redrawCursor = () => {
   cursorEl.style.display = 'block';
 };
 
-const setCharUnderCursor = (
+const setCharUnderCursor = ({
   char,
   bold = hiBold,
   italic = hiItalic,
   underline = hiUnderline,
   undercurl = hiUndercurl,
-) => {
+}) => {
   curChar = char;
   curBold = bold;
   curItalic = italic;
@@ -263,7 +268,7 @@ const refreshCursor = () => {
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
-  put: (props) => {
+  put: (...props) => {
     for (let i = 0; i < props.length; i += 1) {
       printChar(cursor[0], cursor[1], props[i][0]);
       cursor[1] += 1;
@@ -271,7 +276,7 @@ const redrawCmd = {
     }
   },
 
-  cursor_goto: ([newCursor]) => {
+  cursor_goto: (newCursor) => {
     cursor = newCursor;
     refreshCursor();
   },
@@ -290,7 +295,7 @@ const redrawCmd = {
     context.fillRect(left, top, width, height);
   },
 
-  highlight_set: (props) => {
+  highlight_set: (...props) => {
     for (let i = 0; i < props.length; i += 1) {
       const [
         {
@@ -315,26 +320,26 @@ const redrawCmd = {
     }
   },
 
-  update_bg: ([color]) => {
+  update_bg: (color) => {
     defaultBgColor = getColorString(color);
     body.style.background = defaultBgColor;
   },
 
-  update_fg: ([color]) => {
+  update_fg: (color) => {
     defaultFgColor = getColorString(color);
   },
 
-  update_sp: ([color]) => {
+  update_sp: (color) => {
     defaultSpColor = getColorString(color);
   },
 
-  set_scroll_region: ([rect]) => {
+  set_scroll_region: (rect) => {
     // top, bottom, left, right
     scrollRect = rect;
   },
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L202
-  scroll: ([[scrollCount]]) => {
+  scroll: ([scrollCount]) => {
     const [top, bottom, left, right] = scrollRect;
 
     const x = left * charWidth; // region left
@@ -368,7 +373,7 @@ const redrawCmd = {
     context.fillRect(cx, cy, cw, ch);
   },
 
-  resize: (props) => {
+  resize: (...props) => {
     [[cols, rows]] = props;
     screenEl.style.width = `${cols * charWidth}px`;
     screenEl.style.height = `${rows * charHeight}px`;
@@ -379,12 +384,12 @@ const redrawCmd = {
   },
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L75
-  mode_info_set: ([props]) => {
+  mode_info_set: (props) => {
     modeInfoSet = props[1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
     refreshCursor();
   },
 
-  mode_change: ([[newMode]]) => {
+  mode_change: ([newMode]) => {
     mode = newMode;
     refreshCursor();
     redrawCursor();
@@ -395,12 +400,28 @@ const redrawCmd = {
   mouse_off: () => {},
 
   // VV specific commands
-  vv_char_under_cursor: ([char, bold, italic, underline, undercurl]) => {
-    setCharUnderCursor(char, bold, italic, underline, undercurl);
+  vv_char_under_cursor: (args) => {
+    setCharUnderCursor(args);
   },
 
   vv_font_style: (newFontFamily, newFontSize, newLineHeight, newLetterSpacing) => {
     setFontStyle(newFontFamily, newFontSize, newLineHeight, newLetterSpacing);
+  },
+
+  vv_show_bold: (value) => {
+    showBold = value;
+  },
+
+  vv_show_italic: (value) => {
+    showItalic = value;
+  },
+
+  vv_show_underline: (value) => {
+    showUnderline = value;
+  },
+
+  vv_show_undercurl: (value) => {
+    showUndercurl = value;
   },
 };
 

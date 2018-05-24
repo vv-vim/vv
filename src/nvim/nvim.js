@@ -17,11 +17,13 @@ let nvim;
 let cols;
 let rows;
 
+let screen;
+
 const charWidth = () => Math.floor(7.2);
 const charHeight = () => Math.floor(15);
 
 const charUnderCursor = () => {
-  nvim.command('call rpcnotify(0, "vv:char_under_cursor", matchstr(getline("."), \'\\%\' . col(\'.\') . \'c.\'), synIDattr(synIDtrans(synID(line("."), col("."), 1)), "bold"), synIDattr(synIDtrans(synID(line("."), col("."), 1)), "italic"), synIDattr(synIDtrans(synID(line("."), col("."), 1)), "underline"), synIDattr(synIDtrans(synID(line("."), col("."), 1)), "undercurl"))');
+  nvim.command('VVcharUnderCursor');
 };
 
 const debouncedCharUnderCursor = debounce(charUnderCursor, 10);
@@ -43,13 +45,32 @@ const resize = () => {
 
 const handleResize = throttle(resize, 100);
 
-const handleNotification = async (screen, method, args) => {
+const handleSet = {
+  fullscreen: (value) => {
+    currentWindow.setSimpleFullScreen(!!value);
+    currentWindow.webContents.focus();
+  },
+  bold: (value) => {
+    screen.vv_show_bold(value);
+  },
+  italic: (value) => {
+    screen.vv_show_italic(value);
+  },
+  underline: (value) => {
+    screen.vv_show_underline(value);
+  },
+  undercurl: (value) => {
+    screen.vv_show_undercurl(value);
+  },
+};
+
+const handleNotification = async (method, args) => {
   if (method === 'redraw') {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (screen[cmd]) {
         // console.log(cmd, props);
-        screen[cmd](props);
+        screen[cmd](...props);
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
@@ -58,11 +79,13 @@ const handleNotification = async (screen, method, args) => {
         debouncedCharUnderCursor();
       }
     }
-  } else if (method === 'vv:fullscreen') {
-    currentWindow.setSimpleFullScreen(!!args[0]);
-    currentWindow.webContents.focus();
+  } else if (method === 'vv:set') {
+    const [option, ...props] = args;
+    if (handleSet[option]) {
+      handleSet[option](...props);
+    }
   } else if (method === 'vv:char_under_cursor') {
-    screen.vv_char_under_cursor(args);
+    screen.vv_char_under_cursor(...args);
   } else {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
@@ -147,7 +170,7 @@ const closeWindow = async () => {
 };
 
 const initNvim = async () => {
-  const screen = initScreen('screen');
+  screen = initScreen('screen');
   screen.vv_font_style('SFMono-Light', 12, 15, -1);
 
   const {
@@ -166,23 +189,19 @@ const initNvim = async () => {
   nvim.uiAttach(100, 50, { ext_cmdline: false });
 
   nvim.on('notification', (method, args) => {
-    handleNotification(screen, method, args);
+    handleNotification(method, args);
   });
 
   nvim.on('disconnect', closeWindow);
 
-  nvim.command(`source ${path.join(resourcesPath, 'bin/vv.vim')}`);
-
-  // nvim.command('set mouse=a'); // Enable Mouse
-  // nvim.command('map <D-w> :q<CR>');
-  // nvim.command('map <D-q> :qa<CR>');
-
-  // nvim.command('command Fu call rpcnotify(0, "vv:fullscreen", 1)');
-  // nvim.command('command Nofu call rpcnotify(0, "vv:fullscreen", 0)');
-  nvim.subscribe('vv:fullscreen');
+  nvim.subscribe('vv:set');
   nvim.subscribe('vv:char_under_cursor');
 
   resize();
+
+  nvim.command(`source ${path.join(resourcesPath, 'bin/vv.vim')}`);
+  nvim.command('source ~/.config/nvim/vv.vim');
+  nvim.command('VVsettings');
 
   document.addEventListener('keydown', handleKeydown);
   document.addEventListener('mousedown', handleMousedown);
