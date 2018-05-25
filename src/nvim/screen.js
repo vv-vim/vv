@@ -126,8 +126,8 @@ const spColor = () =>
 
 const font = ({ hiItalic = false, hiBold = false }) =>
   [
-    showItalic && hiItalic ? 'italic' : '',
-    showBold && hiBold ? 'bold' : '',
+    hiItalic ? 'italic' : '',
+    hiBold ? 'bold' : '',
     `${fontSize}px`,
     fontFamily,
   ].join(' ');
@@ -161,7 +161,7 @@ const getCharBitmap = (char, props = {}) => {
       ctx.fillText(char, Math.round(letterSpacing / 2), charHeight / 2);
     }
 
-    if (showUnderline && p.hiUnderline) {
+    if (p.hiUnderline) {
       ctx.strokeStyle = p.fgColor;
       ctx.lineWidth = scale;
       ctx.beginPath();
@@ -170,7 +170,7 @@ const getCharBitmap = (char, props = {}) => {
       ctx.stroke();
     }
 
-    if (showUndercurl && p.hiUndercurl) {
+    if (p.hiUndercurl) {
       ctx.strokeStyle = p.spColor;
       ctx.lineWidth = scale;
       const x = charWidth;
@@ -313,10 +313,10 @@ const redrawCmd = {
       hiFgColor = getColorString(foreground);
       hiBgColor = getColorString(background);
       hiSpColor = getColorString(special);
-      hiItalic = italic;
-      hiBold = bold;
-      hiUnderline = underline;
-      hiUndercurl = undercurl;
+      hiItalic = showItalic && italic;
+      hiBold = showBold && bold;
+      hiUnderline = showUnderline && underline;
+      hiUndercurl = showUndercurl && undercurl;
     }
   },
 
@@ -445,9 +445,9 @@ const screen = (containerId) => {
   return redrawCmd;
 };
 
-export const screenSize = () => [
-  Math.floor(window.innerWidth * scale / charWidth),
-  Math.floor(window.innerHeight * scale / charHeight),
+export const screenCoords = (width, height) => [
+  Math.floor(width * scale / charWidth),
+  Math.floor(height * scale / charHeight),
 ];
 
 export default screen;

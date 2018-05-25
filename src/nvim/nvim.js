@@ -2,7 +2,7 @@ import throttle from 'lodash/throttle';
 import debounce from 'lodash/debounce';
 import path from 'path';
 
-import initScreen, { screenSize } from './screen';
+import initScreen, { screenCoords } from './screen';
 import { eventKeyCode } from './input';
 
 const { spawn } = global.require('child_process');
@@ -29,7 +29,7 @@ const handleKeydown = (event) => {
 };
 
 const resize = () => {
-  const [newCols, newRows] = screenSize();
+  const [newCols, newRows] = screenCoords(window.innerWidth, window.innerHeight);
   if (newCols !== cols || newRows !== rows) {
     cols = newCols;
     rows = newRows;
@@ -113,10 +113,7 @@ const handleCopy = async (event) => {
 let mouseButtonDown;
 let mouseCoords = [];
 const mouseCoordsChanged = (event) => {
-  const newCoords = [
-    Math.floor(event.clientX / charWidth()),
-    Math.floor(event.clientY / charHeight()),
-  ];
+  const newCoords = screenCoords(event.clientX, event.clientY);
   if (newCoords[0] !== mouseCoords[0] || newCoords[1] !== mouseCoords[1]) {
     mouseCoords = newCoords;
     return true;
@@ -192,10 +189,9 @@ const initNvim = async () => {
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:char_under_cursor');
 
-  await nvim.input('<Nul>');
   await nvim.command('VVsettings');
 
-  [cols, rows] = screenSize();
+  [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
   await nvim.uiAttach(cols, rows, {});
 
   document.addEventListener('keydown', handleKeydown);

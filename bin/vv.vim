@@ -1,4 +1,4 @@
-let g:vv = true
+let g:vv = 1
 
 set mouse=a
 
