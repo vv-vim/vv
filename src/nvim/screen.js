@@ -182,7 +182,17 @@ const getCharBitmap = (char, props = {}) => {
 };
 
 const printChar = (i, j, char) => {
-  context.drawImage(getCharBitmap(char), j * charWidth, i * charHeight);
+  context.drawImage(
+    getCharBitmap(char),
+    0,
+    0,
+    charWidth,
+    charHeight,
+    j * charWidth,
+    i * charHeight,
+    charWidth,
+    charHeight,
+  );
 };
 
 const getColorString = (rgb) => {
@@ -388,7 +398,6 @@ const redrawCmd = {
     redrawCursor();
   },
 
-  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L128
   mouse_on: () => {},
   mouse_off: () => {},
 
