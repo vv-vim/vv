@@ -28,9 +28,9 @@ const handleKeydown = (event) => {
   if (key) nvim.input(key);
 };
 
-const resize = () => {
+const resize = (forceRedraw = false) => {
   const [newCols, newRows] = screenCoords(window.innerWidth, window.innerHeight);
-  if (newCols !== cols || newRows !== rows) {
+  if (newCols !== cols || newRows !== rows || forceRedraw) {
     cols = newCols;
     rows = newRows;
     nvim.uiTryResize(cols, rows);
@@ -38,6 +38,8 @@ const resize = () => {
 };
 
 const handleResize = throttle(resize, 100);
+
+const debouncedRedraw = debounce(() => resize(true), 10);
 
 const handleSet = {
   fullscreen: (value) => {
@@ -55,6 +57,18 @@ const handleSet = {
   },
   undercurl: (value) => {
     screen.vv_show_undercurl(value);
+  },
+  font: (value) => {
+    screen.vv_font(value);
+    debouncedRedraw();
+  },
+  lineheight: (value) => {
+    screen.vv_lineheight(value);
+    debouncedRedraw();
+  },
+  letterspacing: (value) => {
+    screen.vv_letterspacing(value);
+    debouncedRedraw();
   },
 };
 
@@ -162,7 +176,6 @@ const closeWindow = async () => {
 
 const initNvim = async () => {
   screen = initScreen('screen');
-  screen.vv_font_style('SFMono-Light', 12, 15, -1);
 
   const {
     args, env, cwd, resourcesPath,

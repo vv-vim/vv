@@ -14,14 +14,22 @@ let g:vv_settings = {
       \  'bold': 1,
       \  'italic': 1,
       \  'underline': 1,
-      \  'undercurl': 1
+      \  'undercurl': 1,
+      \  'font': 'monospace:h12',
+      \  'lineheight': 1.25,
+      \  'letterspacing': 0
       \}
 
 " TODO: mimic default set (:help set)
 " Set VV option and notify client about it.
 " Available options and default values are set in g:vv_setings
 function! VVset(name)
-  if a:name =~ '^no'
+
+  if a:name =~ '='
+    let l:split = split(a:name, '=')
+    let l:name = l:split[0]
+    let l:value = l:split[1]
+  elseif a:name =~ '^no'
     let l:name = strpart(a:name, 2)
     let l:value = 0
   else

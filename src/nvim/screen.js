@@ -20,6 +20,37 @@ let fontSize;
 let lineHeight;
 let letterSpacing;
 
+let cols;
+let rows;
+let hiFgColor;
+let hiBgColor;
+let hiSpColor;
+let hiItalic;
+let hiBold;
+let hiUnderline;
+let hiUndercurl;
+let defaultFgColor;
+let defaultBgColor;
+let defaultSpColor;
+let reverseColor;
+let scrollRect = new Array(4);
+let modeInfoSet;
+let mode;
+
+let curChar;
+let curBold;
+let curItalic;
+let curUnderline;
+let curUndercurl;
+
+let showBold = true;
+let showItalic = true;
+let showUnderline = true;
+let showUndercurl = true;
+
+const colorsCache = {};
+let charsCache = {};
+
 const initCursor = (containerEl) => {
   cursorEl = document.createElement('div');
   cursorEl.style.display = 'block';
@@ -62,7 +93,7 @@ const measureCharSize = () => {
   char.innerHTML = '0';
   char.style.fontFamily = fontFamily;
   char.style.fontSize = `${fontSize}px`;
-  char.style.lineHeight = `${lineHeight}px`;
+  char.style.lineHeight = `${Math.round(fontSize * lineHeight)}px`;
   char.style.position = 'absolute';
   char.style.left = '-1000px';
   char.style.top = 0;
@@ -74,46 +105,8 @@ const measureCharSize = () => {
   cursorCanvasEl.height = charHeight;
 
   screenEl.removeChild(char);
+  charsCache = {};
 };
-
-const setFontStyle = (newFontFamily = 'monospace', newFontSize = 12, newLineHeight, newLetterSpacing) => {
-  fontFamily = newFontFamily; // 'SFMono-Light';
-  fontSize = newFontSize * scale;
-  letterSpacing = (newLetterSpacing || 0);
-  lineHeight = Math.round((newLineHeight || newFontSize * 1.25) * scale);
-  measureCharSize();
-};
-
-let cols;
-let rows;
-let hiFgColor;
-let hiBgColor;
-let hiSpColor;
-let hiItalic;
-let hiBold;
-let hiUnderline;
-let hiUndercurl;
-let defaultFgColor;
-let defaultBgColor;
-let defaultSpColor;
-let reverseColor;
-let scrollRect = new Array(4);
-let modeInfoSet;
-let mode;
-
-let curChar;
-let curBold;
-let curItalic;
-let curUnderline;
-let curUndercurl;
-
-let showBold = true;
-let showItalic = true;
-let showUnderline = true;
-let showUndercurl = true;
-
-const colorsCache = {};
-const charsCache = {};
 
 const fgColor = () =>
   (reverseColor ? hiBgColor || defaultBgColor : hiFgColor || defaultFgColor);
@@ -404,8 +397,21 @@ const redrawCmd = {
     setCharUnderCursor(args);
   },
 
-  vv_font_style: (newFontFamily, newFontSize, newLineHeight, newLetterSpacing) => {
-    setFontStyle(newFontFamily, newFontSize, newLineHeight, newLetterSpacing);
+  vv_font: (font) => {
+    const [newFontFamily, newFontSize] = font.split(':h');
+    fontFamily = newFontFamily;
+    fontSize = (parseInt(newFontSize, 10) || 12) * scale;
+    measureCharSize();
+  },
+
+  vv_letterspacing: (newLetterSpacing) => {
+    letterSpacing = parseInt(newLetterSpacing, 10);
+    measureCharSize();
+  },
+
+  vv_lineheight: (newLineHeight) => {
+    lineHeight = parseFloat(newLineHeight);
+    measureCharSize();
   },
 
   vv_show_bold: (value) => {
@@ -439,8 +445,6 @@ const screen = (containerId) => {
 
   initCursor(screenContainer);
   initScreen(screenContainer);
-
-  setFontStyle();
 
   return redrawCmd;
 };
