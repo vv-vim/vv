@@ -1,14 +1,12 @@
 import throttle from 'lodash/throttle';
 import debounce from 'lodash/debounce';
-
-import initScreen from './screen';
-import { eventKeyCode } from './input';
-
 import path from 'path';
+
+import initScreen, { screenSize } from './screen';
+import { eventKeyCode } from './input';
 
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
-
 const { remote, ipcRenderer } = global.require('electron');
 
 const currentWindow = remote.getCurrentWindow();
@@ -18,9 +16,6 @@ let cols;
 let rows;
 
 let screen;
-
-const charWidth = () => Math.floor(7.2);
-const charHeight = () => Math.floor(15);
 
 const charUnderCursor = () => {
   nvim.command('VVcharUnderCursor');
@@ -34,8 +29,7 @@ const handleKeydown = (event) => {
 };
 
 const resize = () => {
-  const newCols = Math.floor(window.innerWidth / charWidth());
-  const newRows = Math.floor(window.innerHeight / charHeight());
+  const [newCols, newRows] = screenSize();
   if (newCols !== cols || newRows !== rows) {
     cols = newCols;
     rows = newRows;
@@ -177,16 +171,17 @@ const initNvim = async () => {
     args, env, cwd, resourcesPath,
   } = currentWindow;
 
-  const nvimProcess = spawn('nvim', ['--embed', ...args], {
-    stdio: ['pipe', 'pipe', process.stderr],
-    env,
-    cwd,
-  });
+  const nvimProcess = spawn(
+    'nvim',
+    ['--embed', '-u', path.join(resourcesPath, 'bin/vv.vim'), ...args],
+    {
+      stdio: ['pipe', 'pipe', process.stderr],
+      env,
+      cwd,
+    },
+  );
 
   nvim = await attach({ proc: nvimProcess });
-  window.nvim = nvim;
-
-  nvim.uiAttach(100, 50, { ext_cmdline: false });
 
   nvim.on('notification', (method, args) => {
     handleNotification(method, args);
@@ -197,11 +192,11 @@ const initNvim = async () => {
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:char_under_cursor');
 
-  resize();
+  await nvim.input('<Nul>');
+  await nvim.command('VVsettings');
 
-  nvim.command(`source ${path.join(resourcesPath, 'bin/vv.vim')}`);
-  nvim.command('source ~/.config/nvim/vv.vim');
-  nvim.command('VVsettings');
+  [cols, rows] = screenSize();
+  await nvim.uiAttach(cols, rows, {});
 
   document.addEventListener('keydown', handleKeydown);
   document.addEventListener('mousedown', handleMousedown);
@@ -209,9 +204,12 @@ const initNvim = async () => {
   document.addEventListener('mousemove', handleMousemove);
   document.addEventListener('paste', handlePaste);
   document.addEventListener('copy', handleCopy);
+
   ipcRenderer.on('selectAll', handleSelectall);
 
   window.addEventListener('resize', handleResize);
+
+  window.nvim = nvim;
 };
 
 document.addEventListener('DOMContentLoaded', initNvim);

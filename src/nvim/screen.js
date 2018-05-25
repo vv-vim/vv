@@ -445,4 +445,9 @@ const screen = (containerId) => {
   return redrawCmd;
 };
 
+export const screenSize = () => [
+  Math.floor(window.innerWidth * scale / charWidth),
+  Math.floor(window.innerHeight * scale / charHeight),
+];
+
 export default screen;

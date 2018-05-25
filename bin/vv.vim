@@ -1,3 +1,5 @@
+let g:vv = true
+
 set mouse=a
 
 map <D-w> :q<CR>
@@ -64,3 +66,5 @@ function! VVcharUnderCursor()
 endfunction
 
 command! -nargs=0 VVcharUnderCursor :call VVcharUnderCursor()
+
+source ~/.config/nvim/init.vim
