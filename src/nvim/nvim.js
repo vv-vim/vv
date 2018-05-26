@@ -3,7 +3,9 @@ import debounce from 'lodash/debounce';
 import path from 'path';
 
 import initScreen, { screenCoords } from './screen';
-import { eventKeyCode } from './input';
+import keyboard from './keyboard';
+import mouse from './mouse';
+import edit from './edit';
 
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
@@ -23,13 +25,11 @@ const charUnderCursor = () => {
 
 const debouncedCharUnderCursor = debounce(charUnderCursor, 10);
 
-const handleKeydown = (event) => {
-  const key = eventKeyCode(event);
-  if (key) nvim.input(key);
-};
-
 const resize = (forceRedraw = false) => {
-  const [newCols, newRows] = screenCoords(window.innerWidth, window.innerHeight);
+  const [newCols, newRows] = screenCoords(
+    window.innerWidth,
+    window.innerHeight,
+  );
   if (newCols !== cols || newRows !== rows || forceRedraw) {
     cols = newCols;
     rows = newRows;
@@ -83,7 +83,6 @@ const handleNotification = async (method, args) => {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
       if (cmd === 'cursor_goto' || cmd === 'put') {
-        // TODO: request char from screen maybe?
         debouncedCharUnderCursor();
       }
     }
@@ -97,79 +96,6 @@ const handleNotification = async (method, args) => {
   } else {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
-};
-
-const handlePaste = async (event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  const clipboardText = event.clipboardData
-    .getData('text')
-    .replace('<', '<lt>');
-  const { mode } = await nvim.mode;
-  if (mode === 'i') {
-    await nvim.command('set paste');
-    await nvim.input(clipboardText);
-    await nvim.command('set nopaste');
-  } else if (['c', 't', 'ce', 'cv', 's', 'R', 'Rv', 'r'].includes(mode)) {
-    nvim.input(clipboardText);
-  } else if (['n', 'no', 'r', 'rm'].includes(mode)) {
-    // do nothing
-  } else {
-    nvim.input('"*p');
-  }
-};
-
-const handleCopy = async (event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  const { mode } = await nvim.mode;
-  if (mode === 'v' || mode === 'V') {
-    nvim.input('"*y');
-  }
-};
-
-let mouseButtonDown;
-let mouseCoords = [];
-const mouseCoordsChanged = (event) => {
-  const newCoords = screenCoords(event.clientX, event.clientY);
-  if (newCoords[0] !== mouseCoords[0] || newCoords[1] !== mouseCoords[1]) {
-    mouseCoords = newCoords;
-    return true;
-  }
-  return false;
-};
-
-const handleMousedown = (event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  if (mouseCoordsChanged(event)) {
-    mouseButtonDown = true;
-    nvim.input(`<LeftMouse><${mouseCoords[0]}, ${mouseCoords[1]}>`);
-  }
-};
-
-const handleMouseup = (event) => {
-  if (mouseButtonDown) {
-    event.preventDefault();
-    event.stopPropagation();
-    mouseButtonDown = false;
-  }
-};
-
-const mousemove = (event) => {
-  if (mouseButtonDown) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (mouseCoordsChanged(event)) {
-      nvim.input(`<LeftDrag><${mouseCoords[0]}, ${mouseCoords[1]}>`);
-    }
-  }
-};
-
-const handleMousemove = throttle(mousemove, 50);
-
-const handleSelectall = () => {
-  nvim.input('ggVG');
 };
 
 const closeWindow = async () => {
@@ -211,14 +137,33 @@ const initNvim = async () => {
   [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
   await nvim.uiAttach(cols, rows, {});
 
+  const {
+    handleMousedown,
+    handleMouseup,
+    handleMousemove,
+    handleMousewheel,
+  } = mouse(nvim);
+
+  const {
+    handleKeydown,
+  } = keyboard(nvim);
+
+  const {
+    handlePaste,
+    handleCopy,
+    handleSelectAll,
+  } = edit(nvim);
+
   document.addEventListener('keydown', handleKeydown);
+
   document.addEventListener('mousedown', handleMousedown);
   document.addEventListener('mouseup', handleMouseup);
   document.addEventListener('mousemove', handleMousemove);
+  document.addEventListener('wheel', handleMousewheel);
+
   document.addEventListener('paste', handlePaste);
   document.addEventListener('copy', handleCopy);
-
-  ipcRenderer.on('selectAll', handleSelectall);
+  ipcRenderer.on('selectAll', handleSelectAll);
 
   window.addEventListener('resize', handleResize);
 

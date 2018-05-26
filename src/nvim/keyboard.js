@@ -37,10 +37,10 @@ const skip = key =>
     Meta: true,
   }[key]);
 
-const modifierPrefix = ({ metaKey, altKey, ctrlKey }) =>
+export const modifierPrefix = ({ metaKey, altKey, ctrlKey }) =>
   `${metaKey ? 'D-' : ''}${altKey ? 'A-' : ''}${ctrlKey ? 'C-' : ''}`;
 
-const shiftPrefix = ({ shiftKey }) => (shiftKey ? 'S-' : '');
+export const shiftPrefix = ({ shiftKey }) => (shiftKey ? 'S-' : '');
 
 const filterResult = result =>
   !{
@@ -56,7 +56,7 @@ const replaceResult = result => ({
   '<C-2>': '<C-@>',
 }[result] || result);
 
-export const eventKeyCode = (event) => {
+const eventKeyCode = (event) => {
   // console.log(event);
   const { key } = event;
 
@@ -76,3 +76,19 @@ export const eventKeyCode = (event) => {
 
   return replaceResult(filterResult(result));
 };
+
+let nvim;
+
+const handleKeydown = (event) => {
+  const key = eventKeyCode(event);
+  if (key) nvim.input(key);
+};
+
+const keyboard = (newNvim) => {
+  nvim = newNvim;
+  return {
+    handleKeydown,
+  };
+};
+
+export default keyboard;
