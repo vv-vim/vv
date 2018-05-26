@@ -110,8 +110,12 @@ const handlePaste = async (event) => {
     await nvim.command('set paste');
     await nvim.input(clipboardText);
     await nvim.command('set nopaste');
+  } else if (['c', 't', 'ce', 'cv', 's', 'R', 'Rv', 'r'].includes(mode)) {
+    nvim.input(clipboardText);
+  } else if (['n', 'no', 'r', 'rm'].includes(mode)) {
+    // do nothing
   } else {
-    nvim.input(mode === 'c' ? clipboardText : '"*p');
+    nvim.input('"*p');
   }
 };
 

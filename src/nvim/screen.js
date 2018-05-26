@@ -392,8 +392,8 @@ const redrawCmd = {
     refreshCursor();
   },
 
-  mode_change: ([newMode]) => {
-    mode = newMode;
+  mode_change: (...modes) => {
+    [mode] = modes[modes.length - 1];
     refreshCursor();
     redrawCursor();
   },
