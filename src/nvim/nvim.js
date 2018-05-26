@@ -58,8 +58,12 @@ const handleSet = {
   undercurl: (value) => {
     screen.vv_show_undercurl(value);
   },
-  font: (value) => {
-    screen.vv_font(value);
+  fontfamily: (value) => {
+    screen.vv_fontfamily(value);
+    debouncedRedraw();
+  },
+  fontsize: (value) => {
+    screen.vv_fontsize(value);
     debouncedRedraw();
   },
   lineheight: (value) => {

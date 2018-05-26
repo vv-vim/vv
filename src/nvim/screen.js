@@ -165,10 +165,10 @@ const getCharBitmap = (char, props = {}) => {
 
     if (p.hiUndercurl) {
       ctx.strokeStyle = p.spColor;
-      ctx.lineWidth = scale;
+      ctx.lineWidth = fontSize * 0.08;
       const x = charWidth;
-      const y = charHeight - scale / 2;
-      const h = charWidth / 2; // Height of the wave
+      const y = charHeight - fontSize * 0.08 / 2;
+      const h = charHeight * 0.20; // Height of the wave
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.bezierCurveTo(x / 4, y, x / 4, y - h / 2, x / 2, y - h / 2);
@@ -406,10 +406,13 @@ const redrawCmd = {
     setCharUnderCursor(args);
   },
 
-  vv_font: (font) => {
-    const [newFontFamily, newFontSize] = font.split(':h');
+  vv_fontfamily: (newFontFamily) => {
     fontFamily = newFontFamily;
-    fontSize = (parseInt(newFontSize, 10) || 12) * scale;
+    measureCharSize();
+  },
+
+  vv_fontsize: (newFontSize) => {
+    fontSize = parseInt(newFontSize, 10) * scale;
     measureCharSize();
   },
 
