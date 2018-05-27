@@ -7,7 +7,7 @@ const createMenu = require('./menu');
 const windows = [];
 
 const isDev = (dev = true, notDev = false) =>
-  (process.env.ELECTRON_ENV === 'development' ? dev : notDev);
+  (process.env.NODE_ENV === 'development' ? dev : notDev);
 
 const cliArgs = args => (args || process.argv).slice(isDev(2, 1));
 
@@ -29,14 +29,14 @@ const createWindow = (args = [], cwd) => {
   win.args = args;
   win.env = process.env;
   win.cwd = cwd;
-  win.resourcesPath = path.join(app.getAppPath(), isDev('', '../'));
+  win.resourcesPath = path.join(app.getAppPath(), isDev('./', '../'));
 
   // win.maximize();
   win.show();
 
   win.loadURL(isDev(
     'http://localhost:3000',
-    `file://${path.join(__dirname, '../build/index.html')}`,
+    `file://${path.join(__dirname, './index.html')}`,
   ));
 
   win.on('closed', async () => {

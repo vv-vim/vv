@@ -1,4 +1,4 @@
-const { Menu } = require('electron');
+import { Menu } from 'electron';
 
 const createMenu = ({ createWindow, openDeveloperTools, selectAll }) => {
   const menuTemplate = [
@@ -50,12 +50,7 @@ const createMenu = ({ createWindow, openDeveloperTools, selectAll }) => {
     },
     {
       role: 'window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        { type: 'separator' },
-        { role: 'front' },
-      ],
+      submenu: [{ role: 'minimize' }, { type: 'separator' }, { role: 'front' }],
     },
   ];
   const menu = Menu.buildFromTemplate(menuTemplate);

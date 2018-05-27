@@ -81,7 +81,6 @@ const handleNotification = async (method, args) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (screen[cmd]) {
-        // console.log(cmd, props);
         screen[cmd](...props);
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
@@ -139,6 +138,7 @@ const initNvim = async () => {
   await nvim.command('VVsettings');
 
   [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
+
   await nvim.uiAttach(cols, rows, {});
 
   const {

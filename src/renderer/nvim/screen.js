@@ -272,8 +272,8 @@ const refreshCursor = () => {
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
   put: (...props) => {
-    for (let i = 0; i < props.length; i += 1) {
-      printChar(cursor[0], cursor[1], props[i][0]);
+    for (let ii = 0; ii < props.length; ii += 1) {
+        printChar(cursor[0], cursor[1], props[ii][0]);
       cursor[1] += 1;
       refreshCursor();
     }
