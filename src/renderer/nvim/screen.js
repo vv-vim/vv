@@ -141,9 +141,9 @@ const getCharBitmap = (char, props = {}) => {
   const key = [char, ...Object.values(p)].join('-');
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
-    c.width = charWidth;
+    c.width = charWidth * 2;
     c.height = charHeight;
-    const ctx = c.getContext('2d', { alpha: false });
+    const ctx = c.getContext('2d', { alpha: true });
     ctx.fillStyle = p.bgColor;
     ctx.fillRect(0, 0, charWidth, charHeight);
     ctx.fillStyle = p.fgColor;
@@ -186,11 +186,11 @@ const printChar = (i, j, char) => {
     getCharBitmap(char),
     0,
     0,
-    charWidth,
+    charWidth * 2,
     charHeight,
     j * charWidth,
     i * charHeight,
-    charWidth,
+    charWidth * 2,
     charHeight,
   );
 };
@@ -272,11 +272,11 @@ const refreshCursor = () => {
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
   put: (...props) => {
-    for (let ii = 0; ii < props.length; ii += 1) {
-        printChar(cursor[0], cursor[1], props[ii][0]);
-      cursor[1] += 1;
-      refreshCursor();
+    for (let i = props.length - 1; i >= 0; i -= 1) {
+      printChar(cursor[0], cursor[1] + i, props[i][0]);
     }
+    cursor[1] += props.length;
+    refreshCursor();
   },
 
   cursor_goto: (newCursor) => {
