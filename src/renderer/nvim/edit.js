@@ -5,7 +5,7 @@ const handlePaste = async (event) => {
   event.stopPropagation();
   const clipboardText = event.clipboardData
     .getData('text')
-    .replace('<', '<lt>');
+    .replace(/</g, '<lt>');
   const { mode } = await nvim.mode;
   // :help mode
   if (mode === 'i') {
