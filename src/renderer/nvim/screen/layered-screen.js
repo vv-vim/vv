@@ -7,9 +7,12 @@ let cursorCanvasEl;
 let cursorContext;
 let cursor;
 
-let screenEl;
-let screenCanvasEl;
-let screenContext;
+let oddEl;
+let oddCanvasEl;
+let oddContext;
+let evenEl;
+let evenCanvasEl;
+let evenContext;
 
 let bgEl;
 let bgCanvasEl;
@@ -77,25 +80,33 @@ let bufferCanvasEl;
 let bufferContext;
 
 const initScreen = (containerEl) => {
-  screenEl = document.createElement('div');
+  oddEl = document.createElement('div');
 
-  screenEl.style.contain = 'strict';
-  screenEl.style.overflow = 'hidden';
-  screenEl.style.position = 'absolute';
-  screenEl.style.zIndex = 200;
+  oddEl.style.contain = 'strict';
+  oddEl.style.overflow = 'hidden';
+  oddEl.style.position = 'absolute';
+  oddEl.style.zIndex = 200;
 
-  screenCanvasEl = document.createElement('canvas');
+  evenEl = oddEl.cloneNode(true);
 
-  screenCanvasEl.style.position = 'absolute';
-  screenCanvasEl.style.top = 0;
-  screenCanvasEl.style.left = 0;
+  oddCanvasEl = document.createElement('canvas');
 
-  screenContext = screenCanvasEl.getContext('2d', { alpha: true });
+  oddCanvasEl.style.position = 'absolute';
+  oddCanvasEl.style.top = 0;
+  oddCanvasEl.style.left = 0;
 
-  screenEl.appendChild(screenCanvasEl);
-  containerEl.appendChild(screenEl);
+  evenCanvasEl = oddCanvasEl.cloneNode(true);
 
+  oddContext = oddCanvasEl.getContext('2d', { alpha: true });
+  evenContext = evenCanvasEl.getContext('2d', { alpha: true });
 
+  oddEl.appendChild(oddCanvasEl);
+  evenEl.appendChild(evenCanvasEl);
+
+  containerEl.appendChild(oddEl);
+  containerEl.appendChild(evenEl);
+
+  // Buffer offscreen canvas for faster scrolling
   bufferCanvasEl = document.createElement('canvas');
   bufferContext = bufferCanvasEl.getContext('2d', { alpha: true });
 };
@@ -129,14 +140,14 @@ const measureCharSize = () => {
   char.style.position = 'absolute';
   char.style.left = '-1000px';
   char.style.top = 0;
-  screenEl.appendChild(char);
+  oddEl.appendChild(char);
 
   charWidth = char.offsetWidth + letterSpacing;
   charHeight = char.offsetHeight;
   cursorCanvasEl.width = charWidth;
   cursorCanvasEl.height = charHeight;
 
-  screenEl.removeChild(char);
+  oddEl.removeChild(char);
   charsCache = {};
 };
 
@@ -169,7 +180,7 @@ const getCharBitmap = (char, props = {}) => {
     },
     props,
   );
-  const key = [char, ...Object.values(p)].join('-');
+  const key = [char, ...Object.values(p)];
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
     c.width = charWidth * 2;
@@ -211,13 +222,14 @@ const getCharBitmap = (char, props = {}) => {
 };
 
 const printChar = (i, j, char) => {
-  screenContext.clearRect(
+  const ctx = j % 2 ? oddContext : evenContext;
+  ctx.clearRect(
     j * charWidth,
     i * charHeight,
-    charWidth,
+    charWidth * 2,
     charHeight,
   );
-  screenContext.drawImage(
+  ctx.drawImage(
     getCharBitmap(char),
     0,
     0,
@@ -334,7 +346,8 @@ const redrawCmd = {
 
   clear: () => {
     cursor = [0, 0];
-    screenContext.clearRect(0, 0, screenCanvasEl.width, screenCanvasEl.height);
+    oddContext.clearRect(0, 0, oddCanvasEl.width, oddCanvasEl.height);
+    evenContext.clearRect(0, 0, evenCanvasEl.width, evenCanvasEl.height);
     bgContext.fillStyle = defaultBgColor;
     bgContext.fillRect(0, 0, bgCanvasEl.width, bgCanvasEl.height);
   },
@@ -342,9 +355,10 @@ const redrawCmd = {
   eol_clear: () => {
     const left = cursor[1] * charWidth;
     const top = cursor[0] * charHeight;
-    const width = screenCanvasEl.width - left;
+    const width = oddCanvasEl.width - left;
     const height = charHeight;
-    screenContext.clearRect(left, top, width, height);
+    oddContext.clearRect(left, top, width, height);
+    evenContext.clearRect(left, top, width, height);
     bgContext.fillStyle = defaultBgColor;
     bgContext.fillRect(left, top, width, height);
   },
@@ -425,9 +439,14 @@ const redrawCmd = {
 
     // Copy scrolled lines
     // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
-    bufferContext.drawImage(screenCanvasEl, areaX, areaY, areaWidth, areaHeight, areaX, areaY, areaWidth, areaHeight);
-    screenContext.clearRect(areaX, areaY, areaWidth, areaHeight);
-    screenContext.drawImage(bufferCanvasEl, x, y, w, h, X, Y, w, h);
+    bufferContext.drawImage(oddCanvasEl, x, y, w, h, X, Y, w, h);
+    oddContext.clearRect(areaX, areaY, areaWidth, areaHeight);
+    oddContext.drawImage(bufferCanvasEl, areaX, areaY, areaWidth, areaHeight, areaX, areaY, areaWidth, areaHeight);
+    bufferContext.clearRect(areaX, areaY, areaWidth, areaHeight);
+
+    bufferContext.drawImage(evenCanvasEl, x, y, w, h, X, Y, w, h);
+    evenContext.clearRect(areaX, areaY, areaWidth, areaHeight);
+    evenContext.drawImage(bufferCanvasEl, areaX, areaY, areaWidth, areaHeight, areaX, areaY, areaWidth, areaHeight);
     bufferContext.clearRect(areaX, areaY, areaWidth, areaHeight);
 
     bgContext.drawImage(bgCanvasEl, x, y, w, h, X, Y, w, h);
@@ -442,17 +461,22 @@ const redrawCmd = {
     const width = cols * charWidth;
     const height = rows * charHeight;
 
-    screenEl.style.width = `${width}px`;
-    screenEl.style.height = `${height}px`;
-    screenCanvasEl.width = width;
-    screenCanvasEl.height = height;
+    oddEl.style.width = `${width}px`;
+    oddEl.style.height = `${height}px`;
+    oddCanvasEl.width = width;
+    oddCanvasEl.height = height;
+
+    evenEl.style.width = `${width}px`;
+    evenEl.style.height = `${height}px`;
+    evenCanvasEl.width = width;
+    evenCanvasEl.height = height;
 
     bgEl.style.width = `${width}px`;
     bgEl.style.height = `${height}px`;
     bgCanvasEl.width = width;
     bgCanvasEl.height = height;
     bgContext.fillStyle = bgColor();
-    bgContext.fillRect(0, 0, screenCanvasEl.width, screenCanvasEl.height);
+    bgContext.fillRect(0, 0, bgCanvasEl.width, bgCanvasEl.height);
 
     bufferCanvasEl.width = width;
     bufferCanvasEl.height = height;
