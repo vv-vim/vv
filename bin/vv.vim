@@ -5,17 +5,20 @@ set mouse=a
 map <D-w> :q<CR>
 map <D-q> :qa<CR>
 
-map <D-=> :VVset fontsize+=1<CR>
-map <D--> :VVset fontsize-=1<CR>
-map <D-0> :VVset fontsize&<CR>
-
 let g:vv_settings_synonims = {
       \  'fu': 'fullscreen',
-      \  'font': 'fontfamily'
+      \  'simplefu': 'simplefullscreen',
+      \  'sfu': 'simplefullscreen',
+      \  'font': 'fontfamily',
+      \  'line': 'lineheight',
+      \  'spacing': 'letterspacing',
+      \  'curl': 'undercurl',
+      \  'under': 'underline'
       \}
 
 let g:vv_default_settings = {
       \  'fullscreen': 0,
+      \  'simplefullscreen': 1,
       \  'bold': 1,
       \  'italic': 1,
       \  'underline': 1,

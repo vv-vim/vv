@@ -44,9 +44,15 @@ export const shiftPrefix = ({ shiftKey }) => (shiftKey ? 'S-' : '');
 
 const filterResult = result =>
   !{
-    '<D-v>': true, // Cmd+C/Cmd+V
-    '<D-c>': true,
-    '<D-a>': true,
+    '<D-c>': true, // Cmd+C
+    '<D-v>': true, // Cmd+V
+    '<D-a>': true, // Cmd+A: "Select all" menu item
+    '<D-=>': true, // Cmd+Plus: "Zoom In" menu item
+    '<D-->': true, // Cmd+-: "Zoom Out" menu item
+    '<D-0>': true, // Cmd+0: "Actual Size" menu item
+    '<D-C-f>': true, // Cmd+Ctrl+F: "Toggle Full Screen" menu item
+    '<D-m>': true, // Cmd+M: "Minimize" menu item
+    '<D-h>': true, // Cmd+H: Hide window
   }[result] && result;
 
 // https://github.com/rhysd/NyaoVim/issues/87

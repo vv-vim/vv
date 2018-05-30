@@ -5,7 +5,7 @@ import path from 'path';
 import initScreen, { screenCoords } from './screen';
 import keyboard from './keyboard';
 import mouse from './mouse';
-import edit from './edit';
+import menu from './menu';
 
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
@@ -18,6 +18,8 @@ let cols;
 let rows;
 
 let screen;
+
+let simpleFullScreen = true;
 
 const charUnderCursor = () => {
   nvim.command('VVcharUnderCursor');
@@ -41,10 +43,30 @@ const handleResize = throttle(resize, 100);
 
 const debouncedRedraw = debounce(() => resize(true), 10);
 
+const boolValue = value => !!parseInt(value, 10);
+
 const handleSet = {
   fullscreen: (value) => {
-    currentWindow.setSimpleFullScreen(!!value);
+    if (simpleFullScreen) {
+      currentWindow.setSimpleFullScreen(boolValue(value));
+    } else {
+      currentWindow.setFullScreen(boolValue(value));
+    }
     currentWindow.webContents.focus();
+  },
+  simplefullscreen: (value) => {
+    simpleFullScreen = boolValue(value);
+    if (simpleFullScreen && currentWindow.isFullScreen()) {
+      currentWindow.setFullScreen(false);
+      currentWindow.setSimpleFullScreen(true);
+      currentWindow.webContents.focus();
+    } else if (currentWindow.isSimpleFullScreen()) {
+      currentWindow.setSimpleFullScreen(false);
+      currentWindow.setFullScreenable(true);
+      currentWindow.setFullScreen(true);
+      currentWindow.webContents.focus();
+    }
+    currentWindow.setFullScreenable(!simpleFullScreen);
   },
   bold: (value) => {
     screen.vv_show_bold(value);
@@ -156,7 +178,9 @@ const initNvim = async () => {
     handlePaste,
     handleCopy,
     handleSelectAll,
-  } = edit(nvim);
+    handleToggleFullScreen,
+    handleZoom,
+  } = menu(nvim);
 
   document.addEventListener('keydown', handleKeydown);
 
@@ -168,6 +192,8 @@ const initNvim = async () => {
   document.addEventListener('paste', handlePaste);
   document.addEventListener('copy', handleCopy);
   ipcRenderer.on('selectAll', handleSelectAll);
+  ipcRenderer.on('toggleFullScreen', handleToggleFullScreen);
+  ipcRenderer.on('zoom', handleZoom);
 
   window.addEventListener('resize', handleResize);
 

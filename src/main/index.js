@@ -2,7 +2,7 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const fixPath = require('fix-path');
 
-const createMenu = require('./menu');
+import menu from './menu';
 
 const windows = [];
 
@@ -23,6 +23,7 @@ const createWindow = (args = [], cwd) => {
     width: 800,
     height: 600,
     show: false,
+    fullscreenable: false,
   });
 
   fixPath();
@@ -54,14 +55,7 @@ const createWindow = (args = [], cwd) => {
   return win;
 };
 
-const selectAll = win => () => {
-  win.webContents.send('selectAll');
-};
-
-app.on('ready', async () => {
-  const win = createWindow(cliArgs());
-  createMenu({ createWindow, openDeveloperTools, selectAll: selectAll(win) });
-});
+app.on('ready', () => menu(createWindow(cliArgs()), { createWindow }));
 
 app.on('before-quit', async () => {
   for (let i = 0; i < windows.length; i += 1) {
