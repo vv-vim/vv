@@ -1,9 +1,12 @@
 let g:vv = 1
 
-set mouse=a
+set mouse=a       " Enable all mouse events
+set title         " Turn on title
+set titlestring&  " Set default titlestring
+set icon          " Turn on icon 
 
-map <D-w> :q<CR>
-map <D-q> :qa<CR>
+map <D-w> :q<CR>  " Cmd+W to close window (TODO)
+map <D-q> :qa<CR> " Cmd+Q to exit (TODO)
 
 let g:vv_settings_synonims = {
       \  'fu': 'fullscreen',
@@ -31,7 +34,8 @@ let g:vv_default_settings = {
 
 let g:vv_settings = deepcopy(g:vv_default_settings)
 
-" :help set
+" Custom VVset command, mimic default set command (:help set) with
+" settings specified in g:vv_default_settings
 function! VVset(...)
   for arg in a:000
     call VVsetItem(arg)
@@ -132,16 +136,15 @@ function! VVSettingName(name)
   endif
 endfunction
 
-command! -nargs=* VVset :call VVset(<f-args>)
-command! -nargs=* VVse :call VVset(<f-args>)
-
 function! VVsettings()
   for key in keys(g:vv_settings)
     call rpcnotify(0, "vv:set", key, g:vv_settings[key])
   endfor
 endfunction
 
-command! -nargs=0 VVsettings :call VVsettings()
+command! -nargs=* VVset :call VVset(<f-args>)
+command! -nargs=* VVse :call VVset(<f-args>)
+command! -nargs=0 VVsettings :call VVsettings() " Send all settings to client
 
 " Notify client about char under cursor and it's style (bold, italic,
 " underline, undercurl)
@@ -158,4 +161,8 @@ endfunction
 
 command! -nargs=0 VVcharUnderCursor :call VVcharUnderCursor()
 
+" Send current file name to client
+autocmd BufEnter * call rpcnotify(0, "vv:filename", expand('%:p'))
+
+" Load default init.vim (TODO)
 source ~/.config/nvim/init.vim

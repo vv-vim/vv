@@ -1,6 +1,7 @@
 import throttle from 'lodash/throttle';
 import debounce from 'lodash/debounce';
 import path from 'path';
+import fs from 'fs';
 
 import initScreen, { screenCoords } from './screen';
 import keyboard from './keyboard';
@@ -26,6 +27,17 @@ const charUnderCursor = () => {
 };
 
 const debouncedCharUnderCursor = debounce(charUnderCursor, 10);
+
+const setTitle = (title) => {
+  currentWindow.setTitle(title);
+};
+
+const setFilename = (filename) => {
+  if (fs.existsSync(filename)) {
+    currentWindow.setRepresentedFilename(filename);
+  }
+};
+
 
 const resize = (forceRedraw = false) => {
   const [newCols, newRows] = screenCoords(
@@ -110,6 +122,9 @@ const handleNotification = async (method, args) => {
       if (cmd === 'cursor_goto' || cmd === 'put') {
         debouncedCharUnderCursor();
       }
+      if (cmd === 'set_title') {
+        setTitle(props[0][0]);
+      }
     }
   } else if (method === 'vv:set') {
     const [option, ...props] = args;
@@ -118,6 +133,8 @@ const handleNotification = async (method, args) => {
     }
   } else if (method === 'vv:char_under_cursor') {
     screen.vv_char_under_cursor(...args);
+  } else if (method === 'vv:filename') {
+    setFilename(args[0]);
   } else {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
@@ -156,12 +173,18 @@ const initNvim = async () => {
 
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:char_under_cursor');
+  nvim.subscribe('vv:filename');
 
   await nvim.command('VVsettings');
 
   [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
 
   await nvim.uiAttach(cols, rows, {});
+  nvim.command('doautocmd <nomodeline> GUIEnter');
+
+  // title and filename don't fire on startup, doing it manually
+  nvim.command('set title');
+  nvim.command('call rpcnotify(0, "vv:filename", expand("%:p"))');
 
   const {
     handleMousedown,

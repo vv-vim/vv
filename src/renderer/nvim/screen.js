@@ -444,6 +444,8 @@ const redrawCmd = {
 
   mouse_on: () => {},
   mouse_off: () => {},
+  set_title: () => {},
+  set_icon: () => {},
 
   // VV specific commands
   vv_char_under_cursor: (args) => {
