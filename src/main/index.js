@@ -1,6 +1,6 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const fixPath = require('fix-path');
+import { app, BrowserWindow } from 'electron';
+import path from 'path';
+import fixPath from 'fix-path';
 
 import menu from './menu';
 
@@ -31,6 +31,7 @@ const createWindow = (args = [], cwd) => {
   win.env = process.env;
   win.cwd = cwd;
   win.resourcesPath = path.join(app.getAppPath(), isDev('./', '../'));
+  win.zoomLevel = 0;
 
   // win.maximize();
   win.show();
@@ -55,7 +56,10 @@ const createWindow = (args = [], cwd) => {
   return win;
 };
 
-app.on('ready', () => menu(createWindow(cliArgs()), { createWindow }));
+app.on('ready', () => {
+  createWindow(cliArgs());
+  menu({ createWindow });
+});
 
 app.on('before-quit', async () => {
   for (let i = 0; i < windows.length; i += 1) {

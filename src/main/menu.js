@@ -1,41 +1,38 @@
 import { Menu } from 'electron';
 
-let win;
-let zoomLevel = 0;
 let actualSizeItem;
 
-const selectAll = () => {
+const selectAll = (item, win) => {
   win.webContents.send('selectAll');
 };
 
-const toggleFullScreen = () => {
+const toggleFullScreen = (item, win) => {
   win.webContents.send('toggleFullScreen');
 };
 
-const disableActualSizeItem = () => {
-  actualSizeItem.enabled = zoomLevel !== 0;
+const disableActualSizeItem = (win) => {
+  actualSizeItem.enabled = win.zoomLevel !== 0;
 };
 
-const zoomIn = () => {
-  zoomLevel += 1;
+const zoomIn = (item, win) => {
+  win.zoomLevel += 1; // eslint-disable-line no-param-reassign
   win.webContents.send('zoom', 1);
-  disableActualSizeItem();
+  disableActualSizeItem(win);
 };
 
-const zoomOut = () => {
-  zoomLevel -= 1;
+const zoomOut = (item, win) => {
+  win.zoomLevel -= 1; // eslint-disable-line no-param-reassign
   win.webContents.send('zoom', -1);
-  disableActualSizeItem();
+  disableActualSizeItem(win);
 };
 
-const actualSize = () => {
-  win.webContents.send('zoom', -zoomLevel);
-  zoomLevel = 0;
-  disableActualSizeItem();
+const actualSize = (item, win) => {
+  win.webContents.send('zoom', -win.zoomLevel);
+  win.zoomLevel = 0; // eslint-disable-line no-param-reassign
+  disableActualSizeItem(win);
 };
 
-const createMenu = (newWin, { createWindow }) => {
-  win = newWin;
+const createMenu = ({ createWindow }) => {
   const menuTemplate = [
     {
       label: 'VV',
