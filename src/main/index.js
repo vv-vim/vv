@@ -86,7 +86,7 @@ app.on('before-quit', (e) => {
   if (windows.length > 0) {
     e.preventDefault();
     shouldQuit = true;
-    (currentWindow || windows[0]).close();
+    (currentWindow || windows[0]).webContents.send('quit');
   }
 });
 

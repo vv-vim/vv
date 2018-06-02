@@ -183,10 +183,6 @@ const handleClose = (e) => {
   }
 };
 
-const handleQuit = () => {
-  window.close();
-};
-
 const initNvim = async () => {
   screen = initScreen('screen');
 
@@ -265,7 +261,7 @@ const initNvim = async () => {
   ipcRenderer.on('selectAll', handleSelectAll);
   ipcRenderer.on('toggleFullScreen', handleToggleFullScreen);
   ipcRenderer.on('zoom', handleZoom);
-  ipcRenderer.on('quit', handleQuit);
+  ipcRenderer.on('quit', handleClose);
 
   window.addEventListener('resize', handleResize);
 
