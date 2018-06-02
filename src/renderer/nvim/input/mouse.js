@@ -1,5 +1,5 @@
 import throttle from 'lodash/throttle';
-import { screenCoords } from './screen';
+import { screenCoords } from './../screen';
 import { modifierPrefix, shiftPrefix } from './keyboard';
 
 let nvim;
@@ -97,14 +97,12 @@ const mousemove = (event) => {
 
 const handleMousemove = throttle(mousemove, 10);
 
-const mouse = (newNvim) => {
+const initMouse = (newNvim) => {
   nvim = newNvim;
-  return {
-    handleMousedown,
-    handleMouseup,
-    handleMousemove,
-    handleMousewheel,
-  };
+  document.addEventListener('mousedown', handleMousedown);
+  document.addEventListener('mouseup', handleMouseup);
+  document.addEventListener('mousemove', handleMousemove);
+  document.addEventListener('wheel', handleMousewheel);
 };
 
-export default mouse;
+export default initMouse;

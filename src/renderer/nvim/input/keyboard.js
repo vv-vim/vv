@@ -91,11 +91,9 @@ const handleKeydown = (event) => {
   if (key) nvim.input(key);
 };
 
-const keyboard = (newNvim) => {
+const initKeyboard = (newNvim) => {
   nvim = newNvim;
-  return {
-    handleKeydown,
-  };
+  document.addEventListener('keydown', handleKeydown);
 };
 
-export default keyboard;
+export default initKeyboard;

@@ -1,3 +1,4 @@
+const { ipcRenderer } = global.require('electron');
 let nvim;
 
 const handlePaste = async (event) => {
@@ -34,23 +35,11 @@ const handleSelectAll = () => {
   nvim.input('ggVG');
 };
 
-const handleToggleFullScreen = () => {
-  nvim.command('VVset fullscreen!');
-};
-
-const handleZoom = (sender, level) => {
-  nvim.command(`VVset fontsize${level > 0 ? '+' : '-'}=${Math.abs(level)}`);
-};
-
-const edit = (newNvim) => {
+const initCopyPaste = (newNvim) => {
   nvim = newNvim;
-  return {
-    handleCopy,
-    handlePaste,
-    handleSelectAll,
-    handleToggleFullScreen,
-    handleZoom,
-  };
+  document.addEventListener('copy', handleCopy);
+  document.addEventListener('paste', handlePaste);
+  ipcRenderer.on('selectAll', handleSelectAll);
 };
 
-export default edit;
+export default initCopyPaste;
