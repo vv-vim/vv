@@ -196,7 +196,7 @@ const initNvim = async () => {
 
   const nvimProcess = spawn(
     'nvim',
-    ['--embed', '-u', path.join(resourcesPath, 'bin/vv.vim'), ...args],
+    ['--embed', '--cmd', `source ${path.join(resourcesPath, 'bin/vv.vim')}`, ...args],
     {
       stdio: ['pipe', 'pipe', process.stderr],
       env,
@@ -216,6 +216,12 @@ const initNvim = async () => {
   nvim.subscribe('vv:char_under_cursor');
   nvim.subscribe('vv:filename');
   nvim.subscribe('vv:unsaved_buffers');
+
+  const uFlagIndex = args.indexOf('-u');
+  if (uFlagIndex !== -1 && args[uFlagIndex + 1] === 'NONE') {
+    await nvim.command('hi Normal guifg=black guibg=white');
+    await nvim.command(`source ${path.join(resourcesPath, 'bin/vv.vim')}`);
+  }
 
   await nvim.command('VVsettings');
 
@@ -262,8 +268,6 @@ const initNvim = async () => {
   ipcRenderer.on('quit', handleQuit);
 
   window.addEventListener('resize', handleResize);
-
-  window.nvim = nvim;
 
   window.addEventListener('beforeunload', handleClose);
 };

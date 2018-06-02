@@ -171,6 +171,3 @@ function! VVunsavedBuffers()
   call rpcnotify(0, "vv:unsaved_buffers", l:buffers)
 endfunction
 command! -nargs=0 VVunsavedBuffers :call VVunsavedBuffers()
-
-" Load default init.vim (TODO)
-source ~/.config/nvim/init.vim
