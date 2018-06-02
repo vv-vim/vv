@@ -49,7 +49,7 @@ const calculateScroll = (event) => {
   scrollX = Math.floor(scrollX / SCROLL_STEP_X);
   scrollY = Math.floor(scrollY / SCROLL_STEP_Y);
 
-  if (scrollY === 0 && scrollY === 0) return;
+  if (scrollY === 0 && scrollX === 0) return;
 
   if (scrollY !== 0) {
     mouseInput(event, `ScrollWheel${scrollDeltaY > 0 ? 'Down' : 'Up'}`);
