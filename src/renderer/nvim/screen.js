@@ -428,6 +428,7 @@ const redrawCmd = {
     canvasEl.height = rows * charHeight;
     context.fillStyle = bgColor();
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    scrollRect = [0, rows - 1, 0, cols - 1];
   },
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L75

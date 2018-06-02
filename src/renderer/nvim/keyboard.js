@@ -53,6 +53,7 @@ const filterResult = result =>
     '<D-C-f>': true, // Cmd+Ctrl+F: "Toggle Full Screen" menu item
     '<D-m>': true, // Cmd+M: "Minimize" menu item
     '<D-h>': true, // Cmd+H: Hide window
+    '<D-q>': true, // Cmd+Q: Quit
   }[result] && result;
 
 // https://github.com/rhysd/NyaoVim/issues/87

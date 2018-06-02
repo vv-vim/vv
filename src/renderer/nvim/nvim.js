@@ -10,17 +10,16 @@ import menu from './menu';
 
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
-const { remote, ipcRenderer } = global.require('electron');
+const { remote: { getCurrentWindow, dialog }, ipcRenderer } = global.require('electron');
 
-const currentWindow = remote.getCurrentWindow();
-
+const currentWindow = getCurrentWindow();
 let nvim;
 let cols;
 let rows;
-
 let screen;
-
 let simpleFullScreen = true;
+let unsavedBuffers = [];
+let shouldClose = false;
 
 const charUnderCursor = () => {
   nvim.command('VVcharUnderCursor');
@@ -135,15 +134,57 @@ const handleNotification = async (method, args) => {
     screen.vv_char_under_cursor(...args);
   } else if (method === 'vv:filename') {
     setFilename(args[0]);
+  } else if (method === 'vv:unsaved_buffers') {
+    [unsavedBuffers] = args;
   } else {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
 };
 
-const closeWindow = async () => {
+const handleDisconnect = async () => {
   await currentWindow.hide();
   await currentWindow.setSimpleFullScreen(false);
+  unsavedBuffers = [];
+  shouldClose = true;
   currentWindow.close();
+};
+
+const showCloseDialog = async () => {
+  await nvim.command('VVunsavedBuffers');
+  if (unsavedBuffers.length === 0) {
+    nvim.command('qa');
+  } else {
+    const response = dialog.showMessageBox(
+      currentWindow,
+      {
+        message: `You have ${unsavedBuffers.length} unsaved buffers. Do you want to save them?`,
+        detail: `${unsavedBuffers.map(b => b.name).join('\n')}\n`,
+        cancelId: 2,
+        defaultId: 0,
+        buttons: ['Save All', 'Discard All', 'Cancel'],
+      },
+    );
+    if (response === 0) {
+      await nvim.command('xa'); // Save All
+    } else if (response === 1) {
+      await nvim.command('qa!'); // Discard All
+    }
+    await nvim.command('VVunsavedBuffers');
+    if (unsavedBuffers.length !== 0) {
+      ipcRenderer.send('cancel-quit');
+    }
+  }
+};
+
+const handleClose = (e) => {
+  if (!shouldClose) {
+    showCloseDialog();
+    e.returnValue = false;
+  }
+};
+
+const handleQuit = () => {
+  window.close();
 };
 
 const initNvim = async () => {
@@ -169,11 +210,12 @@ const initNvim = async () => {
     handleNotification(method, args);
   });
 
-  nvim.on('disconnect', closeWindow);
+  nvim.on('disconnect', handleDisconnect);
 
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:char_under_cursor');
   nvim.subscribe('vv:filename');
+  nvim.subscribe('vv:unsaved_buffers');
 
   await nvim.command('VVsettings');
 
@@ -217,10 +259,13 @@ const initNvim = async () => {
   ipcRenderer.on('selectAll', handleSelectAll);
   ipcRenderer.on('toggleFullScreen', handleToggleFullScreen);
   ipcRenderer.on('zoom', handleZoom);
+  ipcRenderer.on('quit', handleQuit);
 
   window.addEventListener('resize', handleResize);
 
   window.nvim = nvim;
+
+  window.addEventListener('beforeunload', handleClose);
 };
 
 document.addEventListener('DOMContentLoaded', initNvim);

@@ -6,7 +6,6 @@ set titlestring&  " Set default titlestring
 set icon          " Turn on icon 
 
 map <D-w> :q<CR>  " Cmd+W to close window (TODO)
-map <D-q> :qa<CR> " Cmd+Q to exit (TODO)
 
 let g:vv_settings_synonims = {
       \  'fu': 'fullscreen',
@@ -163,6 +162,15 @@ command! -nargs=0 VVcharUnderCursor :call VVcharUnderCursor()
 
 " Send current file name to client
 autocmd BufEnter * call rpcnotify(0, "vv:filename", expand('%:p'))
+
+" Send unsaved buffers to client
+function! VVunsavedBuffers()
+  let l:buffers = getbufinfo()
+  call filter(l:buffers, "v:val['changed'] == 1")
+  let l:buffers = map(l:buffers , "{ 'name': v:val['name'] }" )
+  call rpcnotify(0, "vv:unsaved_buffers", l:buffers)
+endfunction
+command! -nargs=0 VVunsavedBuffers :call VVunsavedBuffers()
 
 " Load default init.vim (TODO)
 source ~/.config/nvim/init.vim

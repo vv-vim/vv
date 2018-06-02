@@ -1,10 +1,12 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import fixPath from 'fix-path';
 
 import menu from './menu';
 
 const windows = [];
+let currentWindow;
+let shouldQuit = false;
 
 const isDev = (dev = true, notDev = false) =>
   (process.env.NODE_ENV === 'development' ? dev : notDev);
@@ -16,6 +18,12 @@ const openDeveloperTools = (win) => {
   win.webContents.on('devtools-opened', () => {
     win.webContents.focus();
   });
+};
+
+const handleAllClosed = () => {
+  if (shouldQuit || process.platform !== 'darwin') {
+    app.quit();
+  }
 };
 
 const createWindow = (args = [], cwd) => {
@@ -42,9 +50,18 @@ const createWindow = (args = [], cwd) => {
   ));
 
   win.on('closed', async () => {
+    if (currentWindow === win) currentWindow = null;
+
     const i = windows.indexOf(win);
     if (i !== -1) windows.splice(i, 1);
     win = null;
+
+    if (shouldQuit) app.quit();
+    if (windows.length === 0) handleAllClosed();
+  });
+
+  win.on('focus', () => {
+    currentWindow = win;
   });
 
   if (isDev()) openDeveloperTools(win);
@@ -56,22 +73,24 @@ const createWindow = (args = [], cwd) => {
   return win;
 };
 
+ipcMain.on('cancel-quit', () => {
+  shouldQuit = false;
+});
+
 app.on('ready', () => {
   createWindow(cliArgs());
   menu({ createWindow });
 });
 
-app.on('before-quit', async () => {
-  for (let i = 0; i < windows.length; i += 1) {
-    await windows[i].close(); // eslint-disable-line no-await-in-loop
+app.on('before-quit', (e) => {
+  if (windows.length > 0) {
+    e.preventDefault();
+    shouldQuit = true;
+    (currentWindow || windows[0]).close();
   }
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+app.on('window-all-closed', handleAllClosed);
 
 app.on('activate', async () => {
   if (windows.length === 0) {
@@ -80,11 +99,11 @@ app.on('activate', async () => {
 });
 
 if (!isDev()) {
-  const shouldQuit = app.makeSingleInstance((args, cwd) => {
+  const doQuit = app.makeSingleInstance((args, cwd) => {
     createWindow(cliArgs(args), cwd);
   });
 
-  if (shouldQuit) {
+  if (doQuit) {
     app.quit();
   }
 }
