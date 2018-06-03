@@ -10,6 +10,7 @@ import initCopyPaste from './features/copyPaste';
 import initFullScreen from './features/fullScreen';
 import initZoom from './features/zoom';
 import initWindowTitle from './features/windowTitle';
+import reloadChanged from './features/reloadChanged';
 
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
@@ -95,7 +96,7 @@ const handleNotification = async (method, args) => {
     }
   } else if (method === 'vv:char_under_cursor') {
     screen.vv_char_under_cursor(...args);
-  } else if (!['vv:unsaved_buffers', 'vv:filename'].includes(method)) {
+  } else if (!['vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)) {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
 };
@@ -138,6 +139,15 @@ const initNvim = async () => {
 
   await fixNoConfig(args, vvSourceCommand);
 
+  initFullScreen(nvim);
+  initZoom(nvim);
+  initKeyboard(nvim);
+  initMouse(nvim);
+  initQuit(nvim);
+  initCopyPaste(nvim);
+  initWindowTitle(nvim);
+  reloadChanged(nvim);
+
   await nvim.command('VVsettings');
 
   [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
@@ -146,14 +156,6 @@ const initNvim = async () => {
   nvim.command('doautocmd <nomodeline> GUIEnter');
 
   window.addEventListener('resize', handleResize);
-
-  initFullScreen(nvim);
-  initZoom(nvim);
-  initKeyboard(nvim);
-  initMouse(nvim);
-  initQuit(nvim);
-  initCopyPaste(nvim);
-  initWindowTitle(nvim);
 };
 
 document.addEventListener('DOMContentLoaded', initNvim);

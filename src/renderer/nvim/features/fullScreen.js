@@ -22,7 +22,7 @@ const handleSet = {
       currentWindow.setFullScreen(false);
       currentWindow.setSimpleFullScreen(true);
       currentWindow.webContents.focus();
-    } else if (currentWindow.isSimpleFullScreen()) {
+    } else if (!simpleFullScreen && currentWindow.isSimpleFullScreen()) {
       currentWindow.setSimpleFullScreen(false);
       currentWindow.setFullScreenable(true);
       currentWindow.setFullScreen(true);
