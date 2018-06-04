@@ -1,4 +1,5 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import fs from 'fs';
 import path from 'path';
 import fixPath from 'fix-path';
 
@@ -26,7 +27,7 @@ const handleAllClosed = () => {
   }
 };
 
-const createWindow = (args = [], cwd) => {
+const doCreateWindow = (args = [], cwd) => {
   let win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -73,13 +74,79 @@ const createWindow = (args = [], cwd) => {
   return win;
 };
 
+// Find files in args and create window with each file.
+// If file is a directory, create window in context of this directory.
+const createWindow = (args = [], cwd) => {
+  const fileArgs = [
+    '--cmd',
+    '-c',
+    '-i',
+    '-r',
+    '-s',
+    '-S',
+    '-u',
+    '--startuptime',
+  ];
+  let fileNames = [];
+  const filesSeparator = args.indexOf('--');
+  if (filesSeparator !== -1) {
+    fileNames = args.splice(filesSeparator).splice(1);
+  } else {
+    for (let i = args.length - 1; i >= 0; i -= 1) {
+      if (
+        ['-', '+'].includes(args[i][0]) ||
+        (args[i - 1] && fileArgs.includes(args[i - 1]))
+      ) {
+        break;
+      }
+      fileNames.push(args.pop());
+    }
+  }
+  if (fileNames.length > 0) {
+    for (let i = 0; i < fileNames.length; i += 1) {
+      app.addRecentDocument(fileNames[i]);
+      if (fs.existsSync(fileNames[i]) && fs.lstatSync(fileNames[i]).isDirectory()) {
+        doCreateWindow(args, fileNames[i]);
+      } else {
+        doCreateWindow([...args, '--', fileNames[i]], cwd);
+      }
+    }
+  } else {
+    doCreateWindow(args, cwd);
+  }
+};
+
+const openFile = () => {
+  dialog.showOpenDialog(
+    {
+      properties: [
+        'openFile',
+        'openDirectory',
+        'createDirectory',
+        'multiSelections',
+      ],
+    },
+    (filePaths) => {
+      for (let i = 0; i < filePaths.length; i += 1) {
+        createWindow([filePaths[i]]);
+      }
+    },
+  );
+};
+
+app.on('will-finish-launching', () => {
+  app.on('open-file', (e, path) => {
+    createWindow([path]);
+  });
+});
+
 ipcMain.on('cancel-quit', () => {
   shouldQuit = false;
 });
 
 app.on('ready', () => {
   createWindow(cliArgs());
-  menu({ createWindow });
+  menu({ createWindow, openFile });
 });
 
 app.on('before-quit', (e) => {

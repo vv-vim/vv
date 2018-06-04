@@ -54,6 +54,7 @@ const filterResult = result =>
     '<D-m>': true, // Cmd+M: "Minimize" menu item
     '<D-h>': true, // Cmd+H: Hide window
     '<D-q>': true, // Cmd+Q: Quit
+    '<D-o>': true, // Cmd+O: Open file
   }[result] && result;
 
 // https://github.com/rhysd/NyaoVim/issues/87

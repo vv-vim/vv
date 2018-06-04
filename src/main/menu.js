@@ -32,7 +32,7 @@ const actualSize = (item, win) => {
   disableActualSizeItem(win);
 };
 
-const createMenu = ({ createWindow }) => {
+const createMenu = ({ createWindow, openFile }) => {
   const menuTemplate = [
     {
       label: 'VV',
@@ -55,6 +55,19 @@ const createMenu = ({ createWindow }) => {
           label: 'New Window',
           accelerator: 'CmdOrCtrl+N',
           click: () => createWindow(),
+        },
+        {
+          label: 'Open...',
+          accelerator: 'CmdOrCtrl+O',
+          click: openFile,
+        },
+        {
+          role: 'recentdocuments',
+          submenu: [
+            {
+              role: 'clearrecentdocuments',
+            },
+          ],
         },
       ],
     },
