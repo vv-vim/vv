@@ -112,6 +112,7 @@ const createWindow = (args = [], cwd) => {
       }
     }
   } else {
+    app.addRecentDocument(cwd || process.cwd());
     doCreateWindow(args, cwd);
   }
 };
