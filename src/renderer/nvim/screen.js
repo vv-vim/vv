@@ -227,19 +227,13 @@ const printPrevChar = (i, j) => {
   }
 };
 
-const getColorString = (rgb) => {
-  if (!rgb) {
-    return null;
+const getColor = (c) => {
+  if (!c) return null;
+  if (!colorsCache[c]) {
+    // eslint-disable-next-line no-bitwise
+    colorsCache[c] = `rgb(${[c >> 16, c >> 8, c].map(c => c & 0xFF).join(',')})`;
   }
-  if (!colorsCache[rgb]) {
-    const bgr = [];
-    for (let i = 0; i < 3; i += 1) {
-      bgr.push(rgb & 0xff); // eslint-disable-line no-bitwise
-      rgb >>= 8; // eslint-disable-line no-param-reassign, no-bitwise
-    }
-    colorsCache[rgb] = `rgb(${bgr[2]},${bgr[1]},${bgr[0]})`;
-  }
-  return colorsCache[rgb];
+  return colorsCache[c];
 };
 
 const redrawCursor = () => {
@@ -357,9 +351,9 @@ const redrawCmd = {
         },
       ] = props[i];
       reverseColor = reverse;
-      hiFgColor = getColorString(foreground);
-      hiBgColor = getColorString(background);
-      hiSpColor = getColorString(special);
+      hiFgColor = getColor(foreground);
+      hiBgColor = getColor(background);
+      hiSpColor = getColor(special);
       hiItalic = showItalic && italic;
       hiBold = showBold && bold;
       hiUnderline = showUnderline && underline;
@@ -367,17 +361,17 @@ const redrawCmd = {
     }
   },
 
-  update_bg: (color) => {
-    defaultBgColor = getColorString(color);
+  update_bg: ([color]) => {
+    defaultBgColor = getColor(color);
     body.style.background = defaultBgColor;
   },
 
-  update_fg: (color) => {
-    defaultFgColor = getColorString(color);
+  update_fg: ([color]) => {
+    defaultFgColor = getColor(color);
   },
 
-  update_sp: (color) => {
-    defaultSpColor = getColorString(color);
+  update_sp: ([color]) => {
+    defaultSpColor = getColor(color);
   },
 
   set_scroll_region: (rect) => {
