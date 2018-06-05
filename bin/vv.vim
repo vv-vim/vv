@@ -193,6 +193,7 @@ endfunction
 function! VVchecktimeAll()
   let l:current_buffer = bufnr("%")
   let l:buffers = getbufinfo()
+  call filter(l:buffers, "v:val['loaded'] == 1")
   for buf in l:buffers
     execute "buffer" buf['bufnr']
     execute "checktime"
