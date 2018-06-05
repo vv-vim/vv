@@ -132,6 +132,10 @@ const initNvim = async () => {
 
   nvim = await attach({ proc: nvimProcess });
 
+  // Send null to reanimate nvim on startup files errors.
+  // Still need to find the way to get errors correctly.
+  nvim.input('<Nul>');
+
   nvim.on('notification', handleNotification);
 
   nvim.subscribe('vv:set');
