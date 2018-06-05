@@ -4,6 +4,7 @@ import path from 'path';
 import fixPath from 'fix-path';
 
 import menu from './menu';
+import installCli from './installCli';
 
 const windows = [];
 let currentWindow;
@@ -147,7 +148,11 @@ ipcMain.on('cancel-quit', () => {
 
 app.on('ready', () => {
   createWindow(cliArgs());
-  menu({ createWindow, openFile });
+  menu({
+    createWindow,
+    openFile,
+    installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
+  });
 });
 
 app.on('before-quit', (e) => {

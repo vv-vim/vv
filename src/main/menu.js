@@ -32,12 +32,16 @@ const actualSize = (item, win) => {
   disableActualSizeItem(win);
 };
 
-const createMenu = ({ createWindow, openFile }) => {
+const createMenu = ({ createWindow, openFile, installCli }) => {
   const menuTemplate = [
     {
       label: 'VV',
       submenu: [
         { role: 'about' },
+        {
+          label: 'Command Line Launcher...',
+          click: installCli,
+        },
         { type: 'separator' },
         { role: 'services', submenu: [] },
         { type: 'separator' },
