@@ -29,12 +29,19 @@ const handleAllClosed = () => {
 };
 
 const doCreateWindow = (args = [], cwd) => {
-  let win = new BrowserWindow({
+  const options = {
     width: 800,
     height: 600,
     show: false,
     fullscreenable: false,
-  });
+  };
+  if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
+    const [x, y] = currentWindow.getPosition();
+    options.x = x + 20;
+    options.y = y + 20;
+    [options.width, options.height] = currentWindow.getSize();
+  }
+  let win = new BrowserWindow(options);
 
   fixPath();
   win.args = args;
@@ -43,8 +50,8 @@ const doCreateWindow = (args = [], cwd) => {
   win.resourcesPath = path.join(app.getAppPath(), isDev('./', '../'));
   win.zoomLevel = 0;
 
-  // win.maximize();
-  win.show();
+  // TODO: pass windowTop, windowLeft from current window
+  if (currentWindow) win.noResize = true;
 
   win.loadURL(isDev(
     'http://localhost:3000',
@@ -86,6 +93,8 @@ const createWindow = (args = [], cwd) => {
     '-s',
     '-S',
     '-u',
+    '-w',
+    '-W',
     '--startuptime',
   ];
   let fileNames = [];

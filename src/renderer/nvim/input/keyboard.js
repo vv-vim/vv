@@ -55,6 +55,7 @@ const filterResult = result =>
     '<D-h>': true, // Cmd+H: Hide window
     '<D-q>': true, // Cmd+Q: Quit
     '<D-o>': true, // Cmd+O: Open file
+    '<D-n>': true, // Cmd+N: New window
   }[result] && result;
 
 // https://github.com/rhysd/NyaoVim/issues/87

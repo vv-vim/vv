@@ -18,7 +18,11 @@ let g:vv_settings_synonims = {
       \  'curl': 'undercurl',
       \  'under': 'underline',
       \  'rchanged': 'reloadchanged',
-      \  'rch': 'reloadchanged'
+      \  'rch': 'reloadchanged',
+      \  'width': 'windowwidth',
+      \  'height': 'windowheight',
+      \  'top': 'windowtop',
+      \  'left': 'windowleft'
       \}
 
 let g:vv_default_settings = {
@@ -32,7 +36,11 @@ let g:vv_default_settings = {
       \  'fontsize': 12,
       \  'lineheight': 1.25,
       \  'letterspacing': 0,
-      \  'reloadchanged': 1
+      \  'reloadchanged': 1,
+      \  'windowwidth': '60%',
+      \  'windowheight': '80%',
+      \  'windowleft': '50%',
+      \  'windowtop': '50%'
       \}
 
 let g:vv_settings = deepcopy(g:vv_default_settings)

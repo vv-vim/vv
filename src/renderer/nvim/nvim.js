@@ -14,13 +14,21 @@ import reloadChanged from './features/reloadChanged';
 
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
-const { remote: { getCurrentWindow } } = global.require('electron');
+const {
+  remote: { getCurrentWindow },
+  screen: { getPrimaryDisplay },
+} = global.require('electron');
 
 const currentWindow = getCurrentWindow();
 let nvim;
 let cols;
 let rows;
 let screen;
+
+let windowLeft = '50%';
+let windowTop = '50%';
+
+let noResize = false;
 
 const charUnderCursor = () => {
   nvim.command('VVcharUnderCursor');
@@ -46,6 +54,48 @@ const debouncedRedraw = debounce(() => resize(true), 10);
 
 // const boolValue = value => !!parseInt(value, 10);
 const handleSet = {
+  windowwidth: (w) => {
+    if (noResize) return;
+    let width = parseInt(w, 10);
+    if (w.toString().indexOf('%') !== -1) {
+      width = Math.round(getPrimaryDisplay().workAreaSize.width * width / 100);
+    }
+    currentWindow.setSize(width, currentWindow.getSize()[1]);
+    handleSet.windowleft(windowLeft);
+  },
+  windowheight: (h) => {
+    if (noResize) return;
+    let height = parseInt(h, 10);
+    if (h.toString().indexOf('%') !== -1) {
+      height = Math.round(getPrimaryDisplay().workAreaSize.height * height / 100);
+    }
+    currentWindow.setSize(currentWindow.getSize()[0], height);
+    handleSet.windowtop(windowTop);
+  },
+  windowleft: (l) => {
+    windowLeft = l;
+    let left = parseInt(l, 10);
+    if (l.toString().indexOf('%') !== -1) {
+      const displayWidth = getPrimaryDisplay().workAreaSize.width;
+      const winWidth = currentWindow.getSize()[0]; // eslint-disable-line prefer-destructuring
+      left = Math.round((displayWidth - winWidth) * left / 100);
+    }
+    if (noResize) return;
+    currentWindow.setPosition(left, currentWindow.getPosition()[1]);
+  },
+  windowtop: (t) => {
+    windowTop = t;
+    let top = parseInt(t, 10);
+    if (t.toString().indexOf('%') !== -1) {
+      const displayHeight = getPrimaryDisplay().workAreaSize.height;
+      const winHeight = currentWindow.getSize()[1]; // eslint-disable-line prefer-destructuring
+      top = Math.round((displayHeight - winHeight) * top / 100);
+    }
+    const topOffset = Math.round(getPrimaryDisplay().bounds.height -
+        getPrimaryDisplay().workAreaSize.height);
+    if (noResize) return;
+    currentWindow.setPosition(currentWindow.getPosition()[0], top + topOffset);
+  },
   bold: (value) => {
     screen.vv_show_bold(value);
   },
@@ -96,12 +146,15 @@ const handleNotification = async (method, args) => {
     }
   } else if (method === 'vv:char_under_cursor') {
     screen.vv_char_under_cursor(...args);
-  } else if (!['vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)) {
+  } else if (
+    !['vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)
+  ) {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
 };
 
-const vvSourceCommand = () => `source ${path.join(currentWindow.resourcesPath, 'bin/vv.vim')}`;
+const vvSourceCommand = () =>
+  `source ${path.join(currentWindow.resourcesPath, 'bin/vv.vim')}`;
 
 // Source vv specific ext and fix colors on -u NONE
 const fixNoConfig = async (args) => {
@@ -115,10 +168,9 @@ const fixNoConfig = async (args) => {
 const initNvim = async () => {
   screen = initScreen('screen');
 
-  const {
-    args, env, cwd,
-  } = currentWindow;
+  const { args, env, cwd } = currentWindow;
 
+  noResize = currentWindow.noResize;
 
   const nvimProcess = spawn(
     'nvim',
@@ -153,9 +205,10 @@ const initNvim = async () => {
   reloadChanged(nvim);
 
   await nvim.command('VVsettings');
-
+  currentWindow.show();
   [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
   await nvim.uiAttach(cols, rows, {});
+  noResize = false;
 
   nvim.command('doautocmd <nomodeline> GUIEnter');
 
