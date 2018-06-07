@@ -14,6 +14,9 @@ const handleSet = {
     } else {
       currentWindow.setFullScreen(boolValue(value));
     }
+    if (!boolValue(value)) {
+      currentWindow.webContents.send('leave-full-screen');
+    }
     currentWindow.webContents.focus();
   },
   simplefullscreen: (value) => {

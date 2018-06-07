@@ -32,7 +32,9 @@ const actualSize = (item, win) => {
   disableActualSizeItem(win);
 };
 
-const createMenu = ({ createWindow, openFile, installCli }) => {
+const createMenu = ({
+  createWindow, openFile, closeWindow, installCli,
+}) => {
   const menuTemplate = [
     {
       label: 'VV',
@@ -72,6 +74,12 @@ const createMenu = ({ createWindow, openFile, installCli }) => {
               role: 'clearrecentdocuments',
             },
           ],
+        },
+        { type: 'separator' },
+        {
+          label: 'Close',
+          accelerator: 'CmdOrCtrl+W',
+          click: closeWindow,
         },
       ],
     },

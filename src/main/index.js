@@ -115,7 +115,10 @@ const createWindow = (args = [], cwd) => {
   if (fileNames.length > 0) {
     for (let i = 0; i < fileNames.length; i += 1) {
       app.addRecentDocument(fileNames[i]);
-      if (fs.existsSync(fileNames[i]) && fs.lstatSync(fileNames[i]).isDirectory()) {
+      if (
+        fs.existsSync(fileNames[i]) &&
+        fs.lstatSync(fileNames[i]).isDirectory()
+      ) {
         doCreateWindow(args, fileNames[i]);
       } else {
         doCreateWindow([...args, '--', fileNames[i]], cwd);
@@ -145,6 +148,12 @@ const openFile = () => {
   );
 };
 
+const closeWindow = () => {
+  if (currentWindow) {
+    currentWindow.webContents.send('closeWindow');
+  }
+};
+
 app.on('will-finish-launching', () => {
   app.on('open-file', (e, path) => {
     createWindow([path]);
@@ -161,6 +170,7 @@ app.on('ready', () => {
     createWindow,
     openFile,
     installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
+    closeWindow,
   });
 });
 

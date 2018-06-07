@@ -11,12 +11,14 @@ import initFullScreen from './features/fullScreen';
 import initZoom from './features/zoom';
 import initWindowTitle from './features/windowTitle';
 import reloadChanged from './features/reloadChanged';
+import closeWindow from './features/closeWindow';
 
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
 const {
   remote: { getCurrentWindow },
   screen: { getPrimaryDisplay },
+  ipcRenderer,
 } = global.require('electron');
 
 const currentWindow = getCurrentWindow();
@@ -25,10 +27,15 @@ let cols;
 let rows;
 let screen;
 
-let windowLeft = '50%';
-let windowTop = '50%';
+let windowLeftOriginal = '50%';
+let windowTopOriginal = '50%';
+let windowLeft = 0;
+let windowTop = 0;
+let windowWidth = currentWindow.getSize()[0]; // eslint-disable-line prefer-destructuring
+let windowHeight = currentWindow.getSize()[1]; // eslint-disable-line prefer-destructuring
 
 let noResize = false;
+let uiAttached = false;
 
 const charUnderCursor = () => {
   nvim.command('VVcharUnderCursor');
@@ -36,21 +43,57 @@ const charUnderCursor = () => {
 
 const debouncedCharUnderCursor = debounce(charUnderCursor, 10);
 
-const resize = (forceRedraw = false) => {
+const resize = async (forceRedraw = false) => {
   const [newCols, newRows] = screenCoords(
     window.innerWidth,
     window.innerHeight,
   );
-  if (newCols !== cols || newRows !== rows || forceRedraw) {
+  if (
+    newCols > 0 &&
+    newRows > 0 &&
+    (newCols !== cols || newRows !== rows || forceRedraw)
+  ) {
     cols = newCols;
     rows = newRows;
-    nvim.uiTryResize(cols, rows);
+    if (!uiAttached) {
+      currentWindow.show();
+      [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
+      await nvim.uiAttach(cols, rows, {});
+      noResize = false;
+      uiAttached = true;
+    } else {
+      nvim.uiTryResize(cols, rows);
+    }
   }
 };
 
-const handleResize = throttle(resize, 100);
+const handleResize = debounce(resize, 100);
 
 const debouncedRedraw = debounce(() => resize(true), 10);
+
+const updateWindowSize = () => {
+  if (
+    !currentWindow.isFullScreen() &&
+    !currentWindow.isSimpleFullScreen()
+  ) {
+    currentWindow.setSize(windowWidth, windowHeight);
+  }
+};
+
+const debouncedUpdateWindowSize = debounce(updateWindowSize, 10);
+
+const updateWindowPosition = () => {
+  if (
+    !currentWindow.isFullScreen() &&
+    !currentWindow.isSimpleFullScreen()
+  ) {
+    const topOffset = Math.round(getPrimaryDisplay().bounds.height -
+        getPrimaryDisplay().workAreaSize.height);
+    currentWindow.setPosition(windowLeft, windowTop + topOffset);
+  }
+};
+
+const debouncedUpdateWindowPosition = debounce(updateWindowPosition, 10);
 
 // const boolValue = value => !!parseInt(value, 10);
 const handleSet = {
@@ -60,8 +103,9 @@ const handleSet = {
     if (w.toString().indexOf('%') !== -1) {
       width = Math.round(getPrimaryDisplay().workAreaSize.width * width / 100);
     }
-    currentWindow.setSize(width, currentWindow.getSize()[1]);
-    handleSet.windowleft(windowLeft);
+    windowWidth = width;
+    debouncedUpdateWindowSize();
+    handleSet.windowleft(windowLeftOriginal);
   },
   windowheight: (h) => {
     if (noResize) return;
@@ -69,32 +113,33 @@ const handleSet = {
     if (h.toString().indexOf('%') !== -1) {
       height = Math.round(getPrimaryDisplay().workAreaSize.height * height / 100);
     }
-    currentWindow.setSize(currentWindow.getSize()[0], height);
-    handleSet.windowtop(windowTop);
+    windowHeight = height;
+    debouncedUpdateWindowSize();
+    handleSet.windowtop(windowTopOriginal);
   },
   windowleft: (l) => {
-    windowLeft = l;
+    windowLeftOriginal = l;
     let left = parseInt(l, 10);
     if (l.toString().indexOf('%') !== -1) {
       const displayWidth = getPrimaryDisplay().workAreaSize.width;
-      const winWidth = currentWindow.getSize()[0]; // eslint-disable-line prefer-destructuring
+      const winWidth = windowWidth;
       left = Math.round((displayWidth - winWidth) * left / 100);
     }
+    windowLeft = left;
     if (noResize) return;
-    currentWindow.setPosition(left, currentWindow.getPosition()[1]);
+    debouncedUpdateWindowPosition();
   },
   windowtop: (t) => {
-    windowTop = t;
+    windowTopOriginal = t;
     let top = parseInt(t, 10);
     if (t.toString().indexOf('%') !== -1) {
       const displayHeight = getPrimaryDisplay().workAreaSize.height;
-      const winHeight = currentWindow.getSize()[1]; // eslint-disable-line prefer-destructuring
+      const winHeight = windowHeight;
       top = Math.round((displayHeight - winHeight) * top / 100);
     }
-    const topOffset = Math.round(getPrimaryDisplay().bounds.height -
-        getPrimaryDisplay().workAreaSize.height);
+    windowTop = top;
     if (noResize) return;
-    currentWindow.setPosition(currentWindow.getPosition()[0], top + topOffset);
+    debouncedUpdateWindowPosition();
   },
   bold: (value) => {
     screen.vv_show_bold(value);
@@ -203,15 +248,16 @@ const initNvim = async () => {
   initCopyPaste(nvim);
   initWindowTitle(nvim);
   reloadChanged(nvim);
+  closeWindow(nvim);
 
   await nvim.command('VVsettings');
-  currentWindow.show();
-  [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
-  await nvim.uiAttach(cols, rows, {});
-  noResize = false;
 
   nvim.command('doautocmd <nomodeline> GUIEnter');
 
+  ipcRenderer.on('leave-full-screen', () => {
+    updateWindowSize();
+    updateWindowPosition();
+  });
   window.addEventListener('resize', handleResize);
 };
 
