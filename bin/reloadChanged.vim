@@ -15,7 +15,7 @@ endfunction
 function! VVchecktimeAll()
   let l:current_buffer = bufnr("%")
   let l:buffers = getbufinfo()
-  call filter(l:buffers, "v:val['loaded'] == 1")
+  call filter(l:buffers, "v:val['changed'] == 1 && v:val['loaded'] == 1")
   for buf in l:buffers
     execute "buffer" buf['bufnr']
     execute "checktime"
@@ -25,18 +25,12 @@ endfunction
 
 function! VVenableReloadChanged(enabled)
   if a:enabled
-    let g:original_autoread = &autoread
-    set noautoread
     augroup ReloadChanged
       autocmd!
       autocmd FileChangedShell * call rpcnotify(0, "vv:file_changed", { "name": expand("<afile>"), "bufnr": expand("<abuf>") })
       autocmd CursorHold * checktime
     augroup END
   else
-    if exists(g:original_autoread)
-      set autoread=g:original_autoread
-      unlet g:original_autoread
-    end
     autocmd! ReloadChanged *
   endif
 endfunction

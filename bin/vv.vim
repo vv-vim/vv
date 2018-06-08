@@ -1,7 +1,7 @@
 let g:vv = 1
 
 source <sfile>:h/vvset.vim
-source <sfile>:h/refresh.vim
+source <sfile>:h/reloadChanged.vim
 
 set mouse=a       " Enable all mouse events
 set title         " Turn on title

@@ -78,7 +78,7 @@ const initReloadChanged = (newNvim) => {
     });
 
     currentWindow.on('focus', () => {
-      if (enabled) nvim.command('checktime');
+      if (enabled) nvim.command('VVchecktimeAll');
     });
 
     nvim.subscribe('vv:file_changed');
