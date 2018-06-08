@@ -1,6 +1,6 @@
 {
   "name": "VV",
-  "description": "NeoVim GUI",
+  "description": "NeoVim GUI Client",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
   "version": "0.1.0",
   "private": true,
@@ -24,9 +24,9 @@
     "postelectron:build": "cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
   },
   "build": {
-    "appId": "TODO.vv.app.id",
+    "appId": "app.vvim.vv",
     "mac": {
-      "category": "TODO.app.category.type"
+      "category": "public.app-category.developer-tools"
     },
     "files": [
       "build/**/*"
