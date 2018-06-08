@@ -49,7 +49,8 @@ const checktimeAll = () => {
 
 const debouncedChecktimeAll = debounce(checktimeAll, 50);
 
-const enable = (enabled = true) => {
+const enable = (newEnabled = true) => {
+  enabled = newEnabled;
   nvim.command(`VVenableReloadChanged ${enabled ? '1' : '0'}`);
 };
 

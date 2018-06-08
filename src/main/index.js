@@ -35,11 +35,13 @@ const doCreateWindow = (args = [], cwd) => {
     show: false,
     fullscreenable: false,
   };
+  let noResize = false;
   if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
     const [x, y] = currentWindow.getPosition();
     options.x = x + 20;
     options.y = y + 20;
     [options.width, options.height] = currentWindow.getSize();
+    noResize = true;
   }
   let win = new BrowserWindow(options);
 
@@ -49,9 +51,7 @@ const doCreateWindow = (args = [], cwd) => {
   win.cwd = cwd;
   win.resourcesPath = path.join(app.getAppPath(), isDev('./', '../'));
   win.zoomLevel = 0;
-
-  // TODO: pass windowTop, windowLeft from current window
-  if (currentWindow) win.noResize = true;
+  win.noResize = noResize;
 
   win.loadURL(isDev(
     'http://localhost:3000',
@@ -84,7 +84,8 @@ const doCreateWindow = (args = [], cwd) => {
 
 // Find files in args and create window with each file.
 // If file is a directory, create window in context of this directory.
-const createWindow = (args = [], cwd) => {
+const createWindow = (args = [], newCwd) => {
+  const cwd = newCwd || process.cwd();
   const fileArgs = [
     '--cmd',
     '-c',
@@ -115,17 +116,10 @@ const createWindow = (args = [], cwd) => {
   if (fileNames.length > 0) {
     for (let i = 0; i < fileNames.length; i += 1) {
       app.addRecentDocument(fileNames[i]);
-      if (
-        fs.existsSync(fileNames[i]) &&
-        fs.lstatSync(fileNames[i]).isDirectory()
-      ) {
-        doCreateWindow(args, fileNames[i]);
-      } else {
-        doCreateWindow([...args, '--', fileNames[i]], cwd);
-      }
+      doCreateWindow([...args, '--', fileNames[i]], cwd);
     }
   } else {
-    app.addRecentDocument(cwd || process.cwd());
+    app.addRecentDocument(cwd);
     doCreateWindow(args, cwd);
   }
 };

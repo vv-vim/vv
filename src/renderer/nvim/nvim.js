@@ -27,10 +27,10 @@ let cols;
 let rows;
 let screen;
 
-let windowLeftOriginal = '50%';
-let windowTopOriginal = '50%';
-let windowLeft = 0;
-let windowTop = 0;
+let windowLeftOriginal = currentWindow.getPosition()[0]; // eslint-disable-line prefer-destructuring
+let windowTopOriginal = currentWindow.getPosition()[1]; // eslint-disable-line prefer-destructuring
+let windowLeft = windowLeftOriginal;
+let windowTop = windowTopOriginal;
 let windowWidth = currentWindow.getSize()[0]; // eslint-disable-line prefer-destructuring
 let windowHeight = currentWindow.getSize()[1]; // eslint-disable-line prefer-destructuring
 
@@ -118,6 +118,7 @@ const handleSet = {
     handleSet.windowtop(windowTopOriginal);
   },
   windowleft: (l) => {
+    if (noResize) return;
     windowLeftOriginal = l;
     let left = parseInt(l, 10);
     if (l.toString().indexOf('%') !== -1) {
@@ -126,10 +127,10 @@ const handleSet = {
       left = Math.round((displayWidth - winWidth) * left / 100);
     }
     windowLeft = left;
-    if (noResize) return;
     debouncedUpdateWindowPosition();
   },
   windowtop: (t) => {
+    if (noResize) return;
     windowTopOriginal = t;
     let top = parseInt(t, 10);
     if (t.toString().indexOf('%') !== -1) {
@@ -138,7 +139,6 @@ const handleSet = {
       top = Math.round((displayHeight - winHeight) * top / 100);
     }
     windowTop = top;
-    if (noResize) return;
     debouncedUpdateWindowPosition();
   },
   bold: (value) => {
