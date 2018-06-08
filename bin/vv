@@ -1,12 +1,33 @@
 #!/bin/sh
 
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do
-  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-BIN="$DIR/../../MacOS/VV"
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+  cat << END 
+VV - NeoVim GUI Client
 
-exec "$BIN" "$@" &>/dev/null & disown
+Usage:
+  vv [options] [file ...]
+
+Options:
+  -h, --help            Print this help message
+  --                    Only file names after this
+
+  [file ...]            One or more space separated files or directories.
+                        They will be opened in separate windows. If no files
+                        are passed, it will open current directory.
+
+All other options will be passed to nvim as is. You can check available options
+here: nvim --help
+END
+
+else
+  SOURCE="${BASH_SOURCE[0]}"
+  while [ -h "$SOURCE" ]; do
+    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+  done
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  BIN="$DIR/../../MacOS/VV"
+
+  exec "$BIN" "$@" &>/dev/null & disown
+fi
