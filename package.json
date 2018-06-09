@@ -24,7 +24,7 @@
     "postelectron:build": "cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
   },
   "build": {
-    "appId": "app.vvim.vv",
+    "appId": "TODO.app.vvim.vv",
     "mac": {
       "category": "public.app-category.developer-tools"
     },

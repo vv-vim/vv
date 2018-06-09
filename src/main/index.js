@@ -1,10 +1,10 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
-import fs from 'fs';
 import path from 'path';
 import fixPath from 'fix-path';
 
 import menu from './menu';
 import installCli from './installCli';
+import checkNeovim from './checkNeovim';
 
 const windows = [];
 let currentWindow;
@@ -159,6 +159,7 @@ ipcMain.on('cancel-quit', () => {
 });
 
 app.on('ready', () => {
+  checkNeovim();
   createWindow(cliArgs());
   menu({
     createWindow,
