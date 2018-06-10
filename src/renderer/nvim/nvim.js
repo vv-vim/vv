@@ -1,4 +1,3 @@
-import throttle from 'lodash/throttle';
 import debounce from 'lodash/debounce';
 import path from 'path';
 
