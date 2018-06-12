@@ -1,7 +1,6 @@
-import os from 'os';
 import { dialog } from 'electron';
 import { execSync } from 'child_process';
-import fixPath from 'fix-path';
+import which from './lib/which';
 
 const showInstallCliDialog = () =>
   dialog.showMessageBox({
@@ -36,22 +35,8 @@ const showErrorDialog = (error) => {
   });
 };
 
-const execOptions = () => {
-  fixPath();
-  return {
-    encoding: 'UTF-8',
-    env: process.env,
-    cwd: os.homedir(),
-  };
-};
-
 const installCli = binPath => () => {
-  let path;
-  try {
-    path = execSync('which vv', execOptions());
-  } catch (error) {
-    path = null;
-  }
+  let path = which('vv');
   if (path && path.indexOf('VV.app/Contents/MacOS/vv') === -1) {
     path = path.replace('\n', '');
     showCliInstalledDialog('Command Line Launcher', path);
@@ -59,7 +44,7 @@ const installCli = binPath => () => {
     const response = showInstallCliDialog();
     if (response === 0) {
       try {
-        path = execSync(`ln -s ${binPath} /usr/local/bin/`, execOptions());
+        path = execSync(`ln -sf ${binPath} /usr/local/bin/`);
       } catch (error) {
         showErrorDialog(error);
         return;
