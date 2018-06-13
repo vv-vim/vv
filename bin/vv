@@ -8,6 +8,8 @@ Usage:
   vv [options] [file ...]
 
 Options:
+  --debug               Debug mode. Keep process attached to terminal and
+                        output errors.
   -h, --help            Print this help message
   --                    Only file names after this
 
@@ -29,5 +31,9 @@ else
   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
   BIN="$DIR/../../MacOS/VV"
 
-  exec "$BIN" "$@" &>/dev/null & disown
+  if [[ "${@#--debug}" = "$@" ]]; then
+    exec "$BIN" "$@" &>/dev/null & disown
+  else
+    exec "$BIN" "${@#--debug}"
+  fi
 fi

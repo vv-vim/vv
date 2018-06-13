@@ -12,6 +12,8 @@ import initWindowTitle from './features/windowTitle';
 import reloadChanged from './features/reloadChanged';
 import closeWindow from './features/closeWindow';
 
+import { hasStdioopen } from './../lib/nvimVersion';
+
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
 const {
@@ -170,6 +172,8 @@ const handleSet = {
   },
 };
 
+let reanimateInterval;
+
 const handleNotification = async (method, args) => {
   if (method === 'redraw') {
     for (let i = 0; i < args.length; i += 1) {
@@ -209,34 +213,61 @@ const fixNoConfig = async (args) => {
   }
 };
 
-const initNvim = async () => {
-  screen = initScreen('screen');
-
+const startNvimProcess = () => {
   const { args, env, cwd } = currentWindow;
 
-  noResize = currentWindow.noResize;
+  // With --embed we can't read startup errors and it blocks process.
+  // With --headless we can do it, but to turn on rpc we need stdioopen
+  // that works only since nvim 0.3.
+  // So we use --headless + stdioopen if we can. Bad luck for nvim 0.2 users
+  // if they have broken init.vim.
+  const nvimArgs = hasStdioopen() ? [
+    '--headless',
+    '--cmd',
+    vvSourceCommand(),
+    '+call stdioopen({\'rpc\': v:true})',
+    ...args,
+  ] : [
+    '--embed',
+    '--cmd',
+    vvSourceCommand(),
+    ...args,
+  ];
 
   const nvimProcess = spawn(
     'nvim',
-    ['--embed', '--cmd', vvSourceCommand(), ...args],
-    {
-      stdio: ['pipe', 'pipe', process.stderr],
-      env,
-      cwd,
-    },
+    nvimArgs,
+    { env, cwd },
   );
 
-  nvim = await attach({ proc: nvimProcess });
+  // Pipe errors to std output and also send it in console as error.
+  nvimProcess.stderr.pipe(process.stdout);
 
-  // Send null to reanimate nvim on startup files errors.
-  // Still need to find the way to get errors correctly.
-  nvim.input('<Nul>');
+  let errorStr = '';
+  nvimProcess.stderr.on('data', (data) => {
+    errorStr += data.toString();
+    debounce(() => {
+      if (errorStr) console.error(errorStr); // eslint-disable-line no-console
+      errorStr = '';
+    }, 10)();
+  });
+
+  return nvimProcess;
+};
+
+const initNvim = async () => {
+  screen = initScreen('screen');
+  noResize = currentWindow.noResize;
+
+  const nvimProcess = startNvimProcess();
+  nvim = await attach({ proc: nvimProcess });
 
   nvim.on('notification', handleNotification);
 
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:char_under_cursor');
 
+  const { args } = currentWindow;
   await fixNoConfig(args, vvSourceCommand);
 
   initFullScreen(nvim);

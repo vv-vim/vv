@@ -3,12 +3,13 @@ let g:vv = 1
 source <sfile>:h/vvset.vim
 source <sfile>:h/reloadChanged.vim
 
+" Set default text color
+hi Normal guifg=black guibg=white
+
 set mouse=a       " Enable all mouse events
 set title         " Turn on title
 set titlestring&  " Set default titlestring
 set icon          " Turn on icon 
-
-" map <D-w> :q<CR>  " Cmd+W to close window (TODO)
 
 " Notify client about char under cursor and it's style (bold, italic,
 " underline, undercurl)
@@ -49,4 +50,3 @@ function! VVcloseWindow()
   endif
 endfunction
 command! -nargs=0 VVcloseWindow :call VVcloseWindow()
-

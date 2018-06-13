@@ -12,12 +12,12 @@ Featues:
 * “Save All” dialog on quit and “Refresh” dialog on external changes.
 * Text zoom.
 
-It is built on Electron, so there are no barriers to eventually port it to Windows and Linux and make plugins with Javascript/HTML/CSS.
+It is built on Electron. There are no barriers to eventually port it to Windows and Linux and make plugins with Javascript/HTML/CSS.
 
 Installation
 ------------
 
-You need Neovim installed to run VV. You can find Neovim installation instructions here: https://github.com/neovim/neovim/wiki/Installing-Neovim.
+You need Neovim installed to run VV. You can find Neovim installation instructions here: https://github.com/neovim/neovim/wiki/Installing-Neovim. It is recommended to use Neovim version 0.3 and higher.
 
 You can download most recent binary in the [Releases](https://github.com/igorgladkoborodov/vv/releases) page.
 
@@ -50,11 +50,11 @@ Options are passed no `nvim` as is. You can check available options in nvim help
 Settings
 --------
 
-You can setup VV-specific option via `:VVset` command. It works the same as vim built in command `:set`. For example `:VVset nofullscreen` is the same as `:VVset fullscreen=0`. You can use `:help set` for syntax reference.
+You can setup VV-specific option via `:VVset` command. It works the same as vim built-in command `:set`. For example `:VVset nofullscreen` is the same as `:VVset fullscreen=0`. You can use `:help set` for syntax reference.
 
 * `fullscreen`, `fu`: Switch to fullscreen mode. You can also toggle fullscreen by `Cmd+Ctrl+F`. Default: `0`.
 
-* `simplefullscreen`, `sfu`: Use simple or standard fullscreen mode. Simple is faster than standard macOS fullscreen mode, it does not have any transition animation. Default: `1`.
+* `simplefullscreen`, `sfu`: Use simple or standard fullscreen mode. Simple is faster than standard macOS fullscreen mode. It does not have any transition animation. Default: `1`.
 
 * `bold`: Allow bold font. You can completely disable bold even if colorscheme has it. Default: `1`.
 * `italic'`: Allow italic. Default: `1`.
@@ -86,7 +86,7 @@ endif
 Development
 -----------
 
-You need to separately start webpack watch process form `main` and devsever for `renderer`:
+You need start webpack watch process for `main` and devsever for `renderer`:
 ```
 yarn start:main
 yarn start:renderer
