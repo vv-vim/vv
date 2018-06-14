@@ -18,8 +18,6 @@ function! VVcharUnderCursor()
         \   'char': matchstr(getline("."), '\%' . col('.') . 'c.'),
         \   'bold': synIDattr(synIDtrans(synID(line("."), col("."), 1)), "bold"),
         \   'italic': synIDattr(synIDtrans(synID(line("."), col("."), 1)), "italic"),
-        \   'underline': synIDattr(synIDtrans(synID(line("."), col("."), 1)), "underline"),
-        \   'undercurl': synIDattr(synIDtrans(synID(line("."), col("."), 1)), "undercurl")
         \ }
   call rpcnotify(0, "vv:char_under_cursor", l:char)
 endfunction

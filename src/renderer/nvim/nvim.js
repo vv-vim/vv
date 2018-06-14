@@ -38,12 +38,6 @@ let windowHeight = currentWindow.getSize()[1]; // eslint-disable-line prefer-des
 let noResize = false;
 let uiAttached = false;
 
-const charUnderCursor = () => {
-  nvim.command('VVcharUnderCursor');
-};
-
-const debouncedCharUnderCursor = debounce(charUnderCursor, 10);
-
 const resize = async (forceRedraw = false) => {
   const [newCols, newRows] = screenCoords(
     window.innerWidth,
@@ -183,9 +177,6 @@ const handleNotification = async (method, args) => {
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
-      if (cmd === 'cursor_goto' || cmd === 'put') {
-        debouncedCharUnderCursor();
-      }
     }
   } else if (method === 'vv:set') {
     const [option, ...props] = args;
@@ -256,16 +247,15 @@ const startNvimProcess = () => {
 };
 
 const initNvim = async () => {
-  screen = initScreen('screen');
   noResize = currentWindow.noResize;
 
   const nvimProcess = startNvimProcess();
   nvim = await attach({ proc: nvimProcess });
+  screen = initScreen('screen', nvim);
 
   nvim.on('notification', handleNotification);
 
   nvim.subscribe('vv:set');
-  nvim.subscribe('vv:char_under_cursor');
 
   const { args } = currentWindow;
   await fixNoConfig(args, vvSourceCommand);

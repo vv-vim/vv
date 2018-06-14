@@ -1,11 +1,15 @@
+import debounce from 'lodash/debounce';
+
 const [body] = document.getElementsByTagName('body');
 
 let screenContainer;
+let nvim;
 
 let cursorEl;
 let cursorCanvasEl;
 let cursorContext;
 let cursor;
+let visualCursor;
 
 let screenEl;
 let canvasEl;
@@ -40,8 +44,6 @@ let mode;
 let curChar;
 let curBold;
 let curItalic;
-let curUnderline;
-let curUndercurl;
 
 let showBold = true;
 let showItalic = true;
@@ -53,10 +55,8 @@ let charsCache = {};
 
 const initCursor = (containerEl) => {
   cursorEl = document.createElement('div');
-  cursorEl.style.display = 'block';
   cursorEl.style.position = 'absolute';
   cursorEl.style.zIndex = 100;
-  cursorEl.style.position = 'absolute';
   cursorEl.style.top = 0;
   cursorEl.style.left = 0;
 
@@ -68,6 +68,7 @@ const initCursor = (containerEl) => {
   containerEl.appendChild(cursorEl);
 
   cursor = [0, 0];
+  visualCursor = [0, 0];
 };
 
 const initScreen = (containerEl) => {
@@ -103,6 +104,8 @@ const measureCharSize = () => {
   charHeight = char.offsetHeight;
   cursorCanvasEl.width = charWidth;
   cursorCanvasEl.height = charHeight;
+  cursorEl.style.width = `${charWidth}px`;
+  cursorEl.style.height = `${charHeight}px`;
 
   screenEl.removeChild(char);
   charsCache = {};
@@ -144,8 +147,6 @@ const getCharBitmap = (char, props = {}) => {
     c.width = charWidth * 3;
     c.height = charHeight;
     const ctx = c.getContext('2d', { alpha: true });
-    // ctx.fillStyle = p.bgColor;
-    // ctx.fillRect(charWidth, 0, charWidth, charHeight);
     ctx.fillStyle = p.fgColor;
     ctx.font = font(p);
     ctx.textAlign = 'left';
@@ -158,7 +159,6 @@ const getCharBitmap = (char, props = {}) => {
       );
     }
 
-    // TODO cache underline?
     if (p.hiUnderline) {
       ctx.strokeStyle = p.fgColor;
       ctx.lineWidth = scale;
@@ -168,7 +168,6 @@ const getCharBitmap = (char, props = {}) => {
       ctx.stroke();
     }
 
-    // TODO cache undercurl maybe?
     if (p.hiUndercurl) {
       ctx.strokeStyle = p.spColor;
       ctx.lineWidth = fontSize * 0.08;
@@ -185,7 +184,14 @@ const getCharBitmap = (char, props = {}) => {
         x + x / 2,
         y - h / 2,
       );
-      ctx.bezierCurveTo(x + x / 4 * 3, y - h / 2, x + x / 4 * 3, y, x + x, y);
+      ctx.bezierCurveTo(
+        x + x / 4 * 3,
+        y - h / 2,
+        x + x / 4 * 3,
+        y,
+        x + x,
+        y,
+      );
       ctx.stroke();
     }
 
@@ -242,21 +248,21 @@ const redrawCursor = () => {
   if (m.cursor_shape === 'block') {
     const char = m.name.indexOf('cmdline') === -1 ? curChar : null;
 
-    cursorContext.fillStyle = defaultFgColor;
-    cursorContext.fillRect(0, 0, charWidth, charHeight);
+    cursorEl.style.background = defaultFgColor;
+    cursorContext.clearRect(0, 0, charWidth, charHeight);
     cursorContext.drawImage(
       getCharBitmap(char, {
         bgColor: defaultFgColor,
         fgColor: defaultBgColor,
+        spColor: defaultBgColor,
         hiBold: curBold,
         hiItalic: curItalic,
-        hiUnderline: curUnderline,
-        hiUndercurl: curUndercurl,
       }),
       -charWidth,
       0,
     );
   } else if (m.cursor_shape === 'vertical') {
+    cursorEl.style.background = 'none';
     const curWidth = m.cell_percentage
       ? Math.max(scale, Math.round(charWidth / 100 * m.cell_percentage))
       : scale;
@@ -264,6 +270,7 @@ const redrawCursor = () => {
     cursorContext.fillStyle = defaultFgColor;
     cursorContext.fillRect(0, 0, curWidth, charHeight);
   } else if (m.cursor_shape === 'horizontal') {
+    cursorEl.style.background = 'none';
     const curHeight = m.cell_percentage
       ? Math.max(scale, Math.round(charHeight / 100 * m.cell_percentage))
       : scale;
@@ -271,30 +278,39 @@ const redrawCursor = () => {
     cursorContext.fillStyle = defaultFgColor;
     cursorContext.fillRect(0, charHeight - curHeight, charWidth, curHeight);
   }
-
-  cursorEl.style.display = 'block';
 };
 
 const setCharUnderCursor = ({
   char,
   bold = hiBold,
   italic = hiItalic,
-  underline = hiUnderline,
-  undercurl = hiUndercurl,
 }) => {
   curChar = char;
-  curBold = bold;
-  curItalic = italic;
-  curUnderline = underline;
-  curUndercurl = undercurl;
+  curBold = showBold && bold;
+  curItalic = showItalic && italic;
   redrawCursor();
 };
 
-const refreshCursor = () => {
-  const left = Math.floor(cursor[1] * charWidth);
-  const top = cursor[0] * charHeight;
-  cursorEl.style.transform = `translate(${left}px, ${top}px)`;
-  cursorEl.style.display = 'none';
+const charUnderCursor = () => {
+  nvim.command('VVcharUnderCursor');
+};
+
+const debouncedCharUnderCursor = debounce(charUnderCursor, 10, { leading: true });
+
+const syncCursor = debounce(() => {
+  visualCursor = cursor;
+  refreshCursor(false); // eslint-disable-line no-use-before-define
+}, 10);
+
+const refreshCursor = (sync = true) => {
+  if (Math.abs(cursor[0] - visualCursor[0]) <= 1 || Math.abs(cursor[1] - visualCursor[1]) <= 1) {
+    visualCursor = cursor;
+    const left = Math.floor(cursor[1] * charWidth);
+    const top = cursor[0] * charHeight;
+    cursorEl.style.transform = `translate(${left}px, ${top}px)`;
+    debouncedCharUnderCursor();
+  }
+  if (sync) syncCursor();
 };
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
@@ -486,7 +502,8 @@ const redrawCmd = {
 
 const isRetina = () => true;
 
-const screen = (containerId) => {
+const screen = (containerId, newNvim) => {
+  nvim = newNvim;
   screenContainer = document.getElementById(containerId);
   if (!screenContainer) return false;
 
@@ -498,6 +515,8 @@ const screen = (containerId) => {
 
   initCursor(screenContainer);
   initScreen(screenContainer);
+
+  nvim.subscribe('vv:char_under_cursor');
 
   return redrawCmd;
 };
