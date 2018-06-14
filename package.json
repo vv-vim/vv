@@ -18,6 +18,7 @@
     "webpack:build": "rm -rf build/*; webpack --config ./config/webpack.prod.config.js",
     "start:main": "webpack --watch --config ./config/webpack.main.config.js",
     "start:renderer": "webpack-dev-server --config ./config/webpack.renderer.config.js",
+    "webpack:watch": "webpack --watch --config ./config/webpack.config.js",
     "start": "electron .",
     "preelectron:build": "yarn webpack:build",
     "electron:build": "build -c.extraMetadata.main=build/main.js",

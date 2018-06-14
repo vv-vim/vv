@@ -86,18 +86,22 @@ endif
 Development
 -----------
 
-You need start webpack watch process for `main` and devsever for `renderer`:
+First you need start webpack watch process in separate terminal:
 ```
-yarn start:main
-yarn start:renderer
+yarn webpack:watch
 ```
 
-Then you can run electron:
+Then you can run app:
 ```
 yarn start
 ```
 
-It is in active development. And honestly, I did not expect that my experiments with Neovim API might get so far. The code is quite chaotic, no tests, no static typing etc. So PR and feedback are highly welcome.
+App is in active development. And honestly, I did not expect that my experiments with Neovim API might get so far. The code is quite chaotic, no tests, no static typing etc. So PR and feedback are highly welcome.
+
+Testing
+-------
+
+TBD
 
 Name
 ----

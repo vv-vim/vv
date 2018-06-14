@@ -36,7 +36,11 @@ const doCreateWindow = (args = [], cwd) => {
     fullscreenable: false,
   };
   let noResize = false;
-  if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
+  if (
+    currentWindow &&
+    !currentWindow.isFullScreen() &&
+    !currentWindow.isSimpleFullScreen()
+  ) {
     const [x, y] = currentWindow.getPosition();
     options.x = x + 20;
     options.y = y + 20;
@@ -53,10 +57,9 @@ const doCreateWindow = (args = [], cwd) => {
   win.zoomLevel = 0;
   win.noResize = noResize;
 
-  win.loadURL(isDev(
-    'http://localhost:3000',
-    `file://${path.join(__dirname, './index.html')}`,
-  ));
+  win.loadURL(process.env.DEV_SERVER
+    ? 'http://localhost:3000'
+    : `file://${path.join(__dirname, './index.html')}`);
 
   win.on('closed', async () => {
     if (currentWindow === win) currentWindow = null;
