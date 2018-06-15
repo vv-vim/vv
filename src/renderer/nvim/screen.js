@@ -360,13 +360,14 @@ const redrawCmd = {
           background,
           special,
           reverse,
+          standout,
           italic,
           bold,
           underline,
           undercurl,
         },
       ] = props[i];
-      reverseColor = reverse;
+      reverseColor = reverse || standout;
       hiFgColor = getColor(foreground);
       hiBgColor = getColor(background);
       hiSpColor = getColor(special);
