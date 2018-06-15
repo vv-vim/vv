@@ -11,12 +11,12 @@
     "no-shadow": "off",
     "prefer-destructuring": ["warn", {
       "VariableDeclarator": {
-        "object": true,
-        "array": true
+        "array": false,
+        "object": true
       },
       "AssignmentExpression": {
-        "array": true,
-        "object":false
+        "array": false,
+        "object": true
       }
     }],
     "no-mixed-operators": [

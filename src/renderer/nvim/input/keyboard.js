@@ -1,3 +1,5 @@
+let nvim;
+
 // :help keyCode
 const specialKey = ({ key }) =>
   ({
@@ -65,13 +67,17 @@ const replaceResult = result => ({
   '<C-2>': '<C-@>',
 }[result] || result);
 
-const eventKeyCode = (event) => {
-  // console.log(event);
+const eventKeyCode = async (event) => {
   const { key } = event;
 
-  if (skip(key)) {
-    return null;
+  if (skip(key)) return null;
+
+  // Just insert the key as-is if you type special char with Alt.
+  if (event.altKey) {
+    const { mode } = await nvim.mode;
+    if (['i', 'c', 't', 'ce', 'cv', 's', 'S', 'R', 'Rv'].includes(mode)) return key;
   }
+
   const modifier = modifierPrefix(event);
   const shift = shiftPrefix(event);
   const special = specialKey(event);
@@ -86,10 +92,9 @@ const eventKeyCode = (event) => {
   return replaceResult(filterResult(result));
 };
 
-let nvim;
 
-const handleKeydown = (event) => {
-  const key = eventKeyCode(event);
+const handleKeydown = async (event) => {
+  const key = await eventKeyCode(event);
   if (key) nvim.input(key);
 };
 
