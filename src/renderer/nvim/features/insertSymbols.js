@@ -6,12 +6,13 @@ const initInsertSymbols = (newNvim) => {
   nvim = newNvim;
 
   const input = document.createElement('input');
+
   input.style.position = 'absolute';
   input.style.opacity = '0';
   input.style.left = 0;
   input.style.top = 0;
-  input.style.width = '100%';
-  input.style.height = '100%';
+  input.style.width = '0';
+  input.style.height = '0';
 
   (getCursorElement() || document.getElementsByTagName('body')[0]).appendChild(input);
 
