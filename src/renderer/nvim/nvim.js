@@ -2,15 +2,18 @@ import debounce from 'lodash/debounce';
 import path from 'path';
 
 import initScreen, { screenCoords } from './screen';
+
 import initKeyboard from './input/keyboard';
 import initMouse from './input/mouse';
+
 import initQuit from './features/quit';
 import initCopyPaste from './features/copyPaste';
 import initFullScreen from './features/fullScreen';
 import initZoom from './features/zoom';
 import initWindowTitle from './features/windowTitle';
-import reloadChanged from './features/reloadChanged';
-import closeWindow from './features/closeWindow';
+import initReloadChanged from './features/reloadChanged';
+import initCloseWindow from './features/closeWindow';
+import initInsertSymbols from './features/insertSymbols';
 
 import { hasStdioopen } from './../lib/nvimVersion';
 
@@ -249,7 +252,7 @@ const startNvimProcess = () => {
 };
 
 const initNvim = async () => {
-  noResize = currentWindow.noResize;
+  ({ noResize } = currentWindow);
 
   const nvimProcess = startNvimProcess();
   nvim = await attach({ proc: nvimProcess });
@@ -269,8 +272,9 @@ const initNvim = async () => {
   initQuit(nvim);
   initCopyPaste(nvim);
   initWindowTitle(nvim);
-  reloadChanged(nvim);
-  closeWindow(nvim);
+  initReloadChanged(nvim);
+  initCloseWindow(nvim);
+  initInsertSymbols(nvim);
 
   await nvim.command('VVsettings');
 

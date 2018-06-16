@@ -53,6 +53,8 @@ let showUndercurl = true;
 const colorsCache = {};
 let charsCache = {};
 
+export const getCursorElement = () => cursorEl;
+
 const initCursor = (containerEl) => {
   cursorEl = document.createElement('div');
   cursorEl.style.position = 'absolute';
@@ -510,7 +512,7 @@ const screen = (containerId, newNvim) => {
 
   scale = isRetina() ? 2 : 1;
 
-  screenContainer.style.position = 'relative';
+  screenContainer.style.position = 'absolute';
   screenContainer.style.transformOrigin = '0 0';
   screenContainer.style.transform = `scale(${1 / scale})`;
 
