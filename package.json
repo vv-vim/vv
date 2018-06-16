@@ -16,9 +16,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack:build": "rm -rf build/*; webpack --config ./config/webpack.prod.config.js",
+    "webpack:watch": "webpack --watch --config ./config/webpack.config.js",
     "start:main": "webpack --watch --config ./config/webpack.main.config.js",
     "start:renderer": "webpack-dev-server --config ./config/webpack.renderer.config.js",
-    "webpack:watch": "webpack --watch --config ./config/webpack.config.js",
+    "start:devserver": "DEV_SERVER=true electron .",
     "start": "electron .",
     "preelectron:build": "yarn webpack:build",
     "electron:build": "build -c.extraMetadata.main=build/main.js",

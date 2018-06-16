@@ -138,15 +138,19 @@ const handleSet = {
   },
   bold: (value) => {
     screen.vv_show_bold(value);
+    debouncedRedraw();
   },
   italic: (value) => {
     screen.vv_show_italic(value);
+    debouncedRedraw();
   },
   underline: (value) => {
     screen.vv_show_underline(value);
+    debouncedRedraw();
   },
   undercurl: (value) => {
     screen.vv_show_undercurl(value);
+    debouncedRedraw();
   },
   fontfamily: (value) => {
     screen.vv_fontfamily(value);
@@ -165,8 +169,6 @@ const handleSet = {
     debouncedRedraw();
   },
 };
-
-let reanimateInterval;
 
 const handleNotification = async (method, args) => {
   if (method === 'redraw') {
