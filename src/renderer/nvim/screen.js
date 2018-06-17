@@ -9,7 +9,6 @@ let cursorEl;
 let cursorCanvasEl;
 let cursorContext;
 let cursor;
-let visualCursor;
 
 let screenEl;
 let canvasEl;
@@ -70,7 +69,6 @@ const initCursor = (containerEl) => {
   containerEl.appendChild(cursorEl);
 
   cursor = [0, 0];
-  visualCursor = [0, 0];
 };
 
 const initScreen = (containerEl) => {
@@ -244,14 +242,18 @@ const getColor = (c) => {
   return colorsCache[c];
 };
 
+const clearCursor = () => {
+  cursorContext.clearRect(0, 0, charWidth, charHeight);
+};
+
 const redrawCursor = () => {
   const m = modeInfoSet && modeInfoSet[mode];
   if (!m) return;
+  clearCursor();
   if (m.cursor_shape === 'block') {
     const char = m.name.indexOf('cmdline') === -1 ? curChar : null;
 
     cursorEl.style.background = defaultFgColor;
-    cursorContext.clearRect(0, 0, charWidth, charHeight);
     cursorContext.drawImage(
       getCharBitmap(char, {
         bgColor: defaultFgColor,
@@ -268,7 +270,6 @@ const redrawCursor = () => {
     const curWidth = m.cell_percentage
       ? Math.max(scale, Math.round(charWidth / 100 * m.cell_percentage))
       : scale;
-    cursorContext.clearRect(0, 0, charWidth, charHeight);
     cursorContext.fillStyle = defaultFgColor;
     cursorContext.fillRect(0, 0, curWidth, charHeight);
   } else if (m.cursor_shape === 'horizontal') {
@@ -276,7 +277,6 @@ const redrawCursor = () => {
     const curHeight = m.cell_percentage
       ? Math.max(scale, Math.round(charHeight / 100 * m.cell_percentage))
       : scale;
-    cursorContext.clearRect(0, 0, charWidth, charHeight);
     cursorContext.fillStyle = defaultFgColor;
     cursorContext.fillRect(0, charHeight - curHeight, charWidth, curHeight);
   }
@@ -297,23 +297,17 @@ const charUnderCursor = () => {
   nvim.command('VVcharUnderCursor');
 };
 
-const debouncedCharUnderCursor = debounce(charUnderCursor, 10, { leading: true });
+let debouncedRepositionCursor;
 
-const syncCursor = debounce(() => {
-  visualCursor = cursor;
-  refreshCursor(false); // eslint-disable-line no-use-before-define
-}, 10);
-
-const refreshCursor = (sync = true) => {
-  if (Math.abs(cursor[0] - visualCursor[0]) <= 1 || Math.abs(cursor[1] - visualCursor[1]) <= 1) {
-    visualCursor = cursor;
-    const left = Math.floor(cursor[1] * charWidth);
-    const top = cursor[0] * charHeight;
-    cursorEl.style.transform = `translate(${left}px, ${top}px)`;
-    debouncedCharUnderCursor();
-  }
-  if (sync) syncCursor();
+export const repositionCursor = () => {
+  if (debouncedRepositionCursor) debouncedRepositionCursor.cancel();
+  const left = cursor[1] * charWidth;
+  const top = cursor[0] * charHeight;
+  cursorEl.style.transform = `translate(${left}px, ${top}px)`;
+  charUnderCursor();
 };
+
+debouncedRepositionCursor = debounce(repositionCursor, 20);
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
@@ -331,16 +325,19 @@ const redrawCmd = {
     }
     printPrevChar(cursor[0], cursor[1]);
     cursor[1] += props.length;
-    refreshCursor();
+    clearCursor();
+    debouncedRepositionCursor();
   },
 
   cursor_goto: (newCursor) => {
     cursor = newCursor;
-    refreshCursor();
+    clearCursor();
+    debouncedRepositionCursor();
   },
 
   clear: () => {
     cursor = [0, 0];
+    clearCursor();
     context.fillStyle = defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
@@ -447,12 +444,11 @@ const redrawCmd = {
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L75
   mode_info_set: (props) => {
     modeInfoSet = props[1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
-    refreshCursor();
+    redrawCursor();
   },
 
   mode_change: (...modes) => {
     [mode] = modes[modes.length - 1];
-    refreshCursor();
     redrawCursor();
   },
 

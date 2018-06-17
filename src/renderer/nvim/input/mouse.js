@@ -95,7 +95,7 @@ const mousemove = (event) => {
   }
 };
 
-const handleMousemove = throttle(mousemove, 10);
+const handleMousemove = throttle(mousemove, 50);
 
 const initMouse = (newNvim) => {
   nvim = newNvim;

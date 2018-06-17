@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 import path from 'path';
 
-import initScreen, { screenCoords } from './screen';
+import initScreen, { screenCoords, repositionCursor } from './screen';
 
 import initKeyboard from './input/keyboard';
 import initMouse from './input/mouse';
@@ -31,12 +31,12 @@ let cols;
 let rows;
 let screen;
 
-let windowLeftOriginal = currentWindow.getPosition()[0]; // eslint-disable-line prefer-destructuring
-let windowTopOriginal = currentWindow.getPosition()[1]; // eslint-disable-line prefer-destructuring
+let windowLeftOriginal = currentWindow.getPosition()[0];
+let windowTopOriginal = currentWindow.getPosition()[1];
 let windowLeft = windowLeftOriginal;
 let windowTop = windowTopOriginal;
-let windowWidth = currentWindow.getSize()[0]; // eslint-disable-line prefer-destructuring
-let windowHeight = currentWindow.getSize()[1]; // eslint-disable-line prefer-destructuring
+let windowWidth = currentWindow.getSize()[0];
+let windowHeight = currentWindow.getSize()[1];
 
 let noResize = false;
 let uiAttached = false;
@@ -93,7 +93,6 @@ const updateWindowPosition = () => {
 
 const debouncedUpdateWindowPosition = debounce(updateWindowPosition, 10);
 
-// const boolValue = value => !!parseInt(value, 10);
 const handleSet = {
   windowwidth: (w) => {
     if (noResize) return;
@@ -182,6 +181,9 @@ const handleNotification = async (method, args) => {
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
+    }
+    if (args[args.length - 1][0] === 'cursor_goto') {
+      repositionCursor();
     }
   } else if (method === 'vv:set') {
     const [option, ...props] = args;
