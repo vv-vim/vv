@@ -52,6 +52,8 @@ let showUndercurl = true;
 const colorsCache = {};
 let charsCache = {};
 
+let chars = {};
+
 export const getCursorElement = () => cursorEl;
 
 const initCursor = (containerEl) => {
@@ -200,12 +202,14 @@ const getCharBitmap = (char, props = {}) => {
   return charsCache[key];
 };
 
-const chars = {};
 const printChar = (i, j, char) => {
   if (!chars[i]) chars[i] = {};
-  chars[i][j] = char;
+  chars[i][j] = {
+    bitmap: getCharBitmap(char),
+    bg: bgColor(),
+  };
   context.drawImage(
-    getCharBitmap(char),
+    chars[i][j].bitmap,
     0,
     0,
     charWidth * 3,
@@ -217,10 +221,12 @@ const printChar = (i, j, char) => {
   );
 };
 
-const printPrevChar = (i, j) => {
-  if (chars[i][j - 1]) {
+// If char previous to the current cursor is wider that char width, we need to draw that part of
+// it that overlaps the current cursor when we redraw it.
+const printPrevChar = ([i, j]) => {
+  if (j > 0 && chars[i] && chars[i][j - 1]) {
     context.drawImage(
-      getCharBitmap(chars[i][j - 1]),
+      chars[i][j - 1].bitmap,
       charWidth * 2,
       0,
       charWidth,
@@ -230,6 +236,74 @@ const printPrevChar = (i, j) => {
       charWidth,
       charHeight,
     );
+  }
+};
+
+// Same with next
+const printNextChar = ([i, j]) => {
+  if (j > 0 && chars[i] && chars[i][j + 1]) {
+    context.drawImage(
+      chars[i][j + 1].bitmap,
+      0,
+      0,
+      charWidth,
+      charHeight,
+      (j + 1) * charWidth,
+      i * charHeight,
+      charWidth,
+      charHeight,
+    );
+  }
+};
+
+// If current char is overlapping previous char, we need to clean it before print other char on
+// this cursor.
+const cleanLeftChar = ([i, j]) => {
+  if (j >= 0 && chars[i] && chars[i][j]) {
+    context.fillStyle = chars[i][j].bg;
+    context.fillRect(
+      j * charWidth,
+      i * charHeight,
+      charWidth,
+      charHeight,
+    );
+    context.drawImage(
+      chars[i][j].bitmap,
+      charWidth,
+      0,
+      charWidth * 2,
+      charHeight,
+      j * charWidth,
+      i * charHeight,
+      charWidth * 2,
+      charHeight,
+    );
+    printPrevChar([i, j]);
+  }
+};
+
+// Same with next
+const cleanRightChar = ([i, j]) => {
+  if (j >= 0 && chars[i] && chars[i][j]) {
+    context.fillStyle = chars[i][j].bg;
+    context.fillRect(
+      j * charWidth,
+      i * charHeight,
+      charWidth,
+      charHeight,
+    );
+    context.drawImage(
+      chars[i][j].bitmap,
+      0,
+      0,
+      charWidth * 2,
+      charHeight,
+      (j - 1) * charWidth,
+      i * charHeight,
+      charWidth * 2,
+      charHeight,
+    );
+    printNextChar([i, j]);
   }
 };
 
@@ -312,6 +386,7 @@ debouncedRepositionCursor = debounce(repositionCursor, 20);
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
   put: (...props) => {
+    // Fill background for the whole set of chars
     context.fillStyle = bgColor();
     context.fillRect(
       cursor[1] * charWidth,
@@ -319,12 +394,17 @@ const redrawCmd = {
       charWidth * props.length,
       charHeight,
     );
+
+    // Then print chars on that place
     for (let ii = props.length - 1; ii >= 0; ii -= 1) {
       // TODO what's wrong with i scope?
       printChar(cursor[0], cursor[1] + ii, props[ii][0]);
     }
-    printPrevChar(cursor[0], cursor[1]);
+
+    cleanLeftChar([cursor[0], cursor[1] - 1]);
     cursor[1] += props.length;
+    cleanRightChar(cursor);
+
     clearCursor();
     debouncedRepositionCursor();
   },
@@ -340,9 +420,13 @@ const redrawCmd = {
     clearCursor();
     context.fillStyle = defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    chars = {};
   },
 
   eol_clear: () => {
+    for (let i = cursor[1]; i < cols; i += 1) {
+      chars[cursor[0]][i] = null;
+    }
     const left = cursor[1] * charWidth;
     const top = cursor[0] * charHeight;
     const width = canvasEl.width - left;
@@ -409,13 +493,14 @@ const redrawCmd = {
     let cy; // clear top
     const cw = w; // clear width
     const ch = Math.abs(scrollCount) * charHeight; // clear height
+
     if (scrollCount > 0) {
-      // scroll up.
+      // scroll down
       y = (top + scrollCount) * charHeight;
       Y = top * charHeight;
       cy = (bottom + 1 - scrollCount) * charHeight;
     } else {
-      // scroll down
+      // scroll up
       y = top * charHeight;
       Y = (top - scrollCount) * charHeight;
       cy = top * charHeight;
@@ -428,6 +513,41 @@ const redrawCmd = {
     // Clear lines under scroll
     context.fillStyle = defaultBgColor;
     context.fillRect(cx, cy, cw, ch);
+
+    // Scroll chars hash
+    let clearCharsFrom = top;
+    let clearCharsTo = bottom;
+
+    const iterateJ = (i) => {
+      for (let j = left; j <= right; j += 1) {
+        if (chars[i + scrollCount] && chars[i + scrollCount][j]) {
+          chars[i][j] = chars[i + scrollCount][j];
+        } else {
+          chars[i][j] = null;
+        }
+      }
+    };
+    if (scrollCount > 0) {
+      // scroll down
+      for (let i = top; i <= bottom - scrollCount; i += 1) {
+        iterateJ(i);
+      }
+      clearCharsFrom = bottom - scrollCount + 1;
+    } else {
+      // scroll up
+      for (let i = bottom; i >= top - scrollCount; i -= 1) {
+        iterateJ(i);
+      }
+      clearCharsTo = top - scrollCount - 1;
+    }
+
+    for (let i = clearCharsFrom; i <= clearCharsTo; i += 1) {
+      for (let j = left; j <= right; j += 1) {
+        if (chars[i] && chars[i][j]) {
+          chars[i][j] = null;
+        }
+      }
+    }
   },
 
   resize: (...props) => {
