@@ -533,33 +533,9 @@
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.7.0.tgz#9a06f4f137ee84d7df0460c1fdb1135ffa6c50fd"
 
-"@types/lodash@^4.14.66":
-  version "4.14.109"
-  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.109.tgz#b1c4442239730bf35cabaf493c772b18c045886d"
-
-"@types/msgpack-lite@^0.1.4":
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/@types/msgpack-lite/-/msgpack-lite-0.1.6.tgz#27e2a7eea4514f084ed4f9b53f8f63e6db4d6d50"
-  dependencies:
-    "@types/node" "*"
-
-"@types/node@*":
-  version "10.1.2"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.1.2.tgz#1b928a0baa408fc8ae3ac012cc81375addc147c6"
-
 "@types/node@^8.0.24":
   version "8.10.17"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.17.tgz#d48cf10f0dc6dcf59f827f5a3fc7a4a6004318d3"
-
-"@types/traverse@^0.6.29":
-  version "0.6.30"
-  resolved "https://registry.yarnpkg.com/@types/traverse/-/traverse-0.6.30.tgz#a53936506dac267c236fb0d47fc4835acb21b522"
-
-"@types/winston@^2.3.3":
-  version "2.3.9"
-  resolved "https://registry.yarnpkg.com/@types/winston/-/winston-2.3.9.tgz#1ff9f1bb57952fe3d88c1b21c4899ede316a35bc"
-  dependencies:
-    "@types/node" "*"
 
 "@webassemblyjs/ast@1.4.3":
   version "1.4.3"
@@ -5269,14 +5245,10 @@ neo-async@^2.5.0:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.5.1.tgz#acb909e327b1e87ec9ef15f41b8a269512ad41ee"
 
-neovim@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/neovim/-/neovim-4.0.1.tgz#5da832e20118aa925396352d4f6d365de64ac6d8"
+neovim@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/neovim/-/neovim-4.1.0.tgz#f931c33e00c8bd443ee8cfae74630b592ba75876"
   dependencies:
-    "@types/lodash" "^4.14.66"
-    "@types/msgpack-lite" "^0.1.4"
-    "@types/traverse" "^0.6.29"
-    "@types/winston" "^2.3.3"
     lodash "^4.17.4"
     msgpack-lite "^0.1.26"
     traverse "^0.6.6"

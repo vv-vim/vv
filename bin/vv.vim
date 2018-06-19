@@ -24,6 +24,27 @@ endfunction
 
 command! -nargs=0 VVcharUnderCursor :call VVcharUnderCursor()
 
+" Notify client about char under cursor and it's style (bold, italic,
+" underline, undercurl)
+function! VVhighlightAttrs(hlid)
+  let l:result = {
+        \   "name": synIDattr(a:hlid, "name"),
+        \   'fg': synIDattr(a:hlid, "fg"),
+        \   'bg': synIDattr(a:hlid, "bg"),
+        \   'sp': synIDattr(a:hlid, "sp"),
+        \   'bold': synIDattr(a:hlid, "bold"),
+        \   'italic': synIDattr(a:hlid, "italic"),
+        \   'reverse': synIDattr(a:hlid, "reverse"),
+        \   'standout': synIDattr(a:hlid, "standout"),
+        \   'underline': synIDattr(a:hlid, "underline"),
+        \   'undercurl': synIDattr(a:hlid, "undercurl"),
+        \ }
+  echo l:result
+  " call rpcnotify(0, "vv:highlight_attrs", l:result)
+endfunction
+
+command! -nargs=1 VVhighlightAttrs :call VVhighlightAttrs(<f-args>)
+
 " Send current file name to client
 autocmd BufEnter * call rpcnotify(0, "vv:filename", expand('%:p'))
 

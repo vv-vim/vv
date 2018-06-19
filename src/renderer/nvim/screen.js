@@ -9,6 +9,7 @@ let cursorEl;
 let cursorCanvasEl;
 let cursorContext;
 let cursor;
+let cursorAnimation;
 
 let screenEl;
 let canvasEl;
@@ -320,22 +321,46 @@ const clearCursor = () => {
   cursorContext.clearRect(0, 0, charWidth, charHeight);
 };
 
-const redrawCursor = () => {
+const redrawCursor = async () => {
   const m = modeInfoSet && modeInfoSet[mode];
   if (!m) return;
   clearCursor();
+
+  // Default cursor colors if no hl_id is set
+  const highlightAttrs = {
+    bgColor: defaultFgColor,
+    fgColor: defaultBgColor,
+    spColor: defaultBgColor,
+    hiBold: curBold,
+    hiItalic: curItalic,
+  };
+
+  // Get custom cursor colors if hl_id is set
+  if (m.hl_id) {
+    // TODO: tmp code. getHighlightById when it will be available
+    // TODO: async command does not work with r mode, it fires only after symbol was replaced
+    const hiAttrsResult = await nvim.commandOutput(`VVhighlightAttrs ${m.hl_id}`);
+    if (hiAttrsResult) {
+      let hiAttrs;
+      try {
+        hiAttrs = JSON.parse(hiAttrsResult.replace(/'/g, '"'));
+      } catch (e) {} // eslint-disable-line no-empty
+      if (hiAttrs) {
+        const reverse = hiAttrs.reverse || hiAttrs.standout;
+        if (hiAttrs.fg) highlightAttrs.fgColor = reverse ? hiAttrs.bg : hiAttrs.fg;
+        if (hiAttrs.bg) highlightAttrs.bgColor = reverse ? hiAttrs.fg : hiAttrs.bg;
+        if (hiAttrs.sp) highlightAttrs.spColor = hiAttrs.bg;
+        highlightAttrs.hiBold = showBold && !!hiAttrs.bold;
+        highlightAttrs.hiItalic = showItalic && !!hiAttrs.italic;
+      }
+    }
+  }
+
   if (m.cursor_shape === 'block') {
     const char = m.name.indexOf('cmdline') === -1 ? curChar : null;
-
-    cursorEl.style.background = defaultFgColor;
+    cursorEl.style.background = highlightAttrs.bgColor;
     cursorContext.drawImage(
-      getCharBitmap(char, {
-        bgColor: defaultFgColor,
-        fgColor: defaultBgColor,
-        spColor: defaultBgColor,
-        hiBold: curBold,
-        hiItalic: curItalic,
-      }),
+      getCharBitmap(char, highlightAttrs),
       -charWidth,
       0,
     );
@@ -344,15 +369,34 @@ const redrawCursor = () => {
     const curWidth = m.cell_percentage
       ? Math.max(scale, Math.round(charWidth / 100 * m.cell_percentage))
       : scale;
-    cursorContext.fillStyle = defaultFgColor;
+    cursorContext.fillStyle = highlightAttrs.bgColor;
     cursorContext.fillRect(0, 0, curWidth, charHeight);
   } else if (m.cursor_shape === 'horizontal') {
     cursorEl.style.background = 'none';
     const curHeight = m.cell_percentage
       ? Math.max(scale, Math.round(charHeight / 100 * m.cell_percentage))
       : scale;
-    cursorContext.fillStyle = defaultFgColor;
+    cursorContext.fillStyle = highlightAttrs.bgColor;
     cursorContext.fillRect(0, charHeight - curHeight, charWidth, curHeight);
+  }
+
+  // Cursor blink
+  if (cursorAnimation) {
+    cursorAnimation.cancel();
+  }
+  if (m.blinkoff && m.blinkon) {
+    const offset = m.blinkon / (m.blinkon + m.blinkoff);
+    cursorAnimation = cursorEl.animate([
+      { opacity: 1, offset: 0 },
+      { opacity: 1, offset },
+      { opacity: 0, offset },
+      { opacity: 0, offset: 1 },
+      { opacity: 1, offset: 1 },
+    ], {
+      duration: m.blinkoff + m.blinkon,
+      iterations: 'Infinity',
+      delay: m.blinkwait || 0,
+    });
   }
 };
 
@@ -621,6 +665,24 @@ const redrawCmd = {
 
 const isRetina = () => true;
 
+const handleNotification = async (method, args) => {
+  if (method === 'redraw') {
+    for (let i = 0; i < args.length; i += 1) {
+      const [cmd, ...props] = args[i];
+      if (redrawCmd[cmd]) {
+        redrawCmd[cmd](...props);
+      } else {
+        console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
+      }
+    }
+    if (args[args.length - 1][0] === 'cursor_goto') {
+      repositionCursor();
+    }
+  } else if (method === 'vv:char_under_cursor') {
+    redrawCmd.vv_char_under_cursor(...args);
+  }
+};
+
 const screen = (containerId, newNvim) => {
   nvim = newNvim;
   screenContainer = document.getElementById(containerId);
@@ -636,6 +698,8 @@ const screen = (containerId, newNvim) => {
   initScreen(screenContainer);
 
   nvim.subscribe('vv:char_under_cursor');
+
+  nvim.on('notification', handleNotification);
 
   return redrawCmd;
 };

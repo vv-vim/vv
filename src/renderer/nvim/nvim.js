@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 import path from 'path';
 
-import initScreen, { screenCoords, repositionCursor } from './screen';
+import initScreen, { screenCoords } from './screen';
 
 import initKeyboard from './input/keyboard';
 import initMouse from './input/mouse';
@@ -173,27 +173,13 @@ const handleSet = {
 };
 
 const handleNotification = async (method, args) => {
-  if (method === 'redraw') {
-    for (let i = 0; i < args.length; i += 1) {
-      const [cmd, ...props] = args[i];
-      if (screen[cmd]) {
-        screen[cmd](...props);
-      } else {
-        console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
-      }
-    }
-    if (args[args.length - 1][0] === 'cursor_goto') {
-      repositionCursor();
-    }
-  } else if (method === 'vv:set') {
+  if (method === 'vv:set') {
     const [option, ...props] = args;
     if (handleSet[option]) {
       handleSet[option](...props);
     }
-  } else if (method === 'vv:char_under_cursor') {
-    screen.vv_char_under_cursor(...args);
   } else if (
-    !['vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)
+    !['redraw', 'vv:char_under_cursor', 'vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)
   ) {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
@@ -286,6 +272,7 @@ const initNvim = async () => {
     updateWindowSize();
     updateWindowPosition();
   });
+
   window.addEventListener('resize', handleResize);
 };
 
