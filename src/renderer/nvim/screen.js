@@ -41,8 +41,6 @@ let scrollRect = new Array(4);
 let modeInfoSet;
 let mode;
 
-let cursorChar;
-
 let showBold = true;
 let showItalic = true;
 let showUnderline = true;
@@ -121,10 +119,10 @@ const bgColor = () =>
 const spColor = () =>
   (reverseColor ? hiSpColor || defaultSpColor : hiSpColor || defaultSpColor);
 
-const font = ({ hiItalic = false, hiBold = false }) =>
+const font = ({ italic = false, bold = false }) =>
   [
-    hiItalic ? 'italic' : '',
-    hiBold ? 'bold' : '',
+    italic ? 'italic' : '',
+    bold ? 'bold' : '',
     `${fontSize}px`,
     fontFamily,
   ].join(' ');
@@ -313,7 +311,7 @@ const getColor = (c) => {
   if (!c) return null;
   if (!colorsCache[c]) {
     // eslint-disable-next-line no-bitwise
-    colorsCache[c] = `rgb(${[c >> 16, c >> 8, c].map(c => c & 0xFF).join(',')})`;
+    colorsCache[c] = `rgb(${[c >> 16, c >> 8, c].map(cc => cc & 0xFF).join(',')})`;
   }
   return colorsCache[c];
 };

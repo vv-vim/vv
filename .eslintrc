@@ -5,10 +5,6 @@
   },
   "rules": {
     "import/no-extraneous-dependencies": "off",
-    "import/no-unresolved": "off",
-    "import/extensions": "off",
-    "react/require-default-props": "off",
-    "no-shadow": "off",
     "prefer-destructuring": ["warn", {
       "VariableDeclarator": {
         "array": false,
@@ -31,14 +27,5 @@
         "allowSamePrecedence": true
       }
     ],
-    "commented": {
-      "--comment--camelcase": "off",
-      "--comment--react/prefer-stateless-function": [0],
-      "--comment--radix": "off",
-      "--comment--react/forbid-prop-types": ["warn", { "forbid": ['object', 'any'] }],
-      "--comment--no-use-before-define": ["warn", { "functions": false }],
-      "--comment--jsx-a11y/no-autofocus": "off",
-      "--comment--jsx-a11y/no-static-element-interactions": "off"
-    }
   },
 }

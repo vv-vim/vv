@@ -152,8 +152,8 @@ const closeWindow = () => {
 };
 
 app.on('will-finish-launching', () => {
-  app.on('open-file', (e, path) => {
-    createWindow([path]);
+  app.on('open-file', (e, windowPath) => {
+    createWindow([windowPath]);
   });
 });
 
