@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import fixPath from 'fix-path';
 
-import menu from './menu';
+import menu, { refreshMenu } from './menu';
 import installCli from './installCli';
 import checkNeovim from './checkNeovim';
 
@@ -74,6 +74,7 @@ const doCreateWindow = (args = [], cwd) => {
 
   win.on('focus', () => {
     currentWindow = win;
+    refreshMenu(currentWindow);
   });
 
   if (isDev()) openDeveloperTools(win);

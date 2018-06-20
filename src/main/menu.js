@@ -1,6 +1,6 @@
 import { Menu } from 'electron';
 
-let actualSizeItem;
+let menu;
 
 const selectAll = (item, win) => {
   win.webContents.send('selectAll');
@@ -11,7 +11,7 @@ const toggleFullScreen = (item, win) => {
 };
 
 const disableActualSizeItem = (win) => {
-  actualSizeItem.enabled = win.zoomLevel !== 0;
+  menu.getMenuItemById('actualSize').enabled = win.zoomLevel !== 0;
 };
 
 const zoomIn = (item, win) => {
@@ -29,6 +29,10 @@ const zoomOut = (item, win) => {
 const actualSize = (item, win) => {
   win.webContents.send('zoom', -win.zoomLevel);
   win.zoomLevel = 0; // eslint-disable-line no-param-reassign
+  disableActualSizeItem(win);
+};
+
+export const refreshMenu = (win) => {
   disableActualSizeItem(win);
 };
 
@@ -137,9 +141,8 @@ const createMenu = ({
       ],
     },
   ];
-  const menu = Menu.buildFromTemplate(menuTemplate);
-  actualSizeItem = menu.getMenuItemById('actualSize');
+  menu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(menu);
 };
 
-module.exports = createMenu;
+export default createMenu;
