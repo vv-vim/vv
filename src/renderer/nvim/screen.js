@@ -41,9 +41,7 @@ let scrollRect = new Array(4);
 let modeInfoSet;
 let mode;
 
-let curChar;
-let curBold;
-let curItalic;
+let cursorChar;
 
 let showBold = true;
 let showItalic = true;
@@ -208,6 +206,9 @@ const printChar = (i, j, char) => {
   chars[i][j] = {
     bitmap: getCharBitmap(char),
     bg: bgColor(),
+    char,
+    italic: hiItalic,
+    bold: hiBold,
   };
   context.drawImage(
     chars[i][j].bitmap,
@@ -326,13 +327,23 @@ const redrawCursor = async () => {
   if (!m) return;
   clearCursor();
 
+
+  let cursorChar = {
+    char: ' ',
+    bold: false,
+    italic: false,
+  };
+  if (chars[cursor[0]] && chars[cursor[0]][cursor[1]]) {
+    cursorChar = chars[cursor[0]][cursor[1]];
+  }
+
   // Default cursor colors if no hl_id is set
   const highlightAttrs = {
     bgColor: defaultFgColor,
     fgColor: defaultBgColor,
     spColor: defaultBgColor,
-    hiBold: curBold,
-    hiItalic: curItalic,
+    hiBold: cursorChar.bold,
+    hiItalic: cursorChar.italic,
   };
 
   // Get custom cursor colors if hl_id is set
@@ -357,7 +368,7 @@ const redrawCursor = async () => {
   }
 
   if (m.cursor_shape === 'block') {
-    const char = m.name.indexOf('cmdline') === -1 ? curChar : null;
+    const char = m.name.indexOf('cmdline') === -1 ? cursorChar.char : null;
     cursorEl.style.background = highlightAttrs.bgColor;
     cursorContext.drawImage(
       getCharBitmap(char, highlightAttrs),
@@ -400,21 +411,6 @@ const redrawCursor = async () => {
   }
 };
 
-const setCharUnderCursor = ({
-  char,
-  bold = hiBold,
-  italic = hiItalic,
-}) => {
-  curChar = char;
-  curBold = showBold && bold;
-  curItalic = showItalic && italic;
-  redrawCursor();
-};
-
-const charUnderCursor = () => {
-  nvim.command('VVcharUnderCursor');
-};
-
 let debouncedRepositionCursor;
 
 export const repositionCursor = () => {
@@ -422,7 +418,7 @@ export const repositionCursor = () => {
   const left = cursor[1] * charWidth;
   const top = cursor[0] * charHeight;
   cursorEl.style.transform = `translate(${left}px, ${top}px)`;
-  charUnderCursor();
+  redrawCursor();
 };
 
 debouncedRepositionCursor = debounce(repositionCursor, 20);
@@ -622,10 +618,6 @@ const redrawCmd = {
   set_icon: () => {},
 
   // VV specific commands
-  vv_char_under_cursor: (args) => {
-    setCharUnderCursor(args);
-  },
-
   vv_fontfamily: (newFontFamily) => {
     fontFamily = newFontFamily;
     measureCharSize();
@@ -678,8 +670,6 @@ const handleNotification = async (method, args) => {
     if (args[args.length - 1][0] === 'cursor_goto') {
       repositionCursor();
     }
-  } else if (method === 'vv:char_under_cursor') {
-    redrawCmd.vv_char_under_cursor(...args);
   }
 };
 
@@ -696,8 +686,6 @@ const screen = (containerId, newNvim) => {
 
   initCursor(screenContainer);
   initScreen(screenContainer);
-
-  nvim.subscribe('vv:char_under_cursor');
 
   nvim.on('notification', handleNotification);
 

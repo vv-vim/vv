@@ -13,19 +13,6 @@ set icon          " Turn on icon
 
 " Notify client about char under cursor and it's style (bold, italic,
 " underline, undercurl)
-function! VVcharUnderCursor()
-  let l:char = {
-        \   'char': matchstr(getline("."), '\%' . col('.') . 'c.'),
-        \   'bold': synIDattr(synIDtrans(synID(line("."), col("."), 1)), "bold"),
-        \   'italic': synIDattr(synIDtrans(synID(line("."), col("."), 1)), "italic"),
-        \ }
-  call rpcnotify(0, "vv:char_under_cursor", l:char)
-endfunction
-
-command! -nargs=0 VVcharUnderCursor :call VVcharUnderCursor()
-
-" Notify client about char under cursor and it's style (bold, italic,
-" underline, undercurl)
 function! VVhighlightAttrs(hlid)
   let l:result = {
         \   "name": synIDattr(a:hlid, "name"),

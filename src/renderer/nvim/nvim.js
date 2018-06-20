@@ -179,7 +179,7 @@ const handleNotification = async (method, args) => {
       handleSet[option](...props);
     }
   } else if (
-    !['redraw', 'vv:char_under_cursor', 'vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)
+    !['redraw', 'vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)
   ) {
     console.warn('Unknown notification', method, args); // eslint-disable-line no-console
   }
