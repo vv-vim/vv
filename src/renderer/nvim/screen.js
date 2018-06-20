@@ -119,10 +119,10 @@ const bgColor = () =>
 const spColor = () =>
   (reverseColor ? hiSpColor || defaultSpColor : hiSpColor || defaultSpColor);
 
-const font = ({ italic = false, bold = false }) =>
+const font = p =>
   [
-    italic ? 'italic' : '',
-    bold ? 'bold' : '',
+    p.hiItalic ? 'italic' : '',
+    p.hiBold ? 'bold' : '',
     `${fontSize}px`,
     fontFamily,
   ].join(' ');
@@ -223,8 +223,8 @@ const printChar = (i, j, char) => {
 
 // If char previous to the current cursor is wider that char width, we need to draw that part of
 // it that overlaps the current cursor when we redraw it.
-const printPrevChar = ([i, j]) => {
-  if (j > 0 && chars[i] && chars[i][j - 1]) {
+const overlapPrev = ([i, j]) => {
+  if (chars[i] && chars[i][j - 1]) {
     context.drawImage(
       chars[i][j - 1].bitmap,
       charWidth * 2,
@@ -240,15 +240,15 @@ const printPrevChar = ([i, j]) => {
 };
 
 // Same with next
-const printNextChar = ([i, j]) => {
-  if (j > 0 && chars[i] && chars[i][j + 1]) {
+const overlapNext = ([i, j]) => {
+  if (chars[i] && chars[i][j + 1]) {
     context.drawImage(
       chars[i][j + 1].bitmap,
       0,
       0,
       charWidth,
       charHeight,
-      (j + 1) * charWidth,
+      j * charWidth,
       i * charHeight,
       charWidth,
       charHeight,
@@ -256,10 +256,9 @@ const printNextChar = ([i, j]) => {
   }
 };
 
-// If current char is overlapping previous char, we need to clean it before print other char on
-// this cursor.
-const cleanLeftChar = ([i, j]) => {
-  if (j >= 0 && chars[i] && chars[i][j]) {
+// Clean char from previous overlapping left and right symbols.
+const cleanOverlap = ([i, j]) => {
+  if (chars[i] && chars[i][j]) {
     context.fillStyle = chars[i][j].bg;
     context.fillRect(
       j * charWidth,
@@ -271,39 +270,15 @@ const cleanLeftChar = ([i, j]) => {
       chars[i][j].bitmap,
       charWidth,
       0,
-      charWidth * 2,
+      charWidth,
       charHeight,
-      j * charWidth,
-      i * charHeight,
-      charWidth * 2,
-      charHeight,
-    );
-    printPrevChar([i, j]);
-  }
-};
-
-// Same with next
-const cleanRightChar = ([i, j]) => {
-  if (j >= 0 && chars[i] && chars[i][j]) {
-    context.fillStyle = chars[i][j].bg;
-    context.fillRect(
       j * charWidth,
       i * charHeight,
       charWidth,
       charHeight,
     );
-    context.drawImage(
-      chars[i][j].bitmap,
-      0,
-      0,
-      charWidth * 2,
-      charHeight,
-      (j - 1) * charWidth,
-      i * charHeight,
-      charWidth * 2,
-      charHeight,
-    );
-    printNextChar([i, j]);
+    overlapPrev([i, j]);
+    overlapNext([i, j]);
   }
 };
 
@@ -324,7 +299,6 @@ const redrawCursor = async () => {
   const m = modeInfoSet && modeInfoSet[mode];
   if (!m) return;
   clearCursor();
-
 
   let cursorChar = {
     char: ' ',
@@ -439,9 +413,13 @@ const redrawCmd = {
       printChar(cursor[0], cursor[1] + ii, props[ii][0]);
     }
 
-    cleanLeftChar([cursor[0], cursor[1] - 1]);
+    cleanOverlap([cursor[0], cursor[1] - 1]);
+    overlapPrev(cursor);
+
     cursor[1] += props.length;
-    cleanRightChar(cursor);
+
+    overlapNext([cursor[0], cursor[1] - 1]);
+    cleanOverlap(cursor);
 
     clearCursor();
     debouncedRepositionCursor();
@@ -465,6 +443,7 @@ const redrawCmd = {
     for (let i = cursor[1]; i < cols; i += 1) {
       chars[cursor[0]][i] = null;
     }
+    cleanOverlap([cursor[0], cursor[1] - 1]);
     const left = cursor[1] * charWidth;
     const top = cursor[0] * charHeight;
     const width = canvasEl.width - left;
