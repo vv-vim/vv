@@ -88,18 +88,33 @@ const initScreen = (containerEl) => {
   containerEl.appendChild(screenEl);
 };
 
+const RETINA_SCALE = 2;
+
+const isRetina = () => window.devicePixelRatio === RETINA_SCALE;
+
+const scaledLetterSpacing = () => {
+  if (isRetina() || letterSpacing === 0) {
+    return letterSpacing;
+  }
+  return letterSpacing > 0
+    ? Math.floor(letterSpacing / RETINA_SCALE)
+    : Math.ceil(letterSpacing / RETINA_SCALE);
+};
+
+const scaledFontSize = () => fontSize * scale;
+
 const measureCharSize = () => {
   const char = document.createElement('span');
   char.innerHTML = '0';
   char.style.fontFamily = fontFamily;
-  char.style.fontSize = `${fontSize}px`;
-  char.style.lineHeight = `${Math.round(fontSize * lineHeight)}px`;
+  char.style.fontSize = `${scaledFontSize()}px`;
+  char.style.lineHeight = `${Math.round(scaledFontSize() * lineHeight)}px`;
   char.style.position = 'absolute';
   char.style.left = '-1000px';
   char.style.top = 0;
   screenEl.appendChild(char);
 
-  charWidth = char.offsetWidth + letterSpacing;
+  charWidth = char.offsetWidth + scaledLetterSpacing();
   charHeight = char.offsetHeight;
   cursorCanvasEl.width = charWidth;
   cursorCanvasEl.height = charHeight;
@@ -123,7 +138,7 @@ const font = p =>
   [
     p.hiItalic ? 'italic' : '',
     p.hiBold ? 'bold' : '',
-    `${fontSize}px`,
+    `${scaledFontSize()}px`,
     fontFamily,
   ].join(' ');
 
@@ -153,8 +168,8 @@ const getCharBitmap = (char, props = {}) => {
     if (char) {
       ctx.fillText(
         char,
-        Math.round(letterSpacing / 2) + charWidth,
-        charHeight / 2,
+        Math.round(scaledLetterSpacing() / 2) + charWidth,
+        Math.round(charHeight / 2),
       );
     }
 
@@ -169,9 +184,9 @@ const getCharBitmap = (char, props = {}) => {
 
     if (p.hiUndercurl) {
       ctx.strokeStyle = p.spColor;
-      ctx.lineWidth = fontSize * 0.08;
+      ctx.lineWidth = scaledFontSize() * 0.08;
       const x = charWidth;
-      const y = charHeight - fontSize * 0.08 / 2;
+      const y = charHeight - scaledFontSize() * 0.08 / 2;
       const h = charHeight * 0.2; // Height of the wave
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -601,7 +616,7 @@ const redrawCmd = {
   },
 
   vv_fontsize: (newFontSize) => {
-    fontSize = parseInt(newFontSize, 10) * scale;
+    fontSize = parseInt(newFontSize, 10);
     measureCharSize();
   },
 
@@ -632,8 +647,6 @@ const redrawCmd = {
   },
 };
 
-const isRetina = () => true;
-
 const handleNotification = async (method, args) => {
   if (method === 'redraw') {
     for (let i = 0; i < args.length; i += 1) {
@@ -650,21 +663,33 @@ const handleNotification = async (method, args) => {
   }
 };
 
+const setScale = () => {
+  scale = isRetina() ? RETINA_SCALE : 1;
+  screenContainer.style.transform = `scale(${1 / scale})`;
+};
+
 const screen = (containerId, newNvim) => {
   nvim = newNvim;
   screenContainer = document.getElementById(containerId);
   if (!screenContainer) return false;
 
-  scale = isRetina() ? 2 : 1;
-
   screenContainer.style.position = 'absolute';
   screenContainer.style.transformOrigin = '0 0';
-  screenContainer.style.transform = `scale(${1 / scale})`;
+
+  setScale();
 
   initCursor(screenContainer);
   initScreen(screenContainer);
 
   nvim.on('notification', handleNotification);
+
+  window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
+    canvasEl.style.opacity = 0;
+    setScale();
+    measureCharSize();
+    await nvim.uiTryResize(cols, rows);
+    canvasEl.style.opacity = 1;
+  });
 
   return redrawCmd;
 };
