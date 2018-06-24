@@ -1,8 +1,27 @@
 let nvim;
 
 // :help keyCode
-const specialKey = ({ key }) =>
+const specialKey = ({ key, code }) =>
   ({
+    Insert: 'Insert',
+    Numpad0: 'k0',
+    Numpad1: 'k1',
+    Numpad2: 'k2',
+    Numpad3: 'k3',
+    Numpad4: 'k4',
+    Numpad5: 'k5',
+    Numpad6: 'k6',
+    Numpad7: 'k7',
+    Numpad8: 'k8',
+    Numpad9: 'k9',
+    NumpadAdd: 'kPlus',
+    NumpadSubtract: 'kMinus',
+    NumpadMultiply: 'kMultiply',
+    NumpadDivide: 'kDivide',
+    NumpadEnter: 'kEnter',
+    NumpadDecimal: 'kPoint',
+  }[code] ||
+  {
     Escape: 'Esc',
     Backspace: 'BS',
     Delete: 'Del',
@@ -29,6 +48,8 @@ const specialKey = ({ key }) =>
     F10: 'F10',
     F11: 'F11',
     F12: 'F12',
+    '\\': 'Bslash',
+    '|': 'Bar',
   }[key]);
 
 const skip = key =>
@@ -61,11 +82,12 @@ const filterResult = result =>
   }[result] && result;
 
 // https://github.com/rhysd/NyaoVim/issues/87
-const replaceResult = result => ({
-  '<C-6>': '<C-^>',
-  '<C-->': '<C-_>',
-  '<C-2>': '<C-@>',
-}[result] || result);
+const replaceResult = result =>
+  ({
+    '<C-6>': '<C-^>',
+    '<C-->': '<C-_>',
+    '<C-2>': '<C-@>',
+  }[result] || result);
 
 const eventKeyCode = async (event) => {
   const { key } = event;
@@ -75,7 +97,9 @@ const eventKeyCode = async (event) => {
   // Just insert the key as-is if you type special char with Alt.
   if (event.altKey) {
     const { mode } = await nvim.mode;
-    if (['i', 'c', 't', 'ce', 'cv', 's', 'S', 'R', 'Rv'].includes(mode)) return key;
+    if (['i', 'c', 't', 'ce', 'cv', 's', 'S', 'R', 'Rv'].includes(mode)) {
+      return key;
+    }
   }
 
   const modifier = modifierPrefix(event);
@@ -91,7 +115,6 @@ const eventKeyCode = async (event) => {
 
   return replaceResult(filterResult(result));
 };
-
 
 const handleKeydown = async (event) => {
   const key = await eventKeyCode(event);
