@@ -65,7 +65,7 @@ const resize = async (forceRedraw = false) => {
   }
 };
 
-const handleResize = debounce(resize, 100);
+const handleResize = debounce(resize, 500);
 
 const debouncedRedraw = debounce(() => resize(true), 10);
 
@@ -86,7 +86,7 @@ const updateWindowPosition = () => {
     !currentWindow.isSimpleFullScreen()
   ) {
     const topOffset = Math.round(getPrimaryDisplay().bounds.height -
-        getPrimaryDisplay().workAreaSize.height);
+      getPrimaryDisplay().workAreaSize.height);
     currentWindow.setPosition(windowLeft, windowTop + topOffset);
   }
 };
