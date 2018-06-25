@@ -1,9 +1,8 @@
 VV
 ==
 
-VV is a Neovim client for macOS. The goal is to provide a pure minimalistic Vim experience with a good macOS integration. And it should be fast.
-
-Featues:
+VV is a Neovim client for macOS. Pure fast minimalistic Vim experience with a good macOS integration.
+![VV screenshot](assets/screenshot.png)
 * Nice and fast text render.
 * OS integration: copy/paste, mouse, scroll.
 * Fullscreen in native and simple (fast) mode.
