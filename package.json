@@ -26,7 +26,7 @@
     "postelectron:build": "cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
   },
   "build": {
-    "appId": "TODO.app.vvim.vv",
+    "appId": "app.vvim.vv",
     "mac": {
       "category": "public.app-category.developer-tools"
     },
@@ -38,7 +38,11 @@
     ],
     "directories": {
       "buildResources": "assets"
-    }
+    },
+    "fileAssociations": [{
+      "ext": "*",
+      "name": "Document"
+    }]
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.49",
