@@ -16,6 +16,9 @@ Options:
   [file ...]            One or more space separated files or directories.
                         They will be opened in separate windows. If no files
                         are passed, it will open current directory.
+                        Note: if you pass directory name, it will also use it
+                        as current working directory. This is different from
+                        the default nvim behavior.
 
 All other options will be passed to nvim as is. You can check available options
 here: nvim --help

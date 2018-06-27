@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { statSync, existsSync } from 'fs';
 import path from 'path';
 import fixPath from 'fix-path';
 
@@ -120,7 +121,11 @@ const createWindow = (args = [], newCwd) => {
   if (fileNames.length > 0) {
     for (let i = 0; i < fileNames.length; i += 1) {
       app.addRecentDocument(fileNames[i]);
-      doCreateWindow([...args, '--', fileNames[i]], cwd);
+      if (existsSync(fileNames[i]) && statSync(fileNames[i]).isDirectory()) {
+        doCreateWindow(args, fileNames[i]);
+      } else {
+        doCreateWindow([...args, '--', fileNames[i]], cwd);
+      }
     }
   } else {
     app.addRecentDocument(cwd);
