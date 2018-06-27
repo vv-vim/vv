@@ -2,7 +2,9 @@ VV
 ==
 
 VV is a Neovim client for macOS. Pure fast minimalistic Vim experience with a good macOS integration.
+
 ![VV screenshot](assets/screenshot.png)
+
 * Nice and fast text render.
 * OS integration: copy/paste, mouse, scroll.
 * Fullscreen in native and simple (fast) mode.
@@ -13,12 +15,15 @@ VV is a Neovim client for macOS. Pure fast minimalistic Vim experience with a go
 
 It is built on Electron. There are no barriers to eventually port it to Windows and Linux and make plugins with Javascript/HTML/CSS.
 
-Installation
-------------
+Download
+--------
 
 You need Neovim installed to run VV. You can find Neovim installation instructions here: https://github.com/neovim/neovim/wiki/Installing-Neovim. It is recommended to use Neovim version 0.3 and higher.
 
-You can download most recent binary in the [Releases](https://github.com/igorgladkoborodov/vv/releases) page.
+You can download most recent release in the [Releases](https://github.com/igorgladkoborodov/vv/releases/latest) page.
+
+Build manually
+--------------
 
 You can also build it manually. You need [Node.js](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/lang/en/) installed.
 
