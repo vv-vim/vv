@@ -3,9 +3,6 @@ let g:vv = 1
 source <sfile>:h/vvset.vim
 source <sfile>:h/reloadChanged.vim
 
-" Set default text color
-hi Normal guifg=black guibg=white
-
 set mouse=a       " Enable all mouse events
 set title         " Turn on title
 set titlestring&  " Set default titlestring

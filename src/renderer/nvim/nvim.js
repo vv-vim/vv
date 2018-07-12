@@ -192,7 +192,6 @@ const vvSourceCommand = () =>
 const fixNoConfig = async (args) => {
   const uFlagIndex = args.indexOf('-u');
   if (uFlagIndex !== -1 && args[uFlagIndex + 1] === 'NONE') {
-    await nvim.command('hi Normal guifg=black guibg=white');
     await nvim.command(vvSourceCommand());
   }
 };

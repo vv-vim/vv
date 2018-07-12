@@ -24,6 +24,10 @@ let fontSize;
 let lineHeight;
 let letterSpacing;
 
+const defaultFgColor = 'rgb(255,255,255)';
+const defaultBgColor = 'rgb(0,0,0)';
+const defaultSpColor = 'rgb(255,255,255)';
+
 let cols;
 let rows;
 let hiFgColor;
@@ -33,9 +37,9 @@ let hiItalic;
 let hiBold;
 let hiUnderline;
 let hiUndercurl;
-let defaultFgColor;
-let defaultBgColor;
-let defaultSpColor;
+let fgColor = defaultFgColor;
+let bgColor = defaultBgColor;
+let spColor = defaultSpColor;
 let reverseColor;
 let scrollRect = new Array(4);
 let modeInfoSet;
@@ -125,14 +129,11 @@ const measureCharSize = () => {
   charsCache = {};
 };
 
-const fgColor = () =>
-  (reverseColor ? hiBgColor || defaultBgColor : hiFgColor || defaultFgColor);
+const getFgColor = () => (reverseColor ? hiBgColor : hiFgColor);
 
-const bgColor = () =>
-  (reverseColor ? hiFgColor || defaultFgColor : hiBgColor || defaultBgColor);
+const getBgColor = () => (reverseColor ? hiFgColor : hiBgColor);
 
-const spColor = () =>
-  (reverseColor ? hiSpColor || defaultSpColor : hiSpColor || defaultSpColor);
+const getSpColor = () => (reverseColor ? hiSpColor : hiSpColor);
 
 const font = p =>
   [
@@ -145,9 +146,9 @@ const font = p =>
 const getCharBitmap = (char, props = {}) => {
   const p = Object.assign(
     {
-      fgColor: fgColor(),
-      bgColor: bgColor(),
-      spColor: spColor(),
+      fgColor: getFgColor(),
+      bgColor: getBgColor(),
+      spColor: getSpColor(),
       hiItalic,
       hiBold,
       hiUnderline,
@@ -218,7 +219,7 @@ const printChar = (i, j, char) => {
   if (!chars[i]) chars[i] = {};
   chars[i][j] = {
     bitmap: getCharBitmap(char),
-    bg: bgColor(),
+    bg: getBgColor(),
     char,
     italic: hiItalic,
     bold: hiBold,
@@ -297,8 +298,8 @@ const cleanOverlap = ([i, j]) => {
   }
 };
 
-const getColor = (c) => {
-  if (!c) return null;
+const getColor = (c, defaultColor = null) => {
+  if (typeof c !== 'number' || c === -1) return defaultColor;
   if (!colorsCache[c]) {
     // eslint-disable-next-line no-bitwise
     colorsCache[c] = `rgb(${[c >> 16, c >> 8, c].map(cc => cc & 0xFF).join(',')})`;
@@ -326,9 +327,9 @@ const redrawCursor = async () => {
 
   // Default cursor colors if no hl_id is set
   const highlightAttrs = {
-    bgColor: defaultFgColor,
-    fgColor: defaultBgColor,
-    spColor: defaultBgColor,
+    bgColor: fgColor,
+    fgColor: bgColor,
+    spColor: bgColor,
     hiBold: cursorChar.bold,
     hiItalic: cursorChar.italic,
   };
@@ -414,7 +415,7 @@ debouncedRepositionCursor = debounce(repositionCursor, 20);
 const redrawCmd = {
   put: (...props) => {
     // Fill background for the whole set of chars
-    context.fillStyle = bgColor();
+    context.fillStyle = getBgColor();
     context.fillRect(
       cursor[1] * charWidth,
       cursor[0] * charHeight,
@@ -449,7 +450,7 @@ const redrawCmd = {
   clear: () => {
     cursor = [0, 0];
     clearCursor();
-    context.fillStyle = defaultBgColor;
+    context.fillStyle = bgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     chars = {};
   },
@@ -463,7 +464,7 @@ const redrawCmd = {
     const top = cursor[0] * charHeight;
     const width = canvasEl.width - left;
     const height = charHeight;
-    context.fillStyle = bgColor();
+    context.fillStyle = getBgColor();
     context.fillRect(left, top, width, height);
   },
 
@@ -483,9 +484,9 @@ const redrawCmd = {
         },
       ] = props[i];
       reverseColor = reverse || standout;
-      hiFgColor = getColor(foreground);
-      hiBgColor = getColor(background);
-      hiSpColor = getColor(special);
+      hiFgColor = getColor(foreground, fgColor);
+      hiBgColor = getColor(background, bgColor);
+      hiSpColor = getColor(special, spColor);
       hiItalic = showItalic && italic;
       hiBold = showBold && bold;
       hiUnderline = showUnderline && underline;
@@ -494,16 +495,16 @@ const redrawCmd = {
   },
 
   update_bg: ([color]) => {
-    defaultBgColor = getColor(color);
-    body.style.background = defaultBgColor;
+    bgColor = getColor(color, defaultBgColor);
+    body.style.background = bgColor;
   },
 
   update_fg: ([color]) => {
-    defaultFgColor = getColor(color);
+    fgColor = getColor(color, defaultFgColor);
   },
 
   update_sp: ([color]) => {
-    defaultSpColor = getColor(color);
+    spColor = getColor(color, defaultSpColor);
   },
 
   set_scroll_region: (rect) => {
@@ -543,7 +544,7 @@ const redrawCmd = {
     context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
 
     // Clear lines under scroll
-    context.fillStyle = defaultBgColor;
+    context.fillStyle = bgColor;
     context.fillRect(cx, cy, cw, ch);
 
     // Scroll chars hash
@@ -552,6 +553,7 @@ const redrawCmd = {
 
     const iterateJ = (i) => {
       for (let j = left; j <= right; j += 1) {
+        if (!chars[i]) chars[i] = {};
         if (chars[i + scrollCount] && chars[i + scrollCount][j]) {
           chars[i][j] = chars[i + scrollCount][j];
         } else {
@@ -588,7 +590,7 @@ const redrawCmd = {
     screenEl.style.height = `${rows * charHeight}px`;
     canvasEl.width = cols * charWidth;
     canvasEl.height = rows * charHeight;
-    context.fillStyle = bgColor();
+    context.fillStyle = getBgColor();
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     scrollRect = [0, rows - 1, 0, cols - 1];
   },
