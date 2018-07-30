@@ -14,6 +14,7 @@ endfunction
 " buffers changed outside.
 function! VVchecktimeAll()
   let l:current_buffer = bufnr("%")
+  let l:current_position = getpos(".")
   let l:buffers = getbufinfo()
   call filter(l:buffers, "v:val['changed'] == 1 && v:val['loaded'] == 1")
   for buf in l:buffers
@@ -21,6 +22,7 @@ function! VVchecktimeAll()
     execute "checktime"
   endfor
   execute "buffer" l:current_buffer
+  call setpos(".", l:current_position)
 endfunction
 
 function! VVenableReloadChanged(enabled)
