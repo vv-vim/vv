@@ -8,9 +8,10 @@ let nvim;
 const currentWindow = getCurrentWindow();
 let changedBuffers = {};
 let enabled = true;
+let checking = false;
 
 const showChangedDialog = async () => {
-  if (currentWindow.isFocused()) {
+  if (currentWindow.isFocused() && Object.keys(changedBuffers).length > 0) {
     const message =
       Object.keys(changedBuffers).length > 1
         ? `${
@@ -41,13 +42,12 @@ const showChangedDialog = async () => {
   }
 };
 
-const debouncedShowChangeDialog = debounce(showChangedDialog, 100);
-
-const checktimeAll = () => {
-  nvim.command('VVchecktimeAll');
+const checktimeAll = async () => {
+  checking = true;
+  await nvim.command('VVchecktimeAll');
+  checking = false;
+  showChangedDialog();
 };
-
-const debouncedChecktimeAll = debounce(checktimeAll, 50);
 
 const enable = (newEnabled = true) => {
   enabled = newEnabled;
@@ -64,11 +64,9 @@ const initReloadChanged = (newNvim) => {
         if (!changedBuffers[buffer.bufnr]) {
           changedBuffers[buffer.bufnr] = buffer;
         }
-        // If we detect changed outside buffer, iterate on other changed buffers and check them too
-        // Debounced in 50 ms to avoid multiple calls
-        debouncedChecktimeAll();
-        // Show dialog debounced in 100 ms to make checktimeAll calls finished
-        debouncedShowChangeDialog();
+        if (!checking) {
+          checktimeAll();
+        }
       }
       if (method === 'vv:set') {
         const [option, ...props] = args;
@@ -79,7 +77,9 @@ const initReloadChanged = (newNvim) => {
     });
 
     currentWindow.on('focus', () => {
-      if (enabled) nvim.command('VVchecktimeAll');
+      if (enabled) {
+        checktimeAll();
+      }
     });
 
     nvim.subscribe('vv:file_changed');

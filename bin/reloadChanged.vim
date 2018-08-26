@@ -1,28 +1,21 @@
 " Iterate on buffers and reload them from disk. No questions asked.
-" Then return to current.
+" Do it in temporary tab to keep the same windows layout.
 function! VVrefresh(...)
-  let l:current_buffer = bufnr("%")
+  -tabnew
   for bufnr in a:000
     execute "buffer" bufnr
     execute "e!"
   endfor
-  execute "buffer" l:current_buffer
+  tabclose!
 endfunction
 
-" :checktime only fires for visible buffers. This function iterates on
-" all opened buffers and call checktime for all of them to collect all
-" buffers changed outside.
+" Checktime for all loaded buffers to trigger FileChangedShell for changed
 function! VVchecktimeAll()
-  let l:current_buffer = bufnr("%")
-  let l:current_position = getpos(".")
   let l:buffers = getbufinfo()
-  call filter(l:buffers, "v:val['changed'] == 1 && v:val['loaded'] == 1")
+  call filter(l:buffers, "v:val['loaded'] == 1")
   for buf in l:buffers
-    execute "buffer" buf['bufnr']
-    execute "checktime"
+    execute "checktime" buf['bufnr']
   endfor
-  execute "buffer" l:current_buffer
-  call setpos(".", l:current_position)
 endfunction
 
 function! VVenableReloadChanged(enabled)
