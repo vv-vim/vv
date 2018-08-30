@@ -15,6 +15,9 @@ let screenEl;
 let canvasEl;
 let context;
 
+let screenFrameCanvasEl;
+let screenFrameContext;
+
 let scale;
 let charWidth;
 let charHeight;
@@ -57,7 +60,7 @@ let chars = {};
 
 export const getCursorElement = () => cursorEl;
 
-const initCursor = (containerEl) => {
+const initCursor = () => {
   cursorEl = document.createElement('div');
   cursorEl.style.position = 'absolute';
   cursorEl.style.zIndex = 100;
@@ -69,12 +72,12 @@ const initCursor = (containerEl) => {
   cursorContext = cursorCanvasEl.getContext('2d', { alpha: true });
 
   cursorEl.appendChild(cursorCanvasEl);
-  containerEl.appendChild(cursorEl);
+  screenEl.appendChild(cursorEl);
 
   cursor = [0, 0];
 };
 
-const initScreen = (containerEl) => {
+const initScreen = () => {
   screenEl = document.createElement('div');
 
   screenEl.style.contain = 'strict';
@@ -89,7 +92,14 @@ const initScreen = (containerEl) => {
   context = canvasEl.getContext('2d', { alpha: false });
 
   screenEl.appendChild(canvasEl);
-  containerEl.appendChild(screenEl);
+  screenContainer.appendChild(screenEl);
+};
+
+const initScreenFrame = () => {
+  screenFrameCanvasEl = document.createElement('canvas');
+  screenFrameCanvasEl.style.position = 'absolute';
+  screenFrameContext = screenFrameCanvasEl.getContext('2d', { alpha: true });
+  screenContainer.appendChild(screenFrameCanvasEl);
 };
 
 const RETINA_SCALE = 2;
@@ -142,6 +152,23 @@ const font = p =>
     `${scaledFontSize()}px`,
     fontFamily,
   ].join(' ');
+
+const fillScreenFrame = (i, j) => {
+  if (j === 0 || j === cols - 1) {
+    const rect = [
+      (j ? cols + 1 : 0) * charWidth,
+      i * charHeight,
+      charWidth,
+      charHeight,
+    ];
+    if (chars[i][j]) {
+      screenFrameContext.fillStyle = chars[i][j].bg;
+      screenFrameContext.fillRect(...rect);
+    } else {
+      screenFrameContext.clearRect(...rect);
+    }
+  }
+};
 
 const getCharBitmap = (char, props = {}) => {
   const p = Object.assign(
@@ -235,6 +262,7 @@ const printChar = (i, j, char) => {
     charWidth * 3,
     charHeight,
   );
+  fillScreenFrame(i, j);
 };
 
 // If char previous to the current cursor is wider that char width, we need to draw that part of
@@ -453,6 +481,7 @@ const redrawCmd = {
     context.fillStyle = bgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     chars = {};
+    screenFrameContext.clearRect(0, 0, screenFrameCanvasEl.width, screenFrameCanvasEl.height);
   },
 
   eol_clear: () => {
@@ -466,6 +495,9 @@ const redrawCmd = {
     const height = charHeight;
     context.fillStyle = getBgColor();
     context.fillRect(left, top, width, height);
+
+    screenFrameContext.fillStyle = getBgColor();
+    screenFrameContext.fillRect(left + 1, top, width + 1, height);
   },
 
   highlight_set: (...props) => {
@@ -559,6 +591,7 @@ const redrawCmd = {
         } else {
           chars[i][j] = null;
         }
+        fillScreenFrame(i, j);
       }
     };
     if (scrollCount > 0) {
@@ -579,6 +612,7 @@ const redrawCmd = {
       for (let j = left; j <= right; j += 1) {
         if (chars[i] && chars[i][j]) {
           chars[i][j] = null;
+          fillScreenFrame(i, j);
         }
       }
     }
@@ -593,6 +627,10 @@ const redrawCmd = {
     context.fillStyle = getBgColor();
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     scrollRect = [0, rows - 1, 0, cols - 1];
+
+    screenFrameCanvasEl.width = (cols + 2) * charWidth;
+    screenFrameCanvasEl.height = rows * charHeight;
+    screenFrameContext.clearRect(0, 0, screenFrameCanvasEl.width, screenFrameCanvasEl.height);
   },
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L75
@@ -668,6 +706,8 @@ const handleNotification = async (method, args) => {
 const setScale = () => {
   scale = isRetina() ? RETINA_SCALE : 1;
   screenContainer.style.transform = `scale(${1 / scale})`;
+  screenContainer.style.width = `${scale * 100}%`;
+  screenContainer.style.height = `${scale * 100}%`;
 };
 
 const screen = (containerId, newNvim) => {
@@ -680,8 +720,9 @@ const screen = (containerId, newNvim) => {
 
   setScale();
 
-  initCursor(screenContainer);
-  initScreen(screenContainer);
+  initScreenFrame();
+  initScreen();
+  initCursor();
 
   nvim.on('notification', handleNotification);
 
