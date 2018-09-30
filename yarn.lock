@@ -5245,9 +5245,9 @@ neo-async@^2.5.0:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.5.1.tgz#acb909e327b1e87ec9ef15f41b8a269512ad41ee"
 
-neovim@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/neovim/-/neovim-4.1.0.tgz#f931c33e00c8bd443ee8cfae74630b592ba75876"
+neovim@^4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/neovim/-/neovim-4.2.1.tgz#25e99703831fafd9e26190feec15366bebfda8c0"
   dependencies:
     lodash "^4.17.4"
     msgpack-lite "^0.1.26"

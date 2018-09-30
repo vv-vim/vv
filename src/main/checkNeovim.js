@@ -1,8 +1,9 @@
 import { app, dialog, shell } from 'electron';
 import which from './lib/which';
+import nvimCommand from './../lib/nvimCommand';
 
 const checkNeovim = () => {
-  if (which('nvim')) return;
+  if (which(nvimCommand())) return;
 
   const result = dialog.showMessageBox({
     message: 'Neovim is not installed',
