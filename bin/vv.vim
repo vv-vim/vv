@@ -32,6 +32,8 @@ command! -nargs=1 VVhighlightAttrs :call VVhighlightAttrs(<f-args>)
 " Send current file name to client
 autocmd BufEnter * call rpcnotify(0, "vv:filename", expand('%:p'))
 
+autocmd VimEnter * call rpcnotify(0, "vv:vim_enter")
+
 " Send unsaved buffers to client
 function! VVunsavedBuffers()
   let l:buffers = getbufinfo()

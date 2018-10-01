@@ -22,10 +22,10 @@ let scale;
 let charWidth;
 let charHeight;
 
-let fontFamily;
-let fontSize;
-let lineHeight;
-let letterSpacing;
+let fontFamily = 'monospace';
+let fontSize = 12;
+let lineHeight = 1.25;
+let letterSpacing = 0;
 
 const defaultFgColor = 'rgb(255,255,255)';
 const defaultBgColor = 'rgb(0,0,0)';
@@ -723,6 +723,7 @@ const screen = (containerId, newNvim) => {
   initScreenFrame();
   initScreen();
   initCursor();
+  measureCharSize();
 
   nvim.on('notification', handleNotification);
 
