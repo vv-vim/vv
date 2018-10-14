@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 import path from 'path';
 
-import nvimCommand from './../../lib/nvimCommand';
+import nvimCommand from '../../lib/nvimCommand';
 
 import initScreen, { screenCoords } from './screen';
 
@@ -17,7 +17,7 @@ import initReloadChanged from './features/reloadChanged';
 import initCloseWindow from './features/closeWindow';
 import initInsertSymbols from './features/insertSymbols';
 
-import { hasStdioopen, hasNewEmbedAPI } from './../lib/nvimVersion';
+import { hasStdioopen, hasNewEmbedAPI } from '../lib/nvimVersion';
 
 const { spawn } = global.require('child_process');
 const { attach } = global.require('neovim');
@@ -54,10 +54,10 @@ const resize = async (forceRedraw = false) => {
     window.innerHeight,
   );
   if (
-    isWindowShown &&
-    newCols > 0 &&
-    newRows > 0 &&
-    (newCols !== cols || newRows !== rows || forceRedraw)
+    isWindowShown
+    && newCols > 0
+    && newRows > 0
+    && (newCols !== cols || newRows !== rows || forceRedraw)
   ) {
     cols = newCols;
     rows = newRows;
@@ -86,8 +86,10 @@ const debouncedUpdateWindowSize = debounce(updateWindowSize, 10);
 
 const updateWindowPosition = () => {
   if (!currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
-    const topOffset = Math.round(getPrimaryDisplay().bounds.height -
-        getPrimaryDisplay().workAreaSize.height);
+    const topOffset = Math.round(
+      getPrimaryDisplay().bounds.height
+        - getPrimaryDisplay().workAreaSize.height,
+    );
     currentWindow.setPosition(windowLeft, windowTop + topOffset);
   }
 };
@@ -109,7 +111,9 @@ const handleSet = {
     if (noResize) return;
     let height = parseInt(h, 10);
     if (h.toString().indexOf('%') !== -1) {
-      height = Math.round(getPrimaryDisplay().workAreaSize.height * height / 100);
+      height = Math.round(
+        getPrimaryDisplay().workAreaSize.height * height / 100,
+      );
     }
     windowHeight = height;
     debouncedUpdateWindowSize();
@@ -202,8 +206,7 @@ const handleNotification = async (method, args) => {
   }
 };
 
-const vvSourceCommand = () =>
-  `source ${path.join(currentWindow.resourcesPath, 'bin/vv.vim')}`;
+const vvSourceCommand = () => `source ${path.join(currentWindow.resourcesPath, 'bin/vv.vim')}`;
 
 // Source vv specific ext on -u NONE
 const fixNoConfig = async () => {
@@ -223,24 +226,17 @@ const startNvimProcess = () => {
   // So we use --headless + stdioopen if we can.
   // Starting from 0.3.2 it has different --embed API that is not blocked by startup errors,
   // so it is safe to use --embed again.
-  const nvimArgs = hasStdioopen() && !hasNewEmbedAPI() ? [
-    '--headless',
-    '--cmd',
-    vvSourceCommand(),
-    '+call stdioopen({\'rpc\': v:true})',
-    ...args,
-  ] : [
-    '--embed',
-    '--cmd',
-    vvSourceCommand(),
-    ...args,
-  ];
+  const nvimArgs = hasStdioopen() && !hasNewEmbedAPI()
+    ? [
+      '--headless',
+      '--cmd',
+      vvSourceCommand(),
+      "+call stdioopen({'rpc': v:true})",
+      ...args,
+    ]
+    : ['--embed', '--cmd', vvSourceCommand(), ...args];
 
-  const nvimProcess = spawn(
-    nvimCommand(),
-    nvimArgs,
-    { env, cwd },
-  );
+  const nvimProcess = spawn(nvimCommand(), nvimArgs, { env, cwd });
 
   // Pipe errors to std output and also send it in console as error.
   nvimProcess.stderr.pipe(process.stdout);

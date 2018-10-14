@@ -439,6 +439,18 @@ export const repositionCursor = () => {
 
 debouncedRepositionCursor = debounce(repositionCursor, 20);
 
+const optionSet = {
+  guifont: (newFont) => {
+    const [newFontFamily, newFontSize] = newFont.trim().split(':h');
+    if (newFontFamily) {
+      nvim.command(`VVset fontfamily=${newFontFamily}`);
+      if (newFontSize) {
+        nvim.command(`VVset fontsize=${newFontSize}`);
+      }
+    }
+  },
+};
+
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
   put: (...props) => {
@@ -648,6 +660,16 @@ const redrawCmd = {
   mouse_off: () => {},
   set_title: () => {},
   set_icon: () => {},
+
+  option_set: (...options) => {
+    options.forEach(([option, value]) => {
+      if (optionSet[option]) {
+        optionSet[option](value);
+      } else {
+        console.warn('Unknown option', option, value); // eslint-disable-line no-console
+      }
+    });
+  },
 
   // VV specific commands
   vv_fontfamily: (newFontFamily) => {
