@@ -15,9 +15,6 @@ let screenEl;
 let canvasEl;
 let context;
 
-let screenFrameCanvasEl;
-let screenFrameContext;
-
 let scale;
 let charWidth;
 let charHeight;
@@ -95,13 +92,6 @@ const initScreen = () => {
   screenContainer.appendChild(screenEl);
 };
 
-const initScreenFrame = () => {
-  screenFrameCanvasEl = document.createElement('canvas');
-  screenFrameCanvasEl.style.position = 'absolute';
-  screenFrameContext = screenFrameCanvasEl.getContext('2d', { alpha: true });
-  screenContainer.appendChild(screenFrameCanvasEl);
-};
-
 const RETINA_SCALE = 2;
 
 const isRetina = () => window.devicePixelRatio === RETINA_SCALE;
@@ -145,30 +135,12 @@ const getBgColor = () => (reverseColor ? hiFgColor : hiBgColor);
 
 const getSpColor = () => (reverseColor ? hiSpColor : hiSpColor);
 
-const font = p =>
-  [
-    p.hiItalic ? 'italic' : '',
-    p.hiBold ? 'bold' : '',
-    `${scaledFontSize()}px`,
-    fontFamily,
-  ].join(' ');
-
-const fillScreenFrame = (i, j) => {
-  if (j === 0 || j === cols - 1) {
-    const rect = [
-      (j ? cols + 1 : 0) * charWidth,
-      i * charHeight,
-      charWidth,
-      charHeight,
-    ];
-    if (chars[i][j]) {
-      screenFrameContext.fillStyle = chars[i][j].bg;
-      screenFrameContext.fillRect(...rect);
-    } else {
-      screenFrameContext.clearRect(...rect);
-    }
-  }
-};
+const font = p => [
+  p.hiItalic ? 'italic' : '',
+  p.hiBold ? 'bold' : '',
+  `${scaledFontSize()}px`,
+  fontFamily,
+].join(' ');
 
 const getCharBitmap = (char, props = {}) => {
   const p = Object.assign(
@@ -226,14 +198,7 @@ const getCharBitmap = (char, props = {}) => {
         x + x / 2,
         y - h / 2,
       );
-      ctx.bezierCurveTo(
-        x + x / 4 * 3,
-        y - h / 2,
-        x + x / 4 * 3,
-        y,
-        x + x,
-        y,
-      );
+      ctx.bezierCurveTo(x + x / 4 * 3, y - h / 2, x + x / 4 * 3, y, x + x, y);
       ctx.stroke();
     }
 
@@ -251,6 +216,16 @@ const printChar = (i, j, char) => {
     italic: hiItalic,
     bold: hiBold,
   };
+  // If this is the last col, fill the next char on extra col with it's bg
+  if (j === cols - 1) {
+    const rect = [cols * charWidth, i * charHeight, charWidth, charHeight];
+    if (chars[i][j]) {
+      context.fillStyle = chars[i][j].bg;
+      context.fillRect(...rect);
+    } else {
+      context.clearRect(...rect);
+    }
+  }
   context.drawImage(
     chars[i][j].bitmap,
     0,
@@ -262,7 +237,6 @@ const printChar = (i, j, char) => {
     charWidth * 3,
     charHeight,
   );
-  fillScreenFrame(i, j);
 };
 
 // If char previous to the current cursor is wider that char width, we need to draw that part of
@@ -304,12 +278,7 @@ const overlapNext = ([i, j]) => {
 const cleanOverlap = ([i, j]) => {
   if (chars[i] && chars[i][j]) {
     context.fillStyle = chars[i][j].bg;
-    context.fillRect(
-      j * charWidth,
-      i * charHeight,
-      charWidth,
-      charHeight,
-    );
+    context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
     context.drawImage(
       chars[i][j].bitmap,
       charWidth,
@@ -329,8 +298,9 @@ const cleanOverlap = ([i, j]) => {
 const getColor = (c, defaultColor = null) => {
   if (typeof c !== 'number' || c === -1) return defaultColor;
   if (!colorsCache[c]) {
-    // eslint-disable-next-line no-bitwise
-    colorsCache[c] = `rgb(${[c >> 16, c >> 8, c].map(cc => cc & 0xFF).join(',')})`;
+    colorsCache[c] = `rgb(${[c >> 16, c >> 8, c] // eslint-disable-line no-bitwise
+      .map(cc => cc & 0xff) // eslint-disable-line no-bitwise
+      .join(',')})`;
   }
   return colorsCache[c];
 };
@@ -366,7 +336,9 @@ const redrawCursor = async () => {
   if (m.hl_id) {
     // TODO: tmp code. getHighlightById when it will be available
     // TODO: async command does not work with r mode, it fires only after symbol was replaced
-    const hiAttrsResult = await nvim.commandOutput(`VVhighlightAttrs ${m.hl_id}`);
+    const hiAttrsResult = await nvim.commandOutput(
+      `VVhighlightAttrs ${m.hl_id}`,
+    );
     if (hiAttrsResult) {
       let hiAttrs;
       try {
@@ -386,11 +358,7 @@ const redrawCursor = async () => {
   if (m.cursor_shape === 'block') {
     const char = m.name.indexOf('cmdline') === -1 ? cursorChar.char : null;
     cursorEl.style.background = highlightAttrs.bgColor;
-    cursorContext.drawImage(
-      getCharBitmap(char, highlightAttrs),
-      -charWidth,
-      0,
-    );
+    cursorContext.drawImage(getCharBitmap(char, highlightAttrs), -charWidth, 0);
   } else if (m.cursor_shape === 'vertical') {
     cursorEl.style.background = 'none';
     const curWidth = m.cell_percentage
@@ -413,17 +381,20 @@ const redrawCursor = async () => {
   }
   if (m.blinkoff && m.blinkon) {
     const offset = m.blinkon / (m.blinkon + m.blinkoff);
-    cursorAnimation = cursorEl.animate([
-      { opacity: 1, offset: 0 },
-      { opacity: 1, offset },
-      { opacity: 0, offset },
-      { opacity: 0, offset: 1 },
-      { opacity: 1, offset: 1 },
-    ], {
-      duration: m.blinkoff + m.blinkon,
-      iterations: 'Infinity',
-      delay: m.blinkwait || 0,
-    });
+    cursorAnimation = cursorEl.animate(
+      [
+        { opacity: 1, offset: 0 },
+        { opacity: 1, offset },
+        { opacity: 0, offset },
+        { opacity: 0, offset: 1 },
+        { opacity: 1, offset: 1 },
+      ],
+      {
+        duration: m.blinkoff + m.blinkon,
+        iterations: 'Infinity',
+        delay: m.blinkwait || 0,
+      },
+    );
   }
 };
 
@@ -442,9 +413,9 @@ debouncedRepositionCursor = debounce(repositionCursor, 20);
 const optionSet = {
   guifont: (newFont) => {
     const [newFontFamily, newFontSize] = newFont.trim().split(':h');
-    if (newFontFamily) {
+    if (newFontFamily && newFontFamily !== '') {
       nvim.command(`VVset fontfamily=${newFontFamily}`);
-      if (newFontSize) {
+      if (newFontSize && newFontFamily !== '') {
         nvim.command(`VVset fontsize=${newFontSize}`);
       }
     }
@@ -493,7 +464,6 @@ const redrawCmd = {
     context.fillStyle = bgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     chars = {};
-    screenFrameContext.clearRect(0, 0, screenFrameCanvasEl.width, screenFrameCanvasEl.height);
   },
 
   eol_clear: () => {
@@ -507,9 +477,6 @@ const redrawCmd = {
     const height = charHeight;
     context.fillStyle = getBgColor();
     context.fillRect(left, top, width, height);
-
-    screenFrameContext.fillStyle = getBgColor();
-    screenFrameContext.fillRect(left + 1, top, width + 1, height);
   },
 
   highlight_set: (...props) => {
@@ -562,14 +529,19 @@ const redrawCmd = {
 
     const x = left * charWidth; // region left
     let y; // region top
-    const w = (right - left + 1) * charWidth; // clipped part width
+    let w = (right - left + 1) * charWidth; // clipped part width
     const h = (bottom - top + 1 - Math.abs(scrollCount)) * charHeight; // clipped part height
     const X = x; // destination left
     let Y; // destination top
     const cx = x; // clear left
     let cy; // clear top
-    const cw = w; // clear width
+    let cw = w; // clear width
     const ch = Math.abs(scrollCount) * charHeight; // clear height
+
+    if (right === cols - 1) { // Add extra char if it is far right rect
+      w += charWidth;
+      cw += charWidth;
+    }
 
     if (scrollCount > 0) {
       // scroll down
@@ -603,7 +575,6 @@ const redrawCmd = {
         } else {
           chars[i][j] = null;
         }
-        fillScreenFrame(i, j);
       }
     };
     if (scrollCount > 0) {
@@ -624,7 +595,6 @@ const redrawCmd = {
       for (let j = left; j <= right; j += 1) {
         if (chars[i] && chars[i][j]) {
           chars[i][j] = null;
-          fillScreenFrame(i, j);
         }
       }
     }
@@ -632,17 +602,14 @@ const redrawCmd = {
 
   resize: (...props) => {
     [[cols, rows]] = props;
-    screenEl.style.width = `${cols * charWidth}px`;
+    // Add extra column on the right to fill it with adjacent color to have a nice right border
+    screenEl.style.width = `${(cols + 1) * charWidth}px`;
     screenEl.style.height = `${rows * charHeight}px`;
-    canvasEl.width = cols * charWidth;
+    canvasEl.width = (cols + 1) * charWidth;
     canvasEl.height = rows * charHeight;
     context.fillStyle = getBgColor();
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     scrollRect = [0, rows - 1, 0, cols - 1];
-
-    screenFrameCanvasEl.width = (cols + 2) * charWidth;
-    screenFrameCanvasEl.height = rows * charHeight;
-    screenFrameContext.clearRect(0, 0, screenFrameCanvasEl.width, screenFrameCanvasEl.height);
   },
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L75
@@ -742,20 +709,22 @@ const screen = (containerId, newNvim) => {
 
   setScale();
 
-  initScreenFrame();
   initScreen();
   initCursor();
   measureCharSize();
 
   nvim.on('notification', handleNotification);
 
-  window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
-    canvasEl.style.opacity = 0;
-    setScale();
-    measureCharSize();
-    await nvim.uiTryResize(cols, rows);
-    canvasEl.style.opacity = 1;
-  });
+  // Detect when you drag between retina/non-retina displays
+  window
+    .matchMedia('screen and (min-resolution: 2dppx)')
+    .addListener(async () => {
+      canvasEl.style.opacity = 0;
+      setScale();
+      measureCharSize();
+      await nvim.uiTryResize(cols, rows);
+      canvasEl.style.opacity = 1;
+    });
 
   return redrawCmd;
 };
