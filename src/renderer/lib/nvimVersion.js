@@ -1,4 +1,4 @@
-import fixPath from 'fix-path';
+// import fixPath from 'fix-path';
 import nvimCommand from './../../lib/nvimCommand';
 
 const { execSync } = global.require('child_process');
@@ -11,7 +11,8 @@ let version;
 const nvimVersion = () => {
   if (version) return version;
 
-  fixPath();
+  // fixPath(); // TODO
+  process.env.PATH += ':/usr/local/bin';
   try {
     const execResult = execSync(`${nvimCommand()} --version`, {
       encoding: 'UTF-8',

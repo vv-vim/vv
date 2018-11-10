@@ -9,29 +9,33 @@ const boolValue = value => !!parseInt(value, 10);
 
 const handleSet = {
   fullscreen: (value) => {
-    if (simpleFullScreen) {
-      currentWindow.setSimpleFullScreen(boolValue(value));
-    } else {
-      currentWindow.setFullScreen(boolValue(value));
-    }
-    if (!boolValue(value)) {
-      currentWindow.webContents.send('leave-full-screen');
-    }
-    currentWindow.webContents.focus();
+    setTimeout(() => {
+      if (simpleFullScreen) {
+        currentWindow.setSimpleFullScreen(boolValue(value));
+      } else {
+        currentWindow.setFullScreen(boolValue(value));
+      }
+      if (!boolValue(value)) {
+        currentWindow.webContents.send('leave-full-screen');
+      }
+      currentWindow.webContents.focus();
+    }, 1);
   },
   simplefullscreen: (value) => {
-    simpleFullScreen = boolValue(value);
-    if (simpleFullScreen && currentWindow.isFullScreen()) {
-      currentWindow.setFullScreen(false);
-      currentWindow.setSimpleFullScreen(true);
-      currentWindow.webContents.focus();
-    } else if (!simpleFullScreen && currentWindow.isSimpleFullScreen()) {
-      currentWindow.setSimpleFullScreen(false);
-      currentWindow.setFullScreenable(true);
-      currentWindow.setFullScreen(true);
-      currentWindow.webContents.focus();
-    }
-    currentWindow.setFullScreenable(!simpleFullScreen);
+    setTimeout(() => {
+      simpleFullScreen = boolValue(value);
+      if (simpleFullScreen && currentWindow.isFullScreen()) {
+        currentWindow.setFullScreen(false);
+        currentWindow.setSimpleFullScreen(true);
+        currentWindow.webContents.focus();
+      } else if (!simpleFullScreen && currentWindow.isSimpleFullScreen()) {
+        currentWindow.setSimpleFullScreen(false);
+        currentWindow.setFullScreenable(true);
+        currentWindow.setFullScreen(true);
+        currentWindow.webContents.focus();
+      }
+      currentWindow.setFullScreenable(!simpleFullScreen);
+    }, 1);
   },
 };
 

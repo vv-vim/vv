@@ -1,6 +1,6 @@
 import { app, dialog, shell } from 'electron';
 import which from './lib/which';
-import nvimCommand from './../lib/nvimCommand';
+import nvimCommand from '../lib/nvimCommand';
 
 const checkNeovim = () => {
   if (which(nvimCommand())) return;

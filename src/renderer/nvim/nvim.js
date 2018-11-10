@@ -1,6 +1,8 @@
 import debounce from 'lodash/debounce';
 import path from 'path';
 
+import { spawn } from 'child_process';
+import isEqual from 'lodash/isEqual';
 import nvimCommand from '../../lib/nvimCommand';
 
 import initScreen, { screenCoords } from './screen';
@@ -17,28 +19,34 @@ import initReloadChanged from './features/reloadChanged';
 import initCloseWindow from './features/closeWindow';
 import initInsertSymbols from './features/insertSymbols';
 
-import { hasStdioopen, hasNewEmbedAPI } from '../lib/nvimVersion';
 
-const { spawn } = global.require('child_process');
-const { attach } = global.require('neovim');
+import store from '../../lib/store';
+import log from '../../lib/log';
+
+import { hasStdioopen, hasNewEmbedAPI } from "../lib/nvimVersion";
+
+log('Start nvim.js');
+
+const { attach } = global.require('neovim'); // ~100 ms lost here
 const {
   remote: { getCurrentWindow },
   screen: { getPrimaryDisplay },
   ipcRenderer,
-} = global.require('electron');
+} = require('electron');
 
 const currentWindow = getCurrentWindow();
+const { args, env, cwd } = currentWindow;
 let nvim;
 let cols;
 let rows;
 let screen;
 
-let windowLeftOriginal = currentWindow.getPosition()[0];
-let windowTopOriginal = currentWindow.getPosition()[1];
+let uiAttached = false;
+
+const [windowLeftOriginal, windowTopOriginal] = currentWindow.getPosition();
+let [windowWidth, windowHeight] = currentWindow.getSize();
 let windowLeft = windowLeftOriginal;
 let windowTop = windowTopOriginal;
-let windowWidth = currentWindow.getSize()[0];
-let windowHeight = currentWindow.getSize()[1];
 
 // When you have existing window and open the new one, the new window will have the same size
 // as existing and have top and left offset. We don't obey VVset width, height, left, top rules
@@ -46,55 +54,82 @@ let windowHeight = currentWindow.getSize()[1];
 // changed to false after startup is finished.
 let noResize = false;
 
+// Don't redraw while init.
+const noRedraw = true;
+
 let isWindowShown = false;
 
-const resize = async (forceRedraw = false) => {
-  const [newCols, newRows] = screenCoords(
-    window.innerWidth,
-    window.innerHeight,
-  );
-  if (
-    isWindowShown
-    && newCols > 0
-    && newRows > 0
-    && (newCols !== cols || newRows !== rows || forceRedraw)
-  ) {
-    cols = newCols;
-    rows = newRows;
+log('let done');
 
-    await nvim.uiTryResize(cols, rows);
+const showWindow = () => {
+  if (!isWindowShown) {
+    log('show window');
+    currentWindow.show();
+    isWindowShown = true;
+    debouncedShowWindow = () => {};
+    window.addEventListener('resize', debounce(resize, 100));
   }
 };
 
-const uiAttach = async () => {
-  [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
-  await nvim.uiAttach(cols, rows, {});
+const resize = (forceRedraw = false) => {
+  log('start resize');
+  const [newCols, newRows] = screenCoords(...currentWindow.getContentSize());
+  if (
+    newCols > 0
+    && newRows > 0
+    && (newCols !== cols || newRows !== rows || forceRedraw || !uiAttached)
+  ) {
+    log(`do resize ${newCols} ${newRows}`);
+    cols = newCols;
+    rows = newRows;
+
+    if (uiAttached) {
+      log('ui attached, ui uiTryResize', cols, rows);
+      nvim.uiTryResize(cols, rows);
+    } else {
+      uiAttached = true;
+      log('ui attach cols=', cols, 'rows=', rows);
+      nvim.uiAttach(cols, rows, {});
+    }
+    if (!hasNewEmbedAPI()) {
+      showWindow();
+    }
+  }
 };
 
-const handleResize = debounce(resize, 300);
+const redraw = () => {
+  if (!noRedraw) {
+    log('redraw');
+    resize(true);
+  }
+};
 
-const redraw = () => resize(true);
+let debouncedShowWindow = () => {};
 const debouncedRedraw = debounce(redraw, 10);
+const debouncedApplySettings = () => !noRedraw && debouncedRedraw();
 
 const updateWindowSize = () => {
-  if (!currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
-    currentWindow.setSize(windowWidth, windowHeight);
+  if (!settings.fullscreen) {
+    const primaryDisplay = getPrimaryDisplay();
+    const topOffset = Math.round(
+      getPrimaryDisplay().bounds.height
+        - getPrimaryDisplay().workAreaSize.height,
+    );
+    currentWindow.setBounds({ // 170ms
+      x: windowLeft,
+      y: windowTop + topOffset,
+      width: windowWidth,
+      height: windowHeight,
+    }, false);
+    resize(true);
   }
 };
 
 const debouncedUpdateWindowSize = debounce(updateWindowSize, 10);
 
-const updateWindowPosition = () => {
-  if (!currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
-    const topOffset = Math.round(
-      getPrimaryDisplay().bounds.height
-        - getPrimaryDisplay().workAreaSize.height,
-    );
-    currentWindow.setPosition(windowLeft, windowTop + topOffset);
-  }
-};
-
-const debouncedUpdateWindowPosition = debounce(updateWindowPosition, 10);
+const newSettings = store.get('settings') || {};
+log(newSettings);
+const settings = {};
 
 const handleSet = {
   windowwidth: (w) => {
@@ -104,8 +139,7 @@ const handleSet = {
       width = Math.round(getPrimaryDisplay().workAreaSize.width * width / 100);
     }
     windowWidth = width;
-    debouncedUpdateWindowSize();
-    handleSet.windowleft(windowLeftOriginal);
+    // handleSet.windowleft(windowLeftOriginal);
   },
   windowheight: (h) => {
     if (noResize) return;
@@ -116,12 +150,11 @@ const handleSet = {
       );
     }
     windowHeight = height;
-    debouncedUpdateWindowSize();
-    handleSet.windowtop(windowTopOriginal);
+    // handleSet.windowtop(windowTopOriginal);
   },
   windowleft: (l) => {
     if (noResize) return;
-    windowLeftOriginal = l;
+    // windowLeftOriginal = l;
     let left = parseInt(l, 10);
     if (l.toString().indexOf('%') !== -1) {
       const displayWidth = getPrimaryDisplay().workAreaSize.width;
@@ -129,11 +162,10 @@ const handleSet = {
       left = Math.round((displayWidth - winWidth) * left / 100);
     }
     windowLeft = left;
-    debouncedUpdateWindowPosition();
   },
   windowtop: (t) => {
     if (noResize) return;
-    windowTopOriginal = t;
+    // windowTopOriginal = t;
     let top = parseInt(t, 10);
     if (t.toString().indexOf('%') !== -1) {
       const displayHeight = getPrimaryDisplay().workAreaSize.height;
@@ -141,59 +173,84 @@ const handleSet = {
       top = Math.round((displayHeight - winHeight) * top / 100);
     }
     windowTop = top;
-    debouncedUpdateWindowPosition();
   },
+
   bold: (value) => {
-    screen.vv_show_bold(value);
-    debouncedRedraw();
+    screen.vv_bold(value);
   },
   italic: (value) => {
-    screen.vv_show_italic(value);
-    debouncedRedraw();
+    screen.vv_italic(value);
   },
   underline: (value) => {
-    screen.vv_show_underline(value);
-    debouncedRedraw();
+    screen.vv_underline(value);
   },
   undercurl: (value) => {
-    screen.vv_show_undercurl(value);
-    debouncedRedraw();
+    screen.vv_undercurl(value);
   },
   fontfamily: (value) => {
     screen.vv_fontfamily(value);
-    debouncedRedraw();
   },
   fontsize: (value) => {
     screen.vv_fontsize(value);
-    debouncedRedraw();
   },
   lineheight: (value) => {
     screen.vv_lineheight(value);
-    debouncedRedraw();
   },
   letterspacing: (value) => {
     screen.vv_letterspacing(value);
-    debouncedRedraw();
   },
 };
 
 const vimEnter = async () => {
-  if (isWindowShown) return;
-  isWindowShown = true;
+  log('vim enter start');
+  // if (isWindowShown) return;
+  // isWindowShown = true;
   noResize = false;
+  log('vim enter before resize');
+  debouncedRedraw.cancel();
   await resize();
-  setTimeout(currentWindow.show, 50);
+  log('vim enter before show window');
+  // setTimeout(() => {
+  //   currentWindow.show();
+  // }, 50);
+  // noRedraw = false;
   nvim.command('doautocmd <nomodeline> GUIEnter');
 };
 
-const handleNotification = async (method, args) => {
-  if (method === 'vv:set') {
-    const [option, ...props] = args;
-    if (handleSet[option]) {
-      handleSet[option](...props);
+const applyAllSettings = () => {
+  let hasChanges = false;
+  Object.keys(newSettings).forEach((key) => {
+    if (settings[key] !== newSettings[key] && handleSet[key]) {
+      handleSet[key](newSettings[key]);
+      settings[key] = newSettings[key];
+      hasChanges = true;
     }
+  });
+
+  if (hasChanges) {
+    log('has changes', hasChanges);
+    store.set('settings', newSettings);
+    updateWindowSize();
+  }
+};
+
+const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
+
+const handleNotification = async (method, params) => {
+  if (method === 'vv:set') {
+    const [option, props] = params;
+    log(`vv:set ${option} value=${props}`);
+    newSettings[option] = props;
+    debouncedApplyAllSettings();
+  } else if (method === 'redraw') {
+    debouncedShowWindow();
   } else if (method === 'vv:vim_enter') {
-    vimEnter();
+    log('vim enter notification');
+    debouncedShowWindow = debounce(showWindow, 10);
+    // showWindow();
+    // uiAttached = true;
+    // updateWindowSize();
+    // vimEnter();
   } else if (
     ![
       'redraw',
@@ -202,99 +259,101 @@ const handleNotification = async (method, args) => {
       'vv:file_changed',
     ].includes(method)
   ) {
-    console.warn('Unknown notification', method, args); // eslint-disable-line no-console
+    // console.warn('Unknown notification', method, params); // eslint-disable-line no-console
   }
 };
 
 const vvSourceCommand = () => `source ${path.join(currentWindow.resourcesPath, 'bin/vv.vim')}`;
 
 // Source vv specific ext on -u NONE
-const fixNoConfig = async () => {
-  const { args } = currentWindow;
+const fixNoConfig = () => {
   const uFlagIndex = args.indexOf('-u');
   if (uFlagIndex !== -1 && args[uFlagIndex + 1] === 'NONE') {
-    await nvim.command(vvSourceCommand());
+    nvim.command(vvSourceCommand());
   }
 };
 
+// const hasStdioopen = () => true;
+// const hasNewEmbedAPI = () => false;
+//
 const startNvimProcess = () => {
-  const { args, env, cwd } = currentWindow;
-
   // With --embed we can't read startup errors and it blocks process.
   // With --headless we can do it, but to turn on rpc we need stdioopen
   // that works only since nvim 0.3.
   // So we use --headless + stdioopen if we can.
   // Starting from 0.3.2 it has different --embed API that is not blocked by startup errors,
   // so it is safe to use --embed again.
-  const nvimArgs = hasStdioopen() && !hasNewEmbedAPI()
-    ? [
+  // const nvimArgs = ;
+
+  log('before nvimArgs');
+  const nvimArgs = hasNewEmbedAPI()
+    ? ['--embed', '--cmd', vvSourceCommand(), ...args]
+    : [
       '--headless',
       '--cmd',
       vvSourceCommand(),
       "+call stdioopen({'rpc': v:true})",
       ...args,
-    ]
-    : ['--embed', '--cmd', vvSourceCommand(), ...args];
+    ];
+  log('after nvimArgs');
 
-  const nvimProcess = spawn(nvimCommand(), nvimArgs, { env, cwd });
+  const nvimProcess = spawn(nvimCommand(), nvimArgs, { env, cwd }); // ~ 30ms
 
   // Pipe errors to std output and also send it in console as error.
-  nvimProcess.stderr.pipe(process.stdout);
+  // nvimProcess.stderr.pipe(process.stdout);
 
   let errorStr = '';
-  nvimProcess.stderr.on('data', (data) => {
+  nvimProcess.stderr.on('data', (data, ...rest) => {
     errorStr += data.toString();
     debounce(() => {
       if (errorStr) console.error(errorStr); // eslint-disable-line no-console
       errorStr = '';
     }, 10)();
   });
+  log('after start nvim');
 
   return nvimProcess;
 };
 
 const initNvim = async () => {
+  log('initNvim');
   ({ noResize } = currentWindow);
+  noResize = false;
 
-  nvim = await attach({ proc: startNvimProcess() });
-
-  screen = initScreen('screen', nvim);
+  log('before start nvim');
+  const proc = startNvimProcess({ args, env, cwd });
+  log('after start nvim');
+  nvim = await attach({ proc });
+  log('after attach nvim');
 
   nvim.on('notification', handleNotification);
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:vim_enter');
 
-  await uiAttach();
-  await fixNoConfig();
+  screen = initScreen('screen', nvim);
+
+  applyAllSettings();
+
+  fixNoConfig({ args });
+  log('after fix noconfig');
 
   initFullScreen(nvim);
+
+  if (!hasNewEmbedAPI()) {
+    log('VVsettings before');
+    await nvim.command('VVsettings');
+    log('VVsettings after');
+  }
+
   initZoom(nvim);
   initKeyboard(nvim);
   initMouse(nvim);
   initQuit(nvim);
   initCopyPaste(nvim);
   initWindowTitle(nvim);
-  initReloadChanged(nvim);
   initCloseWindow(nvim);
   initInsertSymbols(nvim);
-
-  ipcRenderer.on('leave-full-screen', () => {
-    updateWindowSize();
-    updateWindowPosition();
-  });
-
-  // If VimEnter did not fired for some reason, show window anyway
-  setTimeout(() => {
-    if (isWindowShown) return;
-    vimEnter();
-    currentWindow.show();
-  }, 1000);
-
-  if (!hasNewEmbedAPI()) {
-    await nvim.command('VVsettings');
-  }
-
-  window.addEventListener('resize', handleResize);
+  initReloadChanged(nvim);
 };
 
 document.addEventListener('DOMContentLoaded', initNvim);

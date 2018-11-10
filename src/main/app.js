@@ -1,18 +1,26 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import {
+  app, BrowserWindow, ipcMain, dialog,
+} from 'electron';
 import { statSync, existsSync } from 'fs';
 import path from 'path';
-import fixPath from 'fix-path';
+// import fixPath from 'fix-path';
 
 import menu, { refreshMenu } from './menu';
 import installCli from './installCli';
 import checkNeovim from './checkNeovim';
 
+import log from '../lib/log';
+
+log('Init');
+
 const windows = [];
 let currentWindow;
 let shouldQuit = false;
 
-const isDev = (dev = true, notDev = false) =>
-  (process.env.NODE_ENV === 'development' ? dev : notDev);
+// fixPath(); // TODO
+process.env.PATH += ':/usr/local/bin';
+
+const isDev = (dev = true, notDev = false) => (process.env.NODE_ENV === 'development' ? dev : notDev);
 
 const cliArgs = args => (args || process.argv).slice(isDev(2, 1));
 
@@ -38,9 +46,9 @@ const doCreateWindow = (args = [], cwd) => {
   };
   let noResize = false;
   if (
-    currentWindow &&
-    !currentWindow.isFullScreen() &&
-    !currentWindow.isSimpleFullScreen()
+    currentWindow
+    && !currentWindow.isFullScreen()
+    && !currentWindow.isSimpleFullScreen()
   ) {
     const [x, y] = currentWindow.getPosition();
     options.x = x + 20;
@@ -49,8 +57,6 @@ const doCreateWindow = (args = [], cwd) => {
     noResize = true;
   }
   let win = new BrowserWindow(options);
-
-  fixPath();
   win.args = args;
   win.env = process.env;
   win.cwd = cwd;
@@ -58,9 +64,15 @@ const doCreateWindow = (args = [], cwd) => {
   win.zoomLevel = 0;
   win.noResize = noResize;
 
-  win.loadURL(process.env.DEV_SERVER
-    ? 'http://localhost:3000'
-    : `file://${path.join(__dirname, './index.html')}`);
+  win.loadURL(
+    process.env.DEV_SERVER
+      ? 'http://localhost:3000'
+      : `file://${path.join(__dirname, './index.html')}`,
+  );
+
+  win.focus();
+
+  windows.push(win);
 
   win.on('closed', async () => {
     if (currentWindow === win) currentWindow = null;
@@ -80,16 +92,13 @@ const doCreateWindow = (args = [], cwd) => {
 
   if (isDev()) openDeveloperTools(win);
 
-  win.focus();
-
-  windows.push(win);
-
   return win;
 };
 
 // Find files in args and create window with each file.
 // If file is a directory, create window in context of this directory.
 const createWindow = (args = [], newCwd) => {
+  log('start create window');
   const cwd = newCwd || process.cwd();
   const fileArgs = [
     '--cmd',
@@ -110,8 +119,8 @@ const createWindow = (args = [], newCwd) => {
   } else {
     for (let i = args.length - 1; i >= 0; i -= 1) {
       if (
-        ['-', '+'].includes(args[i][0]) ||
-        (args[i - 1] && fileArgs.includes(args[i - 1]))
+        ['-', '+'].includes(args[i][0])
+        || (args[i - 1] && fileArgs.includes(args[i - 1]))
       ) {
         break;
       }
@@ -168,14 +177,16 @@ ipcMain.on('cancel-quit', () => {
 });
 
 app.on('ready', () => {
-  checkNeovim();
+  log('ready');
   createWindow(cliArgs());
+  log('after create window');
   menu({
     createWindow,
     openFile,
     installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
     closeWindow,
   });
+  checkNeovim();
 });
 
 app.on('before-quit', (e) => {
