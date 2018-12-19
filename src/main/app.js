@@ -3,7 +3,6 @@ import {
 } from 'electron';
 import { statSync, existsSync } from 'fs';
 import path from 'path';
-// import fixPath from 'fix-path';
 
 import menu, { refreshMenu } from './menu';
 import installCli from './installCli';
@@ -12,13 +11,11 @@ import checkNeovim from './checkNeovim';
 import log from '../lib/log';
 
 log('Init');
+log('process.env', process.env);
 
 const windows = [];
 let currentWindow;
 let shouldQuit = false;
-
-// fixPath(); // TODO
-process.env.PATH += ':/usr/local/bin';
 
 const isDev = (dev = true, notDev = false) => (process.env.NODE_ENV === 'development' ? dev : notDev);
 
@@ -52,13 +49,12 @@ const doCreateWindow = (args = [], cwd) => {
   ) {
     const [x, y] = currentWindow.getPosition();
     options.x = x + 20;
-    options.y = y + 20;
+    options.y = y;// + 20;
     [options.width, options.height] = currentWindow.getSize();
     noResize = true;
   }
   let win = new BrowserWindow(options);
   win.args = args;
-  win.env = process.env;
   win.cwd = cwd;
   win.resourcesPath = path.join(app.getAppPath(), isDev('./', '../'));
   win.zoomLevel = 0;

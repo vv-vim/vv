@@ -1,16 +1,14 @@
 import { execSync } from 'child_process';
-// import fixPath from 'fix-path';
+import shell from './shell';
 
 // Checks if command exists in shell
 // Returns path or false
 const which = (command) => {
-  // fixPath(); // TODO
-  process.env.PATH += ':/usr/local/bin';
   let result;
   try {
     result = execSync(`which ${command}`, {
       encoding: 'UTF-8',
-      env: process.env,
+      shell,
     });
   } catch (e) {
     result = null;
