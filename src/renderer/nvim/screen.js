@@ -520,9 +520,9 @@ const redrawCmd = {
     spColor = getColor(color, defaultSpColor);
   },
 
-  set_scroll_region: (rect) => {
-    // top, bottom, left, right
-    scrollRect = rect;
+  set_scroll_region: (...rects) => {
+    const rect = rects[rects.length - 1];
+    scrollRect = rect; // top, bottom, left, right
   },
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L202
@@ -683,6 +683,7 @@ const handleNotification = async (method, args) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (redrawCmd[cmd]) {
+        // console.log('redraw', cmd, JSON.stringify(props));
         redrawCmd[cmd](...props);
       } else {
         // console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console

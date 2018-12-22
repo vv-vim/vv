@@ -10,9 +10,6 @@ import checkNeovim from './checkNeovim';
 
 import log from '../lib/log';
 
-log('Init');
-log('process.env', process.env);
-
 const windows = [];
 let currentWindow;
 let shouldQuit = false;
@@ -94,7 +91,6 @@ const doCreateWindow = (args = [], cwd) => {
 // Find files in args and create window with each file.
 // If file is a directory, create window in context of this directory.
 const createWindow = (args = [], newCwd) => {
-  log('start create window');
   const cwd = newCwd || process.cwd();
   const fileArgs = [
     '--cmd',
@@ -173,9 +169,7 @@ ipcMain.on('cancel-quit', () => {
 });
 
 app.on('ready', () => {
-  log('ready');
   createWindow(cliArgs());
-  log('after create window');
   menu({
     createWindow,
     openFile,
