@@ -7,7 +7,7 @@ import nvimCommand from '../../lib/nvimCommand';
 import { hasStdioopen, hasNewEmbedAPI } from '../../lib/nvimVersion';
 
 import store from '../../lib/store';
-import log from '../../lib/log';
+// import log from '../../lib/log';
 import shell from '../../lib/shell';
 
 import initScreen, { screenCoords } from './screen';
@@ -35,6 +35,7 @@ let nvim;
 let cols;
 let rows;
 let screen;
+let fullScreen;
 
 let uiAttached = false;
 
@@ -51,17 +52,33 @@ let { noResize } = currentWindow;
 
 let isWindowShown = false;
 
-const newSettings = store.get('settings') || {};
+let newSettings = store.get('settings') || {};
 const settings = {};
+const defaultSettings = {
+  fullscreen: 0,
+  simplefullscreen: 1,
+  bold: 1,
+  italic: 1,
+  underline: 1,
+  undercurl: 1,
+  fontfamily: 'monospace',
+  fontsize: 12,
+  lineheight: 1.25,
+  letterspacing: 0,
+  windowwidth: '60%',
+  windowheight: '80%',
+  windowleft: '50%',
+  windowtop: '50%',
+};
 
 let debouncedShowWindow = () => {};
 
-const resize = (forceRedraw = false) => {
+const resize = () => {
   const [newCols, newRows] = screenCoords(...currentWindow.getContentSize());
   if (
     newCols > 0
     && newRows > 0
-    && (newCols !== cols || newRows !== rows || forceRedraw || !uiAttached)
+    && (newCols !== cols || newRows !== rows || !uiAttached)
   ) {
     cols = newCols;
     rows = newRows;
@@ -71,9 +88,6 @@ const resize = (forceRedraw = false) => {
     } else {
       uiAttached = true;
       nvim.uiAttach(cols, rows, {});
-    }
-    if (!hasNewEmbedAPI()) {
-      showWindow(); // eslint-disable-line no-use-before-define
     }
   }
 };
@@ -86,10 +100,10 @@ const showWindow = () => {
     isWindowShown = true;
     noResize = false;
     nvim.command('doautocmd <nomodeline> GUIEnter');
+    store.set('settings', settings);
     window.addEventListener('resize', debouncedResize);
   }
 };
-
 
 const updateWindowSize = () => {
   if (!settings.fullscreen) {
@@ -107,8 +121,8 @@ const updateWindowSize = () => {
       },
       false,
     );
-    resize(true);
   }
+  resize();
 };
 
 const handleSet = {
@@ -155,30 +169,16 @@ const handleSet = {
     windowTop = top;
   },
 
-  bold: (value) => {
-    screen.vv_bold(value);
-  },
-  italic: (value) => {
-    screen.vv_italic(value);
-  },
-  underline: (value) => {
-    screen.vv_underline(value);
-  },
-  undercurl: (value) => {
-    screen.vv_undercurl(value);
-  },
-  fontfamily: (value) => {
-    screen.vv_fontfamily(value);
-  },
-  fontsize: (value) => {
-    screen.vv_fontsize(value);
-  },
-  lineheight: (value) => {
-    screen.vv_lineheight(value);
-  },
-  letterspacing: (value) => {
-    screen.vv_letterspacing(value);
-  },
+  fullscreen: value => fullScreen.fullscreen(value),
+
+  bold: value => screen.vv_bold(value),
+  italic: value => screen.vv_italic(value),
+  underline: value => screen.vv_underline(value),
+  undercurl: value => screen.vv_undercurl(value),
+  fontfamily: value => screen.vv_fontfamily(value),
+  fontsize: value => screen.vv_fontsize(value),
+  lineheight: value => screen.vv_lineheight(value),
+  letterspacing: value => screen.vv_letterspacing(value),
 };
 
 const applyAllSettings = () => {
@@ -191,8 +191,7 @@ const applyAllSettings = () => {
     }
   });
 
-  if (hasChanges) {
-    store.set('settings', newSettings);
+  if (hasChanges || Object.keys(newSettings).length === 0) {
     updateWindowSize();
   }
 };
@@ -278,19 +277,24 @@ const initNvim = async () => {
   nvim.on('notification', handleNotification);
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:vim_enter');
-  // await nvim.apiInfo;
+  // const apiInfo = await nvim.apiInfo;
+  // console.log(apiInfo);
+  // window.apiInfo = apiInfo;
 
   screen = initScreen('screen', nvim);
+  fullScreen = initFullScreen(nvim);
 
-  applyAllSettings();
+  if (hasNewEmbedAPI()) {
+    applyAllSettings();
+    newSettings = defaultSettings;
+  } else {
+    newSettings = defaultSettings;
+    await nvim.command('VVsettings');
+    applyAllSettings();
+    showWindow();
+  }
 
   fixNoConfig(args);
-
-  initFullScreen(nvim);
-
-  if (!hasNewEmbedAPI()) {
-    await nvim.command('VVsettings');
-  }
 
   // If nvim has startup errors or swapfile warning it will not trigger VimEnter
   // until user action. If that happens, show window anyway.

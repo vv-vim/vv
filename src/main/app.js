@@ -8,7 +8,7 @@ import menu, { refreshMenu } from './menu';
 import installCli from './installCli';
 import checkNeovim from './checkNeovim';
 
-import log from '../lib/log';
+// import log from '../lib/log';
 
 const windows = [];
 let currentWindow;
