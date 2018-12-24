@@ -87,7 +87,7 @@ const resize = () => {
       nvim.uiTryResize(cols, rows);
     } else {
       uiAttached = true;
-      nvim.uiAttach(cols, rows, {});
+      nvim.uiAttach(cols, rows, { ext_linegrid: true });
     }
   }
 };
@@ -199,6 +199,7 @@ const applyAllSettings = () => {
 const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
 
 const handleNotification = async (method, params) => {
+  // console.('Unknown notification', method, params); // eslint-disable-line no-console
   if (method === 'vv:set') {
     const [option, props] = params;
     newSettings[option] = props;

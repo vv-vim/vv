@@ -55,6 +55,8 @@ let charsCache = {};
 
 let chars = {};
 
+const highlightTable = {};
+
 export const getCursorElement = () => cursorEl;
 
 const initCursor = () => {
@@ -188,7 +190,7 @@ const getCharBitmap = (char, props = {}) => {
       ctx.strokeStyle = p.spColor;
       ctx.lineWidth = scaledFontSize() * 0.08;
       const x = charWidth;
-      const y = charHeight - scaledFontSize() * 0.08 / 2;
+      const y = charHeight - (scaledFontSize() * 0.08) / 2;
       const h = charHeight * 0.2; // Height of the wave
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -200,7 +202,14 @@ const getCharBitmap = (char, props = {}) => {
         x + x / 2,
         y - h / 2,
       );
-      ctx.bezierCurveTo(x + x / 4 * 3, y - h / 2, x + x / 4 * 3, y, x + x, y);
+      ctx.bezierCurveTo(
+        x + (x / 4) * 3,
+        y - h / 2,
+        x + (x / 4) * 3,
+        y,
+        x + x,
+        y,
+      );
       ctx.stroke();
     }
 
@@ -364,14 +373,14 @@ const redrawCursor = async () => {
   } else if (m.cursor_shape === 'vertical') {
     cursorEl.style.background = 'none';
     const curWidth = m.cell_percentage
-      ? Math.max(scale, Math.round(charWidth / 100 * m.cell_percentage))
+      ? Math.max(scale, Math.round((charWidth / 100) * m.cell_percentage))
       : scale;
     cursorContext.fillStyle = highlightAttrs.bgColor;
     cursorContext.fillRect(0, 0, curWidth, charHeight);
   } else if (m.cursor_shape === 'horizontal') {
     cursorEl.style.background = 'none';
     const curHeight = m.cell_percentage
-      ? Math.max(scale, Math.round(charHeight / 100 * m.cell_percentage))
+      ? Math.max(scale, Math.round((charHeight / 100) * m.cell_percentage))
       : scale;
     cursorContext.fillStyle = highlightAttrs.bgColor;
     cursorContext.fillRect(0, charHeight - curHeight, charWidth, curHeight);
@@ -540,7 +549,8 @@ const redrawCmd = {
     let cw = w; // clear width
     const ch = Math.abs(scrollCount) * charHeight; // clear height
 
-    if (right === cols - 1) { // Add extra char if it is far right rect
+    if (right === cols - 1) {
+      // Add extra char if it is far right rect
       w += charWidth;
       cw += charWidth;
     }
@@ -640,6 +650,136 @@ const redrawCmd = {
     });
   },
 
+  // New api
+  grid_resize: (props) => {
+    cols = props[1];
+    rows = props[2];
+    // Add extra column on the right to fill it with adjacent color to have a nice right border
+    screenEl.style.width = `${(cols + 1) * charWidth}px`;
+    screenEl.style.height = `${rows * charHeight}px`;
+    canvasEl.width = (cols + 1) * charWidth;
+    canvasEl.height = rows * charHeight;
+    context.fillStyle = getBgColor();
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    scrollRect = [0, rows - 1, 0, cols - 1];
+  },
+
+  default_colors_set: (...p) => {
+    const props = p[p.length - 1];
+    const [foreground, background, special] = props;
+    bgColor = getColor(background, defaultBgColor);
+    fgColor = getColor(foreground, defaultFgColor);
+    spColor = getColor(special, defaultSpColor);
+    body.style.background = bgColor;
+    highlightTable[0] = {
+      foreground,
+      background,
+      special,
+    };
+  },
+
+  grid_line: (...props) => {
+    // console.log(props);
+    props.forEach(([grid, row, col, cells]) => {
+      let lineLength = 0;
+
+      // Fill background for the whole set of chars
+      cells.forEach(([char, hlId, length = 1]) => {
+        if (highlightTable[hlId]) {
+          const {
+            foreground,
+            background,
+            special,
+            reverse,
+            standout,
+            italic,
+            bold,
+            underline,
+            undercurl,
+          } = highlightTable[hlId];
+          reverseColor = reverse || standout;
+          hiFgColor = getColor(foreground, fgColor);
+          hiBgColor = getColor(background, bgColor);
+          hiSpColor = getColor(special, spColor);
+          hiItalic = showItalic && italic;
+          hiBold = showBold && bold;
+          hiUnderline = showUnderline && underline;
+          hiUndercurl = showUndercurl && undercurl;
+        }
+
+        context.fillStyle = getBgColor();
+
+        Array.from({ length }, (v, iii) => {
+          context.fillRect(
+            (col + lineLength + iii) * charWidth,
+            row * charHeight,
+            charWidth,
+            charHeight,
+          );
+        });
+        lineLength += length;
+      });
+
+      lineLength = 0;
+      cells.forEach(([char, hlId, length = 1]) => {
+        if (highlightTable[hlId]) {
+          const {
+            foreground,
+            background,
+            special,
+            reverse,
+            standout,
+            italic,
+            bold,
+            underline,
+            undercurl,
+          } = highlightTable[hlId];
+          reverseColor = reverse || standout;
+          hiFgColor = getColor(foreground, fgColor);
+          hiBgColor = getColor(background, bgColor);
+          hiSpColor = getColor(special, spColor);
+          hiItalic = showItalic && italic;
+          hiBold = showBold && bold;
+          hiUnderline = showUnderline && underline;
+          hiUndercurl = showUndercurl && undercurl;
+        }
+
+        Array.from({ length }, (v, iii) => {
+          printChar(row, col + lineLength + iii, char);
+        });
+        lineLength += length;
+      });
+
+      cleanOverlap([row, col - 1]);
+      overlapPrev([row, col]);
+
+      overlapNext([row, col + lineLength - 1]);
+      cleanOverlap([row, col + lineLength]);
+
+      // clearCursor();
+      // debouncedRepositionCursor();
+    });
+  },
+
+  grid_clear: () => {
+    cursor = [0, 0];
+    clearCursor();
+    context.fillStyle = bgColor;
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    chars = {};
+  },
+
+  hl_attr_define: (...props) => {
+    props.forEach(([id, value]) => {
+      highlightTable[id] = value;
+    });
+  },
+
+  grid_cursor_goto: (newCursor) => {
+    cursor = [newCursor[1], newCursor[2]];
+    repositionCursor();
+  },
+
   // VV specific commands
   vv_fontfamily: (newFontFamily) => {
     fontFamily = newFontFamily;
@@ -736,8 +876,8 @@ export const screenCoords = (width, height) => {
   debouncedMeasureCharSize.cancel();
   measureCharSize();
   return [
-    Math.floor(width * scale / charWidth),
-    Math.floor(height * scale / charHeight),
+    Math.floor((width * scale) / charWidth),
+    Math.floor((height * scale) / charHeight),
   ];
 };
 
