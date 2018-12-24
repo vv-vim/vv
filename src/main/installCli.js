@@ -1,30 +1,28 @@
 import { dialog } from 'electron';
 import { execSync } from 'child_process';
-import which from './lib/which';
+import which from '../lib/which';
 
-const showInstallCliDialog = () =>
-  dialog.showMessageBox({
-    message: 'Command line launcher',
-    detail: `With command line launcher you can run VV from terminal:
+const showInstallCliDialog = () => dialog.showMessageBox({
+  message: 'Command line launcher',
+  detail: `With command line launcher you can run VV from terminal:
 $ vv [filename]
 
 Do you wish to install it? It will be placed
 to /usr/local/bin.
 `,
-    cancelId: 1,
-    defaultId: 0,
-    buttons: ['Install', 'Cancel'],
-  });
+  cancelId: 1,
+  defaultId: 0,
+  buttons: ['Install', 'Cancel'],
+});
 
-const showCliInstalledDialog = (message, path) =>
-  dialog.showMessageBox({
-    message,
-    detail: `Command line launcher installed at ${path}. You can run VV from terminal by typing:
+const showCliInstalledDialog = (message, path) => dialog.showMessageBox({
+  message,
+  detail: `Command line launcher installed at ${path}. You can run VV from terminal by typing:
 $ vv [filename]
 `,
-    defaultId: 0,
-    buttons: ['Ok'],
-  });
+  defaultId: 0,
+  buttons: ['Ok'],
+});
 
 const showErrorDialog = (error) => {
   dialog.showMessageBox({

@@ -1,18 +1,20 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import {
+  app, BrowserWindow, ipcMain, dialog,
+} from 'electron';
 import { statSync, existsSync } from 'fs';
 import path from 'path';
-import fixPath from 'fix-path';
 
 import menu, { refreshMenu } from './menu';
 import installCli from './installCli';
 import checkNeovim from './checkNeovim';
 
+// import log from '../lib/log';
+
 const windows = [];
 let currentWindow;
 let shouldQuit = false;
 
-const isDev = (dev = true, notDev = false) =>
-  (process.env.NODE_ENV === 'development' ? dev : notDev);
+const isDev = (dev = true, notDev = false) => (process.env.NODE_ENV === 'development' ? dev : notDev);
 
 const cliArgs = args => (args || process.argv).slice(isDev(2, 1));
 
@@ -38,29 +40,32 @@ const doCreateWindow = (args = [], cwd) => {
   };
   let noResize = false;
   if (
-    currentWindow &&
-    !currentWindow.isFullScreen() &&
-    !currentWindow.isSimpleFullScreen()
+    currentWindow
+    && !currentWindow.isFullScreen()
+    && !currentWindow.isSimpleFullScreen()
   ) {
     const [x, y] = currentWindow.getPosition();
     options.x = x + 20;
-    options.y = y + 20;
+    options.y = y;// + 20;
     [options.width, options.height] = currentWindow.getSize();
     noResize = true;
   }
   let win = new BrowserWindow(options);
-
-  fixPath();
   win.args = args;
-  win.env = process.env;
   win.cwd = cwd;
   win.resourcesPath = path.join(app.getAppPath(), isDev('./', '../'));
   win.zoomLevel = 0;
   win.noResize = noResize;
 
-  win.loadURL(process.env.DEV_SERVER
-    ? 'http://localhost:3000'
-    : `file://${path.join(__dirname, './index.html')}`);
+  win.loadURL(
+    process.env.DEV_SERVER
+      ? 'http://localhost:3000'
+      : `file://${path.join(__dirname, './index.html')}`,
+  );
+
+  win.focus();
+
+  windows.push(win);
 
   win.on('closed', async () => {
     if (currentWindow === win) currentWindow = null;
@@ -79,10 +84,6 @@ const doCreateWindow = (args = [], cwd) => {
   });
 
   if (isDev()) openDeveloperTools(win);
-
-  win.focus();
-
-  windows.push(win);
 
   return win;
 };
@@ -110,8 +111,8 @@ const createWindow = (args = [], newCwd) => {
   } else {
     for (let i = args.length - 1; i >= 0; i -= 1) {
       if (
-        ['-', '+'].includes(args[i][0]) ||
-        (args[i - 1] && fileArgs.includes(args[i - 1]))
+        ['-', '+'].includes(args[i][0])
+        || (args[i - 1] && fileArgs.includes(args[i - 1]))
       ) {
         break;
       }
@@ -168,7 +169,6 @@ ipcMain.on('cancel-quit', () => {
 });
 
 app.on('ready', () => {
-  checkNeovim();
   createWindow(cliArgs());
   menu({
     createWindow,
@@ -176,6 +176,7 @@ app.on('ready', () => {
     installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
     closeWindow,
   });
+  checkNeovim();
 });
 
 app.on('before-quit', (e) => {

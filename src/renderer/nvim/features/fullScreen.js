@@ -35,15 +35,6 @@ const handleSet = {
   },
 };
 
-const handleNotification = async (method, args) => {
-  if (method === 'vv:set') {
-    const [option, ...props] = args;
-    if (handleSet[option]) {
-      handleSet[option](...props);
-    }
-  }
-};
-
 const handleToggleFullScreen = () => {
   nvim.command('VVset fullscreen!');
 };
@@ -51,9 +42,7 @@ const handleToggleFullScreen = () => {
 const initFullScreen = (newNvim) => {
   nvim = newNvim;
   ipcRenderer.on('toggleFullScreen', handleToggleFullScreen);
-  nvim.on('notification', (method, args) => {
-    handleNotification(method, args);
-  });
+  return handleSet;
 };
 
 export default initFullScreen;

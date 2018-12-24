@@ -1,7 +1,7 @@
-import fixPath from 'fix-path';
-import nvimCommand from './../../lib/nvimCommand';
+import { execSync } from 'child_process';
 
-const { execSync } = global.require('child_process');
+import nvimCommand from './nvimCommand';
+import shell from './shell';
 
 let version;
 
@@ -11,11 +11,10 @@ let version;
 const nvimVersion = () => {
   if (version) return version;
 
-  fixPath();
   try {
     const execResult = execSync(`${nvimCommand()} --version`, {
       encoding: 'UTF-8',
-      env: process.env,
+      shell,
     });
     if (execResult) {
       const match = execResult.match(/NVIM v(\d+)\.(\d+).(\d+)/);

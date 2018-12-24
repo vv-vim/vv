@@ -129,6 +129,8 @@ const measureCharSize = () => {
   charsCache = {};
 };
 
+const debouncedMeasureCharSize = debounce(measureCharSize, 10);
+
 const getFgColor = () => (reverseColor ? hiBgColor : hiFgColor);
 
 const getBgColor = () => (reverseColor ? hiFgColor : hiBgColor);
@@ -518,9 +520,9 @@ const redrawCmd = {
     spColor = getColor(color, defaultSpColor);
   },
 
-  set_scroll_region: (rect) => {
-    // top, bottom, left, right
-    scrollRect = rect;
+  set_scroll_region: (...rects) => {
+    const rect = rects[rects.length - 1];
+    scrollRect = rect; // top, bottom, left, right
   },
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L202
@@ -633,7 +635,7 @@ const redrawCmd = {
       if (optionSet[option]) {
         optionSet[option](value);
       } else {
-        console.warn('Unknown option', option, value); // eslint-disable-line no-console
+        // console.warn('Unknown option', option, value); // eslint-disable-line no-console
       }
     });
   },
@@ -641,37 +643,37 @@ const redrawCmd = {
   // VV specific commands
   vv_fontfamily: (newFontFamily) => {
     fontFamily = newFontFamily;
-    measureCharSize();
+    debouncedMeasureCharSize();
   },
 
   vv_fontsize: (newFontSize) => {
     fontSize = parseInt(newFontSize, 10);
-    measureCharSize();
+    debouncedMeasureCharSize();
   },
 
   vv_letterspacing: (newLetterSpacing) => {
     letterSpacing = parseInt(newLetterSpacing, 10);
-    measureCharSize();
+    debouncedMeasureCharSize();
   },
 
   vv_lineheight: (newLineHeight) => {
     lineHeight = parseFloat(newLineHeight);
-    measureCharSize();
+    debouncedMeasureCharSize();
   },
 
-  vv_show_bold: (value) => {
+  vv_bold: (value) => {
     showBold = value;
   },
 
-  vv_show_italic: (value) => {
+  vv_italic: (value) => {
     showItalic = value;
   },
 
-  vv_show_underline: (value) => {
+  vv_underline: (value) => {
     showUnderline = value;
   },
 
-  vv_show_undercurl: (value) => {
+  vv_undercurl: (value) => {
     showUndercurl = value;
   },
 };
@@ -681,9 +683,10 @@ const handleNotification = async (method, args) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (redrawCmd[cmd]) {
+        // console.log('redraw', cmd, JSON.stringify(props));
         redrawCmd[cmd](...props);
       } else {
-        console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
+        // console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
     }
     if (args[args.length - 1][0] === 'cursor_goto') {
@@ -729,9 +732,13 @@ const screen = (containerId, newNvim) => {
   return redrawCmd;
 };
 
-export const screenCoords = (width, height) => [
-  Math.floor(width * scale / charWidth),
-  Math.floor(height * scale / charHeight),
-];
+export const screenCoords = (width, height) => {
+  debouncedMeasureCharSize.cancel();
+  measureCharSize();
+  return [
+    Math.floor(width * scale / charWidth),
+    Math.floor(height * scale / charHeight),
+  ];
+};
 
 export default screen;
