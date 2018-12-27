@@ -1,4 +1,5 @@
 import debounce from 'lodash/debounce';
+// import log from '../../lib/log';
 
 const [body] = document.getElementsByTagName('body');
 
@@ -419,7 +420,7 @@ export const repositionCursor = () => {
   redrawCursor();
 };
 
-debouncedRepositionCursor = debounce(repositionCursor, 20);
+debouncedRepositionCursor = debounce(repositionCursor, 10);
 
 const optionSet = {
   guifont: (newFont) => {
@@ -680,11 +681,11 @@ const redrawCmd = {
 
   grid_line: (...props) => {
     // console.log(props);
-    props.forEach(([grid, row, col, cells]) => {
+    props.forEach(([grid, row, col, cells]) => { // eslint-disable-line no-unused-vars
       let lineLength = 0;
 
       // Fill background for the whole set of chars
-      cells.forEach(([char, hlId, length = 1]) => {
+      cells.forEach(([char, hlId, length = 1]) => { // eslint-disable-line no-unused-vars
         if (highlightTable[hlId]) {
           const {
             foreground,
@@ -709,14 +710,12 @@ const redrawCmd = {
 
         context.fillStyle = getBgColor();
 
-        Array.from({ length }, (v, iii) => {
-          context.fillRect(
-            (col + lineLength + iii) * charWidth,
-            row * charHeight,
-            charWidth,
-            charHeight,
-          );
-        });
+        Array.from({ length }, (v, i) => context.fillRect(
+          (col + lineLength + i) * charWidth,
+          row * charHeight,
+          charWidth,
+          charHeight,
+        ));
         lineLength += length;
       });
 
@@ -744,9 +743,7 @@ const redrawCmd = {
           hiUndercurl = showUndercurl && undercurl;
         }
 
-        Array.from({ length }, (v, iii) => {
-          printChar(row, col + lineLength + iii, char);
-        });
+        Array.from({ length }, (v, iii) => printChar(row, col + lineLength + iii, char));
         lineLength += length;
       });
 
@@ -755,9 +752,6 @@ const redrawCmd = {
 
       overlapNext([row, col + lineLength - 1]);
       cleanOverlap([row, col + lineLength]);
-
-      // clearCursor();
-      // debouncedRepositionCursor();
     });
   },
 
@@ -777,9 +771,65 @@ const redrawCmd = {
 
   grid_cursor_goto: (newCursor) => {
     cursor = [newCursor[1], newCursor[2]];
-    repositionCursor();
+    debouncedRepositionCursor();
   },
 
+  // set_scroll_region: (...rects) => {
+  //   const rect = rects[rects.length - 1];
+  //   scrollRect = rect; // top, bottom, left, right
+  // },
+  //
+  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L202
+  // eslint-disable-next-line no-unused-vars
+  grid_scroll: ([grid, top, bottom, left, right, scrollCount]) => {
+    const x = left * charWidth; // region left
+    let y; // region top
+    let w = (right - left) * charWidth; // clipped part width
+    const h = (bottom - top - Math.abs(scrollCount)) * charHeight; // clipped part height
+    const X = x; // destination left
+    let Y; // destination top
+
+    if (right === cols) {
+      // Add extra char if it is far right rect
+      w += charWidth;
+    }
+
+    if (scrollCount > 0) {
+      // scroll down
+      y = (top + scrollCount) * charHeight;
+      Y = top * charHeight;
+    } else {
+      // scroll up
+      y = top * charHeight;
+      Y = (top - scrollCount) * charHeight;
+    }
+
+    // Copy scrolled lines
+    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+    context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
+
+    const iterateJ = (i) => {
+      for (let j = left; j <= right - 1; j += 1) {
+        if (!chars[i]) chars[i] = {};
+        if (chars[i + scrollCount] && chars[i + scrollCount][j]) {
+          chars[i][j] = chars[i + scrollCount][j];
+        } else {
+          chars[i][j] = null;
+        }
+      }
+    };
+    if (scrollCount > 0) {
+      // scroll down
+      for (let i = top; i <= bottom - scrollCount - 1; i += 1) {
+        iterateJ(i);
+      }
+    } else {
+      // scroll up
+      for (let i = bottom - 1; i >= top - scrollCount; i -= 1) {
+        iterateJ(i);
+      }
+    }
+  },
   // VV specific commands
   vv_fontfamily: (newFontFamily) => {
     fontFamily = newFontFamily;
@@ -823,7 +873,7 @@ const handleNotification = async (method, args) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (redrawCmd[cmd]) {
-        // console.log('redraw', cmd, JSON.stringify(props));
+        // log('redraw', cmd, JSON.stringify(props));
         redrawCmd[cmd](...props);
       } else {
         // console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
