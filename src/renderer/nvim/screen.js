@@ -147,19 +147,16 @@ const font = p => [
   fontFamily,
 ].join(' ');
 
-const getCharBitmap = (char, props = {}) => {
-  const p = Object.assign(
-    {
-      fgColor: getFgColor(),
-      bgColor: getBgColor(),
-      spColor: getSpColor(),
-      hiItalic,
-      hiBold,
-      hiUnderline,
-      hiUndercurl,
-    },
-    props,
-  );
+const getCharBitmap = (char, props) => {
+  const p = props || {
+    fgColor: getFgColor(),
+    bgColor: getBgColor(),
+    spColor: getSpColor(),
+    hiItalic,
+    hiBold,
+    hiUnderline,
+    hiUndercurl,
+  };
   const key = [char, ...Object.values(p)].join('-');
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
@@ -219,15 +216,29 @@ const getCharBitmap = (char, props = {}) => {
   return charsCache[key];
 };
 
-const printChar = (i, j, char) => {
+const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
-  chars[i][j] = {
-    bitmap: getCharBitmap(char),
-    bg: getBgColor(),
-    char,
-    italic: hiItalic,
-    bold: hiBold,
-  };
+
+  if (hlId || hlId === 0) {
+    const props = highlightTable[hlId].calculated;
+    chars[i][j] = {
+      char,
+      bitmap: getCharBitmap(char, props),
+      bg: props.bgColor,
+      italic: props.hiItalic,
+      bold: props.hiBold,
+      hlId,
+    };
+  } else {
+    chars[i][j] = {
+      bitmap: getCharBitmap(char),
+      bg: getBgColor(),
+      char,
+      italic: hiItalic,
+      bold: hiBold,
+    };
+  }
+
   // If this is the last col, fill the next char on extra col with it's bg
   if (j === cols - 1) {
     const rect = [cols * charWidth, i * charHeight, charWidth, charHeight];
@@ -251,8 +262,8 @@ const printChar = (i, j, char) => {
   );
 };
 
-// If char previous to the current cursor is wider that char width, we need to draw that part of
-// it that overlaps the current cursor when we redraw it.
+// If char previous to the current cursor is wider that char width, we need to draw that part
+// of it that overlaps the current cursor when we redraw it.
 const overlapPrev = ([i, j]) => {
   if (chars[i] && chars[i][j - 1]) {
     context.drawImage(
@@ -336,7 +347,13 @@ const redrawCursor = async () => {
   }
 
   // Default cursor colors if no hl_id is set
-  const highlightAttrs = {
+  const highlightAttrs = highlightTable[0] ? {
+    bgColor: highlightTable[0].calculated.fgColor,
+    fgColor: highlightTable[0].calculated.bgColor,
+    spColor: highlightTable[0].calculated.bgColor,
+    hiBold: cursorChar.bold,
+    hiItalic: cursorChar.italic,
+  } : {
     bgColor: fgColor,
     fgColor: bgColor,
     spColor: bgColor,
@@ -344,6 +361,7 @@ const redrawCursor = async () => {
     hiItalic: cursorChar.italic,
   };
 
+  // TODO: check this
   // Get custom cursor colors if hl_id is set
   if (m.hl_id) {
     // TODO: tmp code. getHighlightById when it will be available
@@ -434,6 +452,40 @@ const optionSet = {
   },
 };
 
+const recalculateHighlightTable = () => {
+  if (highlightTable[0]) {
+    Object.keys(highlightTable).forEach((id) => {
+      if (id > 0) {
+        const {
+          foreground,
+          background,
+          special,
+          reverse,
+          standout,
+          italic,
+          bold,
+          underline,
+          undercurl,
+        } = highlightTable[id].value;
+        const r = reverse || standout;
+        const fg = getColor(foreground, highlightTable[0].calculated.fgColor);
+        const bg = getColor(background, highlightTable[0].calculated.bgColor);
+        const sp = getColor(special, highlightTable[0].calculated.spColor);
+
+        highlightTable[id].calculated = {
+          fgColor: r ? bg : fg,
+          bgColor: r ? fg : bg,
+          spColor: sp,
+          hiItalic: showItalic && italic,
+          hiBold: showBold && bold,
+          hiUnderline: showUnderline && underline,
+          hiUndercurl: showUndercurl && undercurl,
+        };
+      }
+    });
+  }
+};
+
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
   put: (...props) => {
@@ -473,7 +525,7 @@ const redrawCmd = {
   clear: () => {
     cursor = [0, 0];
     clearCursor();
-    context.fillStyle = bgColor;
+    context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : bgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     chars = {};
   },
@@ -668,49 +720,42 @@ const redrawCmd = {
   default_colors_set: (...p) => {
     const props = p[p.length - 1];
     const [foreground, background, special] = props;
-    bgColor = getColor(background, defaultBgColor);
-    fgColor = getColor(foreground, defaultFgColor);
-    spColor = getColor(special, defaultSpColor);
-    body.style.background = bgColor;
-    highlightTable[0] = {
-      foreground,
-      background,
-      special,
+    const calculated = {
+      bgColor: getColor(background, defaultBgColor),
+      fgColor: getColor(foreground, defaultFgColor),
+      spColor: getColor(special, defaultSpColor),
+      hiItalic: false,
+      hiBold: false,
+      hiUnderline: false,
+      hiUndercurl: false,
     };
+    body.style.background = calculated.bgColor;
+    highlightTable[0] = {
+      value: {
+        foreground,
+        background,
+        special,
+      },
+      calculated,
+    };
+    recalculateHighlightTable();
   },
 
   grid_line: (...props) => {
-    // console.log(props);
-    props.forEach(([grid, row, col, cells]) => { // eslint-disable-line no-unused-vars
+    props.forEach(([_grid, row, col, cells]) => {
+      // eslint-disable-line no-unused-vars
       let lineLength = 0;
 
       // Fill background for the whole set of chars
+      // TODO: refactor
+
+      let currentHlId;
       cells.forEach(([char, hlId, length = 1]) => { // eslint-disable-line no-unused-vars
-        if (highlightTable[hlId]) {
-          const {
-            foreground,
-            background,
-            special,
-            reverse,
-            standout,
-            italic,
-            bold,
-            underline,
-            undercurl,
-          } = highlightTable[hlId];
-          reverseColor = reverse || standout;
-          hiFgColor = getColor(foreground, fgColor);
-          hiBgColor = getColor(background, bgColor);
-          hiSpColor = getColor(special, spColor);
-          hiItalic = showItalic && italic;
-          hiBold = showBold && bold;
-          hiUnderline = showUnderline && underline;
-          hiUndercurl = showUndercurl && undercurl;
+        if (hlId || hlId === 0) {
+          currentHlId = hlId;
         }
-
-        context.fillStyle = getBgColor();
-
-        Array.from({ length }, (v, i) => context.fillRect(
+        context.fillStyle = highlightTable[currentHlId].calculated.bgColor;
+        Array.from({ length }, (_v, i) => context.fillRect(
           (col + lineLength + i) * charWidth,
           row * charHeight,
           charWidth,
@@ -720,30 +765,15 @@ const redrawCmd = {
       });
 
       lineLength = 0;
+      currentHlId = undefined;
       cells.forEach(([char, hlId, length = 1]) => {
-        if (highlightTable[hlId]) {
-          const {
-            foreground,
-            background,
-            special,
-            reverse,
-            standout,
-            italic,
-            bold,
-            underline,
-            undercurl,
-          } = highlightTable[hlId];
-          reverseColor = reverse || standout;
-          hiFgColor = getColor(foreground, fgColor);
-          hiBgColor = getColor(background, bgColor);
-          hiSpColor = getColor(special, spColor);
-          hiItalic = showItalic && italic;
-          hiBold = showBold && bold;
-          hiUnderline = showUnderline && underline;
-          hiUndercurl = showUndercurl && undercurl;
+        if (hlId || hlId === 0) {
+          currentHlId = hlId;
         }
-
-        Array.from({ length }, (v, iii) => printChar(row, col + lineLength + iii, char));
+        Array.from(
+          { length },
+          (_v, i) => printChar(row, col + lineLength + i, char, currentHlId),
+        );
         lineLength += length;
       });
 
@@ -758,15 +788,18 @@ const redrawCmd = {
   grid_clear: () => {
     cursor = [0, 0];
     clearCursor();
-    context.fillStyle = bgColor;
+    context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     chars = {};
   },
 
   hl_attr_define: (...props) => {
     props.forEach(([id, value]) => {
-      highlightTable[id] = value;
+      highlightTable[id] = {
+        value,
+      };
     });
+    recalculateHighlightTable();
   },
 
   grid_cursor_goto: (newCursor) => {
@@ -830,6 +863,11 @@ const redrawCmd = {
       }
     }
   },
+
+  flush: () => {
+    // log('flush');
+  },
+
   // VV specific commands
   vv_fontfamily: (newFontFamily) => {
     fontFamily = newFontFamily;
@@ -875,7 +913,7 @@ const handleNotification = async (method, args) => {
       if (redrawCmd[cmd]) {
         // log('redraw', cmd, JSON.stringify(props));
         redrawCmd[cmd](...props);
-      } else {
+        // } else {
         // console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
     }
