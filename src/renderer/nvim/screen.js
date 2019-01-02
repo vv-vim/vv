@@ -1,4 +1,5 @@
 import debounce from 'lodash/debounce';
+import isFinite from 'lodash/isFinite';
 // import log from '../../lib/log';
 
 const [body] = document.getElementsByTagName('body');
@@ -219,7 +220,7 @@ const getCharBitmap = (char, props) => {
 const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
 
-  if (hlId || hlId === 0) {
+  if (isFinite(hlId)) {
     const props = highlightTable[hlId].calculated;
     chars[i][j] = {
       char,
@@ -228,6 +229,7 @@ const printChar = (i, j, char, hlId) => {
       italic: props.hiItalic,
       bold: props.hiBold,
       hlId,
+      needsRedraw: false,
     };
   } else {
     chars[i][j] = {
@@ -236,6 +238,7 @@ const printChar = (i, j, char, hlId) => {
       char,
       italic: hiItalic,
       bold: hiBold,
+      needsRedraw: false,
     };
   }
 
@@ -265,7 +268,7 @@ const printChar = (i, j, char, hlId) => {
 // If char previous to the current cursor is wider that char width, we need to draw that part
 // of it that overlaps the current cursor when we redraw it.
 const overlapPrev = ([i, j]) => {
-  if (chars[i] && chars[i][j - 1]) {
+  if (chars[i] && chars[i][j - 1] && !chars[i][j - 1].needsRedraw) {
     context.drawImage(
       chars[i][j - 1].bitmap,
       charWidth * 2,
@@ -282,7 +285,7 @@ const overlapPrev = ([i, j]) => {
 
 // Same with next
 const overlapNext = ([i, j]) => {
-  if (chars[i] && chars[i][j + 1]) {
+  if (chars[i] && chars[i][j + 1] && !chars[i][j + 1].needsRedraw) {
     context.drawImage(
       chars[i][j + 1].bitmap,
       0,
@@ -299,7 +302,7 @@ const overlapNext = ([i, j]) => {
 
 // Clean char from previous overlapping left and right symbols.
 const cleanOverlap = ([i, j]) => {
-  if (chars[i] && chars[i][j]) {
+  if (chars[i] && chars[i][j] && !chars[i][j].needsRedraw) {
     context.fillStyle = chars[i][j].bg;
     context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
     context.drawImage(
@@ -485,6 +488,37 @@ const recalculateHighlightTable = () => {
     });
   }
 };
+
+// When we get `default_colors_set`, we need to redraw chars that have colors referenced to
+// default colors. First we mark all chars with `needsRedraw`, then on each `printChar` we set
+// it to `false`. After `grid_line` we redraw chars that still have `needsRedraw`.
+// https://github.com/neovim/neovim/blob/5a11e55/runtime/doc/ui.txt#L237
+const requireRedrawAll = () => {
+  for (let i = 0; i <= rows; i += 1) {
+    if (chars[i]) {
+      for (let j = 0; j <= cols; j += 1) {
+        if (chars[i][j] && isFinite(chars[i][j].hlId)) {
+          const { foreground, background, special } = highlightTable[chars[i][j].hlId].value;
+          if (!chars[i][j].hlId || !foreground || !background || !special) {
+            chars[i][j].needsRedraw = true;
+          }
+        }
+      }
+    }
+  }
+};
+
+const redrawChars = debounce(() => {
+  for (let i = 0; i <= rows; i += 1) {
+    if (chars[i]) {
+      for (let j = 0; j <= cols; j += 1) {
+        if (chars[i][j] && chars[i][j].needsRedraw) {
+          printChar(i, j, chars[i][j].char, chars[i][j].hlId);
+        }
+      }
+    }
+  }
+}, 10);
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
@@ -739,6 +773,9 @@ const redrawCmd = {
       calculated,
     };
     recalculateHighlightTable();
+    requireRedrawAll();
+    context.fillStyle = calculated.bgColor;
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
 
   grid_line: (...props) => {
@@ -751,7 +788,7 @@ const redrawCmd = {
 
       let currentHlId;
       cells.forEach(([char, hlId, length = 1]) => { // eslint-disable-line no-unused-vars
-        if (hlId || hlId === 0) {
+        if (isFinite(hlId)) {
           currentHlId = hlId;
         }
         context.fillStyle = highlightTable[currentHlId].calculated.bgColor;
@@ -767,7 +804,7 @@ const redrawCmd = {
       lineLength = 0;
       currentHlId = undefined;
       cells.forEach(([char, hlId, length = 1]) => {
-        if (hlId || hlId === 0) {
+        if (isFinite(hlId)) {
           currentHlId = hlId;
         }
         Array.from(
@@ -783,6 +820,7 @@ const redrawCmd = {
       overlapNext([row, col + lineLength - 1]);
       cleanOverlap([row, col + lineLength]);
     });
+    redrawChars();
   },
 
   grid_clear: () => {
@@ -865,7 +903,6 @@ const redrawCmd = {
   },
 
   flush: () => {
-    // log('flush');
   },
 
   // VV specific commands
@@ -911,10 +948,9 @@ const handleNotification = async (method, args) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (redrawCmd[cmd]) {
-        // log('redraw', cmd, JSON.stringify(props));
         redrawCmd[cmd](...props);
-        // } else {
-        // console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
+      } else {
+        console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
     }
     if (args[args.length - 1][0] === 'cursor_goto') {
