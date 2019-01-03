@@ -158,7 +158,9 @@ const getCharBitmap = (char, props) => {
     hiUnderline,
     hiUndercurl,
   };
-  const key = [char, ...Object.values(p)].join('-');
+  // Constructing key with string template appears much faster than array join
+  const key = `${char}-${p.fgColor}-${p.bgColor}-${p.spColor}-${p.hiItalic}-${p.hiBold}-${p.hiUnderline}-${p.hiUndercurl}`;
+
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
     c.width = charWidth * 3;

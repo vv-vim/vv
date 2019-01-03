@@ -52,6 +52,8 @@ let { noResize } = currentWindow;
 
 let isWindowShown = false;
 
+let apiInfo;
+
 let newSettings = store.get('settings') || {};
 const settings = {};
 const defaultSettings = {
@@ -87,7 +89,11 @@ const resize = () => {
       nvim.uiTryResize(cols, rows);
     } else {
       uiAttached = true;
-      nvim.uiAttach(cols, rows, { ext_linegrid: true });
+      const uiOptions = {};
+      if (apiInfo[1].ui_options.includes('ext_linegrid')) {
+        uiOptions.ext_linegrid = true;
+      }
+      nvim.uiAttach(cols, rows, uiOptions);
     }
   }
 };
@@ -278,9 +284,7 @@ const initNvim = async () => {
   nvim.on('notification', handleNotification);
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:vim_enter');
-  // const apiInfo = await nvim.apiInfo;
-  // console.log(apiInfo);
-  // window.apiInfo = apiInfo;
+  apiInfo = await nvim.apiInfo;
 
   screen = initScreen('screen', nvim);
   fullScreen = initFullScreen(nvim);
