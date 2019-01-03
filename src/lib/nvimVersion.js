@@ -29,11 +29,8 @@ const nvimVersion = () => {
   return version;
 };
 
-// stdioopen function only appears in nvim 0.3
-export const hasStdioopen = () => nvimVersion() && nvimVersion()[1] >= 3;
-
 // Starting from version 0.3.2 neovim will have different --embed API
 // https://github.com/neovim/neovim/wiki/Following-HEAD#20180922
-export const hasNewEmbedAPI = () => nvimVersion() && nvimVersion().num >= 3002;
+export const hasLegacyEmbedAPI = () => nvimVersion() && nvimVersion().num < 3002;
 
 export default nvimVersion;

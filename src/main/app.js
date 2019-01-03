@@ -159,7 +159,7 @@ const closeWindow = () => {
 };
 
 app.on('will-finish-launching', () => {
-  app.on('open-file', (e, windowPath) => {
+  app.on('open-file', (_e, windowPath) => {
     createWindow([windowPath]);
   });
 });
@@ -169,6 +169,7 @@ ipcMain.on('cancel-quit', () => {
 });
 
 app.on('ready', () => {
+  checkNeovim();
   createWindow(cliArgs());
   menu({
     createWindow,
@@ -176,7 +177,6 @@ app.on('ready', () => {
     installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
     closeWindow,
   });
-  checkNeovim();
 });
 
 app.on('before-quit', (e) => {

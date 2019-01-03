@@ -4,7 +4,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 
 import nvimCommand from '../../lib/nvimCommand';
-import { hasStdioopen, hasNewEmbedAPI } from '../../lib/nvimVersion';
+import { hasLegacyEmbedAPI } from '../../lib/nvimVersion';
 
 import store from '../../lib/store';
 // import log from '../../lib/log';
@@ -205,7 +205,6 @@ const applyAllSettings = () => {
 const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
 
 const handleNotification = async (method, params) => {
-  // console.('Unknown notification', method, params); // eslint-disable-line no-console
   if (method === 'vv:set') {
     const [option, props] = params;
     newSettings[option] = props;
@@ -241,15 +240,15 @@ const startNvimProcess = ({ cwd, args }) => {
   // So we use --headless + stdioopen if we can.
   // Starting from 0.3.2 it has different --embed API that is not blocked by startup errors,
   // so it is safe to use --embed again.
-  const nvimArgs = hasNewEmbedAPI() || !hasStdioopen()
-    ? ['--embed', '--cmd', vvSourceCommand(), ...args]
-    : [
+  const nvimArgs = hasLegacyEmbedAPI()
+    ? [
       '--headless',
       '--cmd',
       vvSourceCommand(),
       "+call stdioopen({'rpc': v:true})",
       ...args,
-    ];
+    ]
+    : ['--embed', '--cmd', vvSourceCommand(), ...args];
 
   const nvimProcess = spawn(
     nvimCommand(),
@@ -289,14 +288,14 @@ const initNvim = async () => {
   screen = initScreen('screen', nvim);
   fullScreen = initFullScreen(nvim);
 
-  if (hasNewEmbedAPI()) {
-    applyAllSettings();
-    newSettings = defaultSettings;
-  } else {
+  if (hasLegacyEmbedAPI()) {
     newSettings = defaultSettings;
     await nvim.command('VVsettings');
     applyAllSettings();
     showWindow();
+  } else {
+    applyAllSettings();
+    newSettings = defaultSettings;
   }
 
   fixNoConfig(args);

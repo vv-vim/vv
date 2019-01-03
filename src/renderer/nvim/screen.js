@@ -787,7 +787,6 @@ const redrawCmd = {
 
       // Fill background for the whole set of chars
       // TODO: refactor
-
       let currentHlId;
       cells.forEach(([char, hlId, length = 1]) => { // eslint-disable-line no-unused-vars
         if (isFinite(hlId)) {
