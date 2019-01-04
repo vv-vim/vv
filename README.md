@@ -18,7 +18,7 @@ VV is built on Electron. There are no barriers to porting it to Windows or Linux
 Download
 --------
 
-You need Neovim installed to run VV. You can find Neovim installation instructions here: https://github.com/neovim/neovim/wiki/Installing-Neovim. Neovim version 0.3 and higher is recommended.
+You need Neovim installed to run VV. You can find Neovim installation instructions here: https://github.com/neovim/neovim/wiki/Installing-Neovim. Neovim version 0.3.1 and higher is required.
 
 You can download the most recent release from the [Releases](https://github.com/igorgladkoborodov/vv/releases/latest) page.
 
