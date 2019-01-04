@@ -1,4 +1,6 @@
 import debounce from 'lodash/debounce';
+import isFinite from 'lodash/isFinite';
+// import log from '../../lib/log';
 
 const [body] = document.getElementsByTagName('body');
 
@@ -54,6 +56,8 @@ const colorsCache = {};
 let charsCache = {};
 
 let chars = {};
+
+const highlightTable = {};
 
 export const getCursorElement = () => cursorEl;
 
@@ -144,20 +148,19 @@ const font = p => [
   fontFamily,
 ].join(' ');
 
-const getCharBitmap = (char, props = {}) => {
-  const p = Object.assign(
-    {
-      fgColor: getFgColor(),
-      bgColor: getBgColor(),
-      spColor: getSpColor(),
-      hiItalic,
-      hiBold,
-      hiUnderline,
-      hiUndercurl,
-    },
-    props,
-  );
-  const key = [char, ...Object.values(p)].join('-');
+const getCharBitmap = (char, props) => {
+  const p = props || {
+    fgColor: getFgColor(),
+    bgColor: getBgColor(),
+    spColor: getSpColor(),
+    hiItalic,
+    hiBold,
+    hiUnderline,
+    hiUndercurl,
+  };
+  // Constructing key with string template appears much faster than array join
+  const key = `${char}-${p.fgColor}-${p.bgColor}-${p.spColor}-${p.hiItalic}-${p.hiBold}-${p.hiUnderline}-${p.hiUndercurl}`;
+
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
     c.width = charWidth * 3;
@@ -188,7 +191,7 @@ const getCharBitmap = (char, props = {}) => {
       ctx.strokeStyle = p.spColor;
       ctx.lineWidth = scaledFontSize() * 0.08;
       const x = charWidth;
-      const y = charHeight - scaledFontSize() * 0.08 / 2;
+      const y = charHeight - (scaledFontSize() * 0.08) / 2;
       const h = charHeight * 0.2; // Height of the wave
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -200,7 +203,14 @@ const getCharBitmap = (char, props = {}) => {
         x + x / 2,
         y - h / 2,
       );
-      ctx.bezierCurveTo(x + x / 4 * 3, y - h / 2, x + x / 4 * 3, y, x + x, y);
+      ctx.bezierCurveTo(
+        x + (x / 4) * 3,
+        y - h / 2,
+        x + (x / 4) * 3,
+        y,
+        x + x,
+        y,
+      );
       ctx.stroke();
     }
 
@@ -209,15 +219,31 @@ const getCharBitmap = (char, props = {}) => {
   return charsCache[key];
 };
 
-const printChar = (i, j, char) => {
+const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
-  chars[i][j] = {
-    bitmap: getCharBitmap(char),
-    bg: getBgColor(),
-    char,
-    italic: hiItalic,
-    bold: hiBold,
-  };
+
+  if (isFinite(hlId)) {
+    const props = highlightTable[hlId].calculated;
+    chars[i][j] = {
+      char,
+      bitmap: getCharBitmap(char, props),
+      bg: props.bgColor,
+      italic: props.hiItalic,
+      bold: props.hiBold,
+      hlId,
+      needsRedraw: false,
+    };
+  } else {
+    chars[i][j] = {
+      bitmap: getCharBitmap(char),
+      bg: getBgColor(),
+      char,
+      italic: hiItalic,
+      bold: hiBold,
+      needsRedraw: false,
+    };
+  }
+
   // If this is the last col, fill the next char on extra col with it's bg
   if (j === cols - 1) {
     const rect = [cols * charWidth, i * charHeight, charWidth, charHeight];
@@ -241,10 +267,10 @@ const printChar = (i, j, char) => {
   );
 };
 
-// If char previous to the current cursor is wider that char width, we need to draw that part of
-// it that overlaps the current cursor when we redraw it.
+// If char previous to the current cursor is wider that char width, we need to draw that part
+// of it that overlaps the current cursor when we redraw it.
 const overlapPrev = ([i, j]) => {
-  if (chars[i] && chars[i][j - 1]) {
+  if (chars[i] && chars[i][j - 1] && !chars[i][j - 1].needsRedraw) {
     context.drawImage(
       chars[i][j - 1].bitmap,
       charWidth * 2,
@@ -261,7 +287,7 @@ const overlapPrev = ([i, j]) => {
 
 // Same with next
 const overlapNext = ([i, j]) => {
-  if (chars[i] && chars[i][j + 1]) {
+  if (chars[i] && chars[i][j + 1] && !chars[i][j + 1].needsRedraw) {
     context.drawImage(
       chars[i][j + 1].bitmap,
       0,
@@ -278,7 +304,7 @@ const overlapNext = ([i, j]) => {
 
 // Clean char from previous overlapping left and right symbols.
 const cleanOverlap = ([i, j]) => {
-  if (chars[i] && chars[i][j]) {
+  if (chars[i] && chars[i][j] && !chars[i][j].needsRedraw) {
     context.fillStyle = chars[i][j].bg;
     context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
     context.drawImage(
@@ -326,7 +352,13 @@ const redrawCursor = async () => {
   }
 
   // Default cursor colors if no hl_id is set
-  const highlightAttrs = {
+  const highlightAttrs = highlightTable[0] ? {
+    bgColor: highlightTable[0].calculated.fgColor,
+    fgColor: highlightTable[0].calculated.bgColor,
+    spColor: highlightTable[0].calculated.bgColor,
+    hiBold: cursorChar.bold,
+    hiItalic: cursorChar.italic,
+  } : {
     bgColor: fgColor,
     fgColor: bgColor,
     spColor: bgColor,
@@ -334,6 +366,7 @@ const redrawCursor = async () => {
     hiItalic: cursorChar.italic,
   };
 
+  // TODO: check this
   // Get custom cursor colors if hl_id is set
   if (m.hl_id) {
     // TODO: tmp code. getHighlightById when it will be available
@@ -364,14 +397,14 @@ const redrawCursor = async () => {
   } else if (m.cursor_shape === 'vertical') {
     cursorEl.style.background = 'none';
     const curWidth = m.cell_percentage
-      ? Math.max(scale, Math.round(charWidth / 100 * m.cell_percentage))
+      ? Math.max(scale, Math.round((charWidth / 100) * m.cell_percentage))
       : scale;
     cursorContext.fillStyle = highlightAttrs.bgColor;
     cursorContext.fillRect(0, 0, curWidth, charHeight);
   } else if (m.cursor_shape === 'horizontal') {
     cursorEl.style.background = 'none';
     const curHeight = m.cell_percentage
-      ? Math.max(scale, Math.round(charHeight / 100 * m.cell_percentage))
+      ? Math.max(scale, Math.round((charHeight / 100) * m.cell_percentage))
       : scale;
     cursorContext.fillStyle = highlightAttrs.bgColor;
     cursorContext.fillRect(0, charHeight - curHeight, charWidth, curHeight);
@@ -410,7 +443,7 @@ export const repositionCursor = () => {
   redrawCursor();
 };
 
-debouncedRepositionCursor = debounce(repositionCursor, 20);
+debouncedRepositionCursor = debounce(repositionCursor, 10);
 
 const optionSet = {
   guifont: (newFont) => {
@@ -423,6 +456,71 @@ const optionSet = {
     }
   },
 };
+
+const recalculateHighlightTable = () => {
+  if (highlightTable[0]) {
+    Object.keys(highlightTable).forEach((id) => {
+      if (id > 0) {
+        const {
+          foreground,
+          background,
+          special,
+          reverse,
+          standout,
+          italic,
+          bold,
+          underline,
+          undercurl,
+        } = highlightTable[id].value;
+        const r = reverse || standout;
+        const fg = getColor(foreground, highlightTable[0].calculated.fgColor);
+        const bg = getColor(background, highlightTable[0].calculated.bgColor);
+        const sp = getColor(special, highlightTable[0].calculated.spColor);
+
+        highlightTable[id].calculated = {
+          fgColor: r ? bg : fg,
+          bgColor: r ? fg : bg,
+          spColor: sp,
+          hiItalic: showItalic && italic,
+          hiBold: showBold && bold,
+          hiUnderline: showUnderline && underline,
+          hiUndercurl: showUndercurl && undercurl,
+        };
+      }
+    });
+  }
+};
+
+// When we get `default_colors_set`, we need to redraw chars that have colors referenced to
+// default colors. First we mark all chars with `needsRedraw`, then on each `printChar` we set
+// it to `false`. After `grid_line` we redraw chars that still have `needsRedraw`.
+// https://github.com/neovim/neovim/blob/5a11e55/runtime/doc/ui.txt#L237
+const requireRedrawAll = () => {
+  for (let i = 0; i <= rows; i += 1) {
+    if (chars[i]) {
+      for (let j = 0; j <= cols; j += 1) {
+        if (chars[i][j] && isFinite(chars[i][j].hlId)) {
+          const { foreground, background, special } = highlightTable[chars[i][j].hlId].value;
+          if (!chars[i][j].hlId || !foreground || !background || !special) {
+            chars[i][j].needsRedraw = true;
+          }
+        }
+      }
+    }
+  }
+};
+
+const redrawChars = debounce(() => {
+  for (let i = 0; i <= rows; i += 1) {
+    if (chars[i]) {
+      for (let j = 0; j <= cols; j += 1) {
+        if (chars[i][j] && chars[i][j].needsRedraw) {
+          printChar(i, j, chars[i][j].char, chars[i][j].hlId);
+        }
+      }
+    }
+  }
+}, 10);
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
@@ -463,7 +561,7 @@ const redrawCmd = {
   clear: () => {
     cursor = [0, 0];
     clearCursor();
-    context.fillStyle = bgColor;
+    context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : bgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     chars = {};
   },
@@ -540,7 +638,8 @@ const redrawCmd = {
     let cw = w; // clear width
     const ch = Math.abs(scrollCount) * charHeight; // clear height
 
-    if (right === cols - 1) { // Add extra char if it is far right rect
+    if (right === cols - 1) {
+      // Add extra char if it is far right rect
       w += charWidth;
       cw += charWidth;
     }
@@ -640,6 +739,173 @@ const redrawCmd = {
     });
   },
 
+  // New api
+  grid_resize: (props) => {
+    cols = props[1];
+    rows = props[2];
+    // Add extra column on the right to fill it with adjacent color to have a nice right border
+    screenEl.style.width = `${(cols + 1) * charWidth}px`;
+    screenEl.style.height = `${rows * charHeight}px`;
+    canvasEl.width = (cols + 1) * charWidth;
+    canvasEl.height = rows * charHeight;
+    context.fillStyle = getBgColor();
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    scrollRect = [0, rows - 1, 0, cols - 1];
+  },
+
+  default_colors_set: (...p) => {
+    const props = p[p.length - 1];
+    const [foreground, background, special] = props;
+    const calculated = {
+      bgColor: getColor(background, defaultBgColor),
+      fgColor: getColor(foreground, defaultFgColor),
+      spColor: getColor(special, defaultSpColor),
+      hiItalic: false,
+      hiBold: false,
+      hiUnderline: false,
+      hiUndercurl: false,
+    };
+    body.style.background = calculated.bgColor;
+    highlightTable[0] = {
+      value: {
+        foreground,
+        background,
+        special,
+      },
+      calculated,
+    };
+    recalculateHighlightTable();
+    requireRedrawAll();
+    context.fillStyle = calculated.bgColor;
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+  },
+
+  grid_line: (...props) => {
+    props.forEach(([_grid, row, col, cells]) => {
+      // eslint-disable-line no-unused-vars
+      let lineLength = 0;
+
+      // Fill background for the whole set of chars
+      // TODO: refactor
+      let currentHlId;
+      cells.forEach(([char, hlId, length = 1]) => { // eslint-disable-line no-unused-vars
+        if (isFinite(hlId)) {
+          currentHlId = hlId;
+        }
+        context.fillStyle = highlightTable[currentHlId].calculated.bgColor;
+        Array.from({ length }, (_v, i) => context.fillRect(
+          (col + lineLength + i) * charWidth,
+          row * charHeight,
+          charWidth,
+          charHeight,
+        ));
+        lineLength += length;
+      });
+
+      lineLength = 0;
+      currentHlId = undefined;
+      cells.forEach(([char, hlId, length = 1]) => {
+        if (isFinite(hlId)) {
+          currentHlId = hlId;
+        }
+        Array.from(
+          { length },
+          (_v, i) => printChar(row, col + lineLength + i, char, currentHlId),
+        );
+        lineLength += length;
+      });
+
+      cleanOverlap([row, col - 1]);
+      overlapPrev([row, col]);
+
+      overlapNext([row, col + lineLength - 1]);
+      cleanOverlap([row, col + lineLength]);
+    });
+    redrawChars();
+  },
+
+  grid_clear: () => {
+    cursor = [0, 0];
+    clearCursor();
+    context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    chars = {};
+  },
+
+  hl_attr_define: (...props) => {
+    props.forEach(([id, value]) => {
+      highlightTable[id] = {
+        value,
+      };
+    });
+    recalculateHighlightTable();
+  },
+
+  grid_cursor_goto: (newCursor) => {
+    cursor = [newCursor[1], newCursor[2]];
+    debouncedRepositionCursor();
+  },
+
+  // set_scroll_region: (...rects) => {
+  //   const rect = rects[rects.length - 1];
+  //   scrollRect = rect; // top, bottom, left, right
+  // },
+  //
+  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L202
+  // eslint-disable-next-line no-unused-vars
+  grid_scroll: ([grid, top, bottom, left, right, scrollCount]) => {
+    const x = left * charWidth; // region left
+    let y; // region top
+    let w = (right - left) * charWidth; // clipped part width
+    const h = (bottom - top - Math.abs(scrollCount)) * charHeight; // clipped part height
+    const X = x; // destination left
+    let Y; // destination top
+
+    if (right === cols) {
+      // Add extra char if it is far right rect
+      w += charWidth;
+    }
+
+    if (scrollCount > 0) {
+      // scroll down
+      y = (top + scrollCount) * charHeight;
+      Y = top * charHeight;
+    } else {
+      // scroll up
+      y = top * charHeight;
+      Y = (top - scrollCount) * charHeight;
+    }
+
+    // Copy scrolled lines
+    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+    context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
+
+    const iterateJ = (i) => {
+      for (let j = left; j <= right - 1; j += 1) {
+        if (!chars[i]) chars[i] = {};
+        if (chars[i + scrollCount] && chars[i + scrollCount][j]) {
+          chars[i][j] = chars[i + scrollCount][j];
+        } else {
+          chars[i][j] = null;
+        }
+      }
+    };
+    if (scrollCount > 0) {
+      // scroll down
+      for (let i = top; i <= bottom - scrollCount - 1; i += 1) {
+        iterateJ(i);
+      }
+    } else {
+      // scroll up
+      for (let i = bottom - 1; i >= top - scrollCount; i -= 1) {
+        iterateJ(i);
+      }
+    }
+  },
+
+  flush: () => {
+  },
+
   // VV specific commands
   vv_fontfamily: (newFontFamily) => {
     fontFamily = newFontFamily;
@@ -683,10 +949,9 @@ const handleNotification = async (method, args) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (redrawCmd[cmd]) {
-        // console.log('redraw', cmd, JSON.stringify(props));
         redrawCmd[cmd](...props);
       } else {
-        // console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
+        console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
     }
     if (args[args.length - 1][0] === 'cursor_goto') {
@@ -736,8 +1001,8 @@ export const screenCoords = (width, height) => {
   debouncedMeasureCharSize.cancel();
   measureCharSize();
   return [
-    Math.floor(width * scale / charWidth),
-    Math.floor(height * scale / charHeight),
+    Math.floor((width * scale) / charWidth),
+    Math.floor((height * scale) / charHeight),
   ];
 };
 

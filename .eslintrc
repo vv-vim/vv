@@ -4,6 +4,10 @@
     "browser": true
   },
   "rules": {
+    "no-unused-vars": ["warn", {
+      "args": "all",
+      "argsIgnorePattern": "^_"
+    }],
     "import/no-extraneous-dependencies": "off",
     "prefer-destructuring": ["warn", {
       "VariableDeclarator": {

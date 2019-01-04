@@ -4,7 +4,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 
 import nvimCommand from '../../lib/nvimCommand';
-import { hasStdioopen, hasNewEmbedAPI } from '../../lib/nvimVersion';
+import { hasLegacyEmbedAPI } from '../../lib/nvimVersion';
 
 import store from '../../lib/store';
 // import log from '../../lib/log';
@@ -52,6 +52,8 @@ let { noResize } = currentWindow;
 
 let isWindowShown = false;
 
+let apiInfo;
+
 let newSettings = store.get('settings') || {};
 const settings = {};
 const defaultSettings = {
@@ -87,7 +89,11 @@ const resize = () => {
       nvim.uiTryResize(cols, rows);
     } else {
       uiAttached = true;
-      nvim.uiAttach(cols, rows, {});
+      const uiOptions = {};
+      if (apiInfo[1].ui_options.includes('ext_linegrid')) {
+        uiOptions.ext_linegrid = true;
+      }
+      nvim.uiAttach(cols, rows, uiOptions);
     }
   }
 };
@@ -234,15 +240,15 @@ const startNvimProcess = ({ cwd, args }) => {
   // So we use --headless + stdioopen if we can.
   // Starting from 0.3.2 it has different --embed API that is not blocked by startup errors,
   // so it is safe to use --embed again.
-  const nvimArgs = hasNewEmbedAPI() || !hasStdioopen()
-    ? ['--embed', '--cmd', vvSourceCommand(), ...args]
-    : [
+  const nvimArgs = hasLegacyEmbedAPI()
+    ? [
       '--headless',
       '--cmd',
       vvSourceCommand(),
       "+call stdioopen({'rpc': v:true})",
       ...args,
-    ];
+    ]
+    : ['--embed', '--cmd', vvSourceCommand(), ...args];
 
   const nvimProcess = spawn(
     nvimCommand(),
@@ -277,21 +283,19 @@ const initNvim = async () => {
   nvim.on('notification', handleNotification);
   nvim.subscribe('vv:set');
   nvim.subscribe('vv:vim_enter');
-  // const apiInfo = await nvim.apiInfo;
-  // console.log(apiInfo);
-  // window.apiInfo = apiInfo;
+  apiInfo = await nvim.apiInfo;
 
   screen = initScreen('screen', nvim);
   fullScreen = initFullScreen(nvim);
 
-  if (hasNewEmbedAPI()) {
-    applyAllSettings();
-    newSettings = defaultSettings;
-  } else {
+  if (hasLegacyEmbedAPI()) {
     newSettings = defaultSettings;
     await nvim.command('VVsettings');
     applyAllSettings();
     showWindow();
+  } else {
+    applyAllSettings();
+    newSettings = defaultSettings;
   }
 
   fixNoConfig(args);
