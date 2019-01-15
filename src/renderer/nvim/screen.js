@@ -435,8 +435,9 @@ const redrawCursor = async () => {
 
 let debouncedRepositionCursor;
 
-export const repositionCursor = () => {
+export const repositionCursor = (newCursor) => {
   if (debouncedRepositionCursor) debouncedRepositionCursor.cancel();
+  if (newCursor) cursor = newCursor;
   const left = cursor[1] * charWidth;
   const top = cursor[0] * charHeight;
   cursorEl.style.transform = `translate(${left}px, ${top}px)`;
@@ -841,19 +842,15 @@ const redrawCmd = {
     recalculateHighlightTable();
   },
 
-  grid_cursor_goto: (newCursor) => {
-    cursor = [newCursor[1], newCursor[2]];
-    debouncedRepositionCursor();
+  grid_cursor_goto: ([_grid, ...newCursor]) => {
+    if (newCursor[0] !== cursor[0] && newCursor[0] === rows - 1) {
+      debouncedRepositionCursor(newCursor);
+    } else {
+      repositionCursor(newCursor);
+    }
   },
 
-  // set_scroll_region: (...rects) => {
-  //   const rect = rects[rects.length - 1];
-  //   scrollRect = rect; // top, bottom, left, right
-  // },
-  //
-  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L202
-  // eslint-disable-next-line no-unused-vars
-  grid_scroll: ([grid, top, bottom, left, right, scrollCount]) => {
+  grid_scroll: ([_grid, top, bottom, left, right, scrollCount]) => {
     const x = left * charWidth; // region left
     let y; // region top
     let w = (right - left) * charWidth; // clipped part width
@@ -953,9 +950,6 @@ const handleNotification = async (method, args) => {
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
-    }
-    if (args[args.length - 1][0] === 'cursor_goto') {
-      repositionCursor();
     }
   }
 };

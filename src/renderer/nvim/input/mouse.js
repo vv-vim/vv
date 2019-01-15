@@ -1,5 +1,5 @@
 import throttle from 'lodash/throttle';
-import { screenCoords } from './../screen';
+import { screenCoords } from '../screen';
 import { modifierPrefix, shiftPrefix } from './keyboard';
 
 let nvim;
@@ -23,18 +23,16 @@ const mouseCoordsChanged = (event) => {
   return false;
 };
 
-const buttonName = (event, type) =>
-  [
-    '<',
-    shiftPrefix(event),
-    modifierPrefix(event),
-    event.buttons ? MOUSE_BUTTON[event.button] : '',
-    type,
-    '>',
-  ].join('');
+const buttonName = (event, type) => [
+  '<',
+  shiftPrefix(event),
+  modifierPrefix(event),
+  event.buttons ? MOUSE_BUTTON[event.button] : '',
+  type,
+  '>',
+].join('');
 
-const mousePosition = event =>
-  `<${screenCoords(event.clientX, event.clientY).join(',')}>`;
+const mousePosition = event => `<${screenCoords(event.clientX, event.clientY).join(',')}>`;
 
 const mouseInput = (event, type) => {
   mouseCoordsChanged(event);
