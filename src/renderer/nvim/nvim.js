@@ -76,7 +76,7 @@ const defaultSettings = {
 let debouncedShowWindow = () => {};
 
 const resize = () => {
-  const [newCols, newRows] = screenCoords(...currentWindow.getContentSize());
+  const [newCols, newRows] = screenCoords(...currentWindow.getContentSize(), true);
   if (
     newCols > 0
     && newRows > 0

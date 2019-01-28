@@ -122,15 +122,19 @@ const measureCharSize = () => {
   char.style.top = 0;
   screenEl.appendChild(char);
 
+  const oldCharWidth = charWidth;
+  const oldCharHeight = charHeight;
   charWidth = char.offsetWidth + scaledLetterSpacing();
   charHeight = char.offsetHeight;
-  cursorCanvasEl.width = charWidth;
-  cursorCanvasEl.height = charHeight;
-  cursorEl.style.width = `${charWidth}px`;
-  cursorEl.style.height = `${charHeight}px`;
+  if (oldCharWidth !== charWidth || oldCharHeight !== charHeight) {
+    cursorCanvasEl.width = charWidth;
+    cursorCanvasEl.height = charHeight;
+    cursorEl.style.width = `${charWidth}px`;
+    cursorEl.style.height = `${charHeight}px`;
 
+    charsCache = {};
+  }
   screenEl.removeChild(char);
-  charsCache = {};
 };
 
 const debouncedMeasureCharSize = debounce(measureCharSize, 10);
@@ -827,7 +831,6 @@ const redrawCmd = {
 
   grid_clear: () => {
     cursor = [0, 0];
-    clearCursor();
     context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     chars = {};
@@ -991,9 +994,10 @@ const screen = (containerId, newNvim) => {
   return redrawCmd;
 };
 
-export const screenCoords = (width, height) => {
-  debouncedMeasureCharSize.cancel();
-  measureCharSize();
+export const screenCoords = (width, height, checkCharSize = false) => {
+  if (checkCharSize) {
+    debouncedMeasureCharSize.flush();
+  }
   return [
     Math.floor((width * scale) / charWidth),
     Math.floor((height * scale) / charHeight),
