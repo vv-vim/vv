@@ -954,6 +954,7 @@ const handleNotification = async (method, args) => {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
     }
+    redrawCursor(); // TODO: check if char under cursor changed first
   }
 };
 
