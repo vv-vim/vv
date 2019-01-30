@@ -20,7 +20,7 @@ Download
 
 You need Neovim installed to run VV. You can find Neovim installation instructions here: https://github.com/neovim/neovim/wiki/Installing-Neovim. Neovim version 0.3.1 and higher is required.
 
-You can download the most recent release from the [Releases](https://github.com/igorgladkoborodov/vv/releases/latest) page.
+You can download the most recent release from the [Releases](https://github.com/vv-vim/vv/releases/latest) page.
 
 Build manually
 --------------
@@ -28,7 +28,7 @@ Build manually
 You can also build it manually. You will need [Node.js](https://nodejs.org/en/download/) and [Yarn](https://yarnpkg.com/lang/en/) installed.
 
 ```
-git clone git@github.com:igorgladkoborodov/vv.git
+git clone git@github.com:vv-vim/vv.git
 cd vv
 yarn
 yarn electron:build
