@@ -40,11 +40,11 @@ let hiItalic;
 let hiBold;
 let hiUnderline;
 let hiUndercurl;
-let fgColor = defaultFgColor;
-let bgColor = defaultBgColor;
-let spColor = defaultSpColor;
+
+const fgColor = defaultFgColor;
+const bgColor = defaultBgColor;
+
 let reverseColor;
-let scrollRect = new Array(4);
 let modeInfoSet;
 let mode;
 
@@ -559,210 +559,13 @@ const redrawChars = debounce(() => {
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
-  put: (...props) => {
-    // Fill background for the whole set of chars
-    context.fillStyle = getBgColor();
-    context.fillRect(
-      cursor[1] * charWidth,
-      cursor[0] * charHeight,
-      charWidth * props.length,
-      charHeight,
-    );
+  set_title: () => {},
+  set_icon: () => {},
 
-    // Then print chars on that place
-    for (let ii = props.length - 1; ii >= 0; ii -= 1) {
-      // TODO what's wrong with i scope?
-      printChar(cursor[0], cursor[1] + ii, props[ii][0]);
-    }
-
-    cleanOverlap([cursor[0], cursor[1] - 1]);
-    overlapPrev(cursor);
-
-    cursor[1] += props.length;
-
-    overlapNext([cursor[0], cursor[1] - 1]);
-    cleanOverlap(cursor);
-
-    clearCursor();
-    debouncedRepositionCursor();
-  },
-
-  cursor_goto: (newCursor) => {
-    cursor = newCursor;
-    clearCursor();
-    debouncedRepositionCursor();
-  },
-
-  clear: () => {
-    cursor = [0, 0];
-    clearCursor();
-    context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : bgColor;
-    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
-    chars = {};
-  },
-
-  eol_clear: () => {
-    for (let i = cursor[1]; i < cols; i += 1) {
-      chars[cursor[0]][i] = null;
-    }
-    cleanOverlap([cursor[0], cursor[1] - 1]);
-    const left = cursor[1] * charWidth;
-    const top = cursor[0] * charHeight;
-    const width = canvasEl.width - left;
-    const height = charHeight;
-    context.fillStyle = getBgColor();
-    context.fillRect(left, top, width, height);
-  },
-
-  highlight_set: (...props) => {
-    for (let i = 0; i < props.length; i += 1) {
-      const [
-        {
-          foreground,
-          background,
-          special,
-          reverse,
-          standout,
-          italic,
-          bold,
-          underline,
-          undercurl,
-        },
-      ] = props[i];
-      reverseColor = reverse || standout;
-      hiFgColor = getColor(foreground, fgColor);
-      hiBgColor = getColor(background, bgColor);
-      hiSpColor = getColor(special, spColor);
-      hiItalic = showItalic && italic;
-      hiBold = showBold && bold;
-      hiUnderline = showUnderline && underline;
-      hiUndercurl = showUndercurl && undercurl;
-    }
-  },
-
-  update_bg: ([color]) => {
-    bgColor = getColor(color, defaultBgColor);
-    body.style.background = bgColor;
-  },
-
-  update_fg: ([color]) => {
-    fgColor = getColor(color, defaultFgColor);
-  },
-
-  update_sp: ([color]) => {
-    spColor = getColor(color, defaultSpColor);
-  },
-
-  set_scroll_region: (...rects) => {
-    const rect = rects[rects.length - 1];
-    scrollRect = rect; // top, bottom, left, right
-  },
-
-  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L202
-  scroll: ([scrollCount]) => {
-    const [top, bottom, left, right] = scrollRect;
-
-    const x = left * charWidth; // region left
-    let y; // region top
-    let w = (right - left + 1) * charWidth; // clipped part width
-    const h = (bottom - top + 1 - Math.abs(scrollCount)) * charHeight; // clipped part height
-    const X = x; // destination left
-    let Y; // destination top
-    const cx = x; // clear left
-    let cy; // clear top
-    let cw = w; // clear width
-    const ch = Math.abs(scrollCount) * charHeight; // clear height
-
-    if (right === cols - 1) {
-      // Add extra char if it is far right rect
-      w += charWidth;
-      cw += charWidth;
-    }
-
-    if (scrollCount > 0) {
-      // scroll down
-      y = (top + scrollCount) * charHeight;
-      Y = top * charHeight;
-      cy = (bottom + 1 - scrollCount) * charHeight;
-    } else {
-      // scroll up
-      y = top * charHeight;
-      Y = (top - scrollCount) * charHeight;
-      cy = top * charHeight;
-    }
-
-    // Copy scrolled lines
-    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
-    context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
-
-    // Clear lines under scroll
-    context.fillStyle = bgColor;
-    context.fillRect(cx, cy, cw, ch);
-
-    // Scroll chars hash
-    let clearCharsFrom = top;
-    let clearCharsTo = bottom;
-
-    const iterateJ = (i) => {
-      for (let j = left; j <= right; j += 1) {
-        if (!chars[i]) chars[i] = {};
-        if (chars[i + scrollCount] && chars[i + scrollCount][j]) {
-          chars[i][j] = chars[i + scrollCount][j];
-        } else {
-          chars[i][j] = null;
-        }
-      }
-    };
-    if (scrollCount > 0) {
-      // scroll down
-      for (let i = top; i <= bottom - scrollCount; i += 1) {
-        iterateJ(i);
-      }
-      clearCharsFrom = bottom - scrollCount + 1;
-    } else {
-      // scroll up
-      for (let i = bottom; i >= top - scrollCount; i -= 1) {
-        iterateJ(i);
-      }
-      clearCharsTo = top - scrollCount - 1;
-    }
-
-    for (let i = clearCharsFrom; i <= clearCharsTo; i += 1) {
-      for (let j = left; j <= right; j += 1) {
-        if (chars[i] && chars[i][j]) {
-          chars[i][j] = null;
-        }
-      }
-    }
-  },
-
-  resize: (...props) => {
-    [[cols, rows]] = props;
-    // Add extra column on the right to fill it with adjacent color to have a nice right border
-    screenEl.style.width = `${(cols + 1) * charWidth}px`;
-    screenEl.style.height = `${rows * charHeight}px`;
-    canvasEl.width = (cols + 1) * charWidth;
-    canvasEl.height = rows * charHeight;
-    context.fillStyle = getBgColor();
-    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
-    scrollRect = [0, rows - 1, 0, cols - 1];
-  },
-
-  // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt#L75
   mode_info_set: (props) => {
     modeInfoSet = props[1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
     redrawCursor();
   },
-
-  mode_change: (...modes) => {
-    [mode] = modes[modes.length - 1];
-    redrawCursor();
-  },
-
-  mouse_on: () => {},
-  mouse_off: () => {},
-  set_title: () => {},
-  set_icon: () => {},
 
   option_set: (...options) => {
     options.forEach(([option, value]) => {
@@ -773,6 +576,26 @@ const redrawCmd = {
       }
     });
   },
+
+  mode_change: (...modes) => {
+    [mode] = modes[modes.length - 1];
+    redrawCursor();
+  },
+
+  mouse_on: () => {},
+  mouse_off: () => {},
+
+  busy_start: () => {},
+  busy_stop: () => {},
+
+  suspend: () => {},
+
+  update_menu: () => {},
+
+  bell: () => {},
+  visual_bell: () => {},
+
+  flush: () => {},
 
   // New api
   grid_resize: (props) => {
@@ -785,7 +608,6 @@ const redrawCmd = {
     canvasEl.height = rows * charHeight;
     context.fillStyle = getBgColor();
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
-    scrollRect = [0, rows - 1, 0, cols - 1];
   },
 
   default_colors_set: (...p) => {
@@ -813,6 +635,15 @@ const redrawCmd = {
     requireRedrawAll();
     context.fillStyle = calculated.bgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+  },
+
+  hl_attr_define: (...props) => {
+    props.forEach(([id, value]) => {
+      highlightTable[id] = {
+        value,
+      };
+    });
+    recalculateHighlightTable();
   },
 
   grid_line: (...props) => {
@@ -866,14 +697,7 @@ const redrawCmd = {
     chars = {};
   },
 
-  hl_attr_define: (...props) => {
-    props.forEach(([id, value]) => {
-      highlightTable[id] = {
-        value,
-      };
-    });
-    recalculateHighlightTable();
-  },
+  grid_destroy: () => {},
 
   grid_cursor_goto: ([_grid, ...newCursor]) => {
     if (newCursor[0] !== cursor[0] && newCursor[0] === rows - 1) {
@@ -931,9 +755,6 @@ const redrawCmd = {
         iterateJ(i);
       }
     }
-  },
-
-  flush: () => {
   },
 
   // VV specific commands

@@ -16,10 +16,10 @@ https://github.com/neovim/neovim/wiki/Installing-Neovim
       shell.openExternal('https://github.com/neovim/neovim/wiki/Installing-Neovim');
     }
     app.exit();
-  } else if (version.num < 3001) {
+  } else if (version.num < 3002) {
     const result = dialog.showMessageBox({
       message: 'Neovim is outdated',
-      detail: `VV requires Neovim version 0.3.1 and later. You have ${version[0]}.${version[1]}.${version[2]}.
+      detail: `VV requires Neovim version 0.3.2 and later. You have ${version[0]}.${version[1]}.${version[2]}.
 You can run \`brew upgrade neovim\` if you used Homebrew to install it. Otherwise please check installation instructions here:
 https://github.com/neovim/neovim/wiki/Installing-Neovim
   `,
