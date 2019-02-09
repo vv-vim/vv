@@ -4,7 +4,6 @@ import path from 'path';
 import { spawn } from 'child_process';
 
 import nvimCommand from '../../lib/nvimCommand';
-import { hasLegacyEmbedAPI } from '../../lib/nvimVersion';
 
 import store from '../../lib/store';
 // import log from '../../lib/log';
@@ -234,21 +233,7 @@ const fixNoConfig = (args) => {
 };
 
 const startNvimProcess = ({ cwd, args }) => {
-  // With --embed we can't read startup errors and it blocks process.
-  // With --headless we can do it, but to turn on rpc we need stdioopen
-  // that works only since nvim 0.3.
-  // So we use --headless + stdioopen if we can.
-  // Starting from 0.3.2 it has different --embed API that is not blocked by startup errors,
-  // so it is safe to use --embed again.
-  const nvimArgs = hasLegacyEmbedAPI()
-    ? [
-      '--headless',
-      '--cmd',
-      vvSourceCommand(),
-      "+call stdioopen({'rpc': v:true})",
-      ...args,
-    ]
-    : ['--embed', '--cmd', vvSourceCommand(), ...args];
+  const nvimArgs = ['--embed', '--cmd', vvSourceCommand(), ...args];
 
   const nvimProcess = spawn(
     nvimCommand(),
@@ -288,15 +273,8 @@ const initNvim = async () => {
   screen = initScreen('screen', nvim);
   fullScreen = initFullScreen(nvim);
 
-  if (hasLegacyEmbedAPI()) {
-    newSettings = defaultSettings;
-    await nvim.command('VVsettings');
-    applyAllSettings();
-    showWindow();
-  } else {
-    applyAllSettings();
-    newSettings = defaultSettings;
-  }
+  applyAllSettings();
+  newSettings = defaultSettings;
 
   fixNoConfig(args);
 

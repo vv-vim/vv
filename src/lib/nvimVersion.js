@@ -29,8 +29,4 @@ const nvimVersion = () => {
   return version;
 };
 
-// Starting from version 0.3.2 neovim will have different --embed API
-// https://github.com/neovim/neovim/wiki/Following-HEAD#20180922
-export const hasLegacyEmbedAPI = () => nvimVersion() && nvimVersion().num < 3002;
-
 export default nvimVersion;
