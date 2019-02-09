@@ -2,7 +2,7 @@ import debounce from 'lodash/debounce';
 import isFinite from 'lodash/isFinite';
 // import log from '../../lib/log';
 
-// import * as PIXI from 'pixi.js';
+import * as PIXI from 'pixi.js';
 
 const [body] = document.getElementsByTagName('body');
 
@@ -79,7 +79,9 @@ const initCursor = () => {
   cursor = [0, 0];
 };
 
-// let stage;
+let stage;
+let ticker;
+let renderer;
 
 const initScreen = () => {
   screenEl = document.createElement('div');
@@ -87,30 +89,28 @@ const initScreen = () => {
   screenEl.style.contain = 'strict';
   screenEl.style.overflow = 'hidden';
 
-  // ====================
+  const pixi = new PIXI.Application({
+    transparent: true,
+    autostart: false,
+  });
+
+  screenEl.appendChild(pixi.view);
+
+  screenContainer.appendChild(screenEl);
+
+  ({ stage, ticker, renderer } = pixi);
+  ticker.stop();
+
   canvasEl = document.createElement('canvas');
 
   canvasEl.style.position = 'absolute';
   canvasEl.style.top = 0;
   canvasEl.style.left = 0;
+  canvasEl.style.zIndex = -1;
 
   context = canvasEl.getContext('2d', { alpha: false });
 
   screenEl.appendChild(canvasEl); //
-  // ====================
-
-
-  // const pixi = new PIXI.Application({
-  //   width: 1600,
-  //   height: 1600,
-  //   transparent: true,
-  // });
-  //
-  // screenEl.appendChild(pixi.view);
-
-  screenContainer.appendChild(screenEl);
-
-  // stage = pixi.stage;
 };
 
 const RETINA_SCALE = 2;
@@ -168,6 +168,27 @@ const font = p => [
   `${scaledFontSize()}px`,
   fontFamily,
 ].join(' ');
+
+const textureCache = {};
+
+const getCharTexture = (char, props) => {
+  const p = props || {
+    fgColor: getFgColor(),
+    bgColor: getBgColor(),
+    spColor: getSpColor(),
+    hiItalic,
+    hiBold,
+    hiUnderline,
+    hiUndercurl,
+  };
+  // Constructing key with string template appears much faster than array join
+  const key = `${char}-${p.fgColor}-${p.bgColor}-${p.spColor}-${p.hiItalic}-${p.hiBold}-${p.hiUnderline}-${p.hiUndercurl}`;
+
+  if (!textureCache[key]) {
+    textureCache[key] = new PIXI.Texture.fromCanvas(getCharBitmap(char, props));
+  }
+  return textureCache[key];
+};
 
 const getCharBitmap = (char, props) => {
   const p = props || {
@@ -242,40 +263,29 @@ const getCharBitmap = (char, props) => {
 
 const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
-  // if (!chars[i][j]) chars[i][j] = {};
-  //
-  // if (!chars[i][j].sprite) {
-  //   chars[i][j].sprite = new PIXI.Sprite();
-  //   stage.addChild(chars[i][j].sprite);
-  //   chars[i][j].sprite.x = (j - 1) * charWidth;
-  //   chars[i][j].sprite.y = i * charHeight;
-  // }
-  // const sprite = chars[i][j].sprite;
+  if (!chars[i][j]) chars[i][j] = {};
 
-  if (isFinite(hlId)) {
-    const props = highlightTable[hlId].calculated;
-    chars[i][j] = {
-      char,
-      bitmap: getCharBitmap(char, props),
-      bg: props.bgColor,
-      italic: props.hiItalic,
-      bold: props.hiBold,
-      hlId,
-      needsRedraw: false,
-      // sprite,
-    };
-  } else {
-    chars[i][j] = {
-      bitmap: getCharBitmap(char),
-      bg: getBgColor(),
-      char,
-      italic: hiItalic,
-      bold: hiBold,
-      needsRedraw: false,
-      // sprite,
-    };
+  if (!chars[i][j].sprite) {
+    chars[i][j].sprite = new PIXI.Sprite();
+    stage.addChild(chars[i][j].sprite);
+    chars[i][j].sprite.x = (j - 1) * charWidth;
+    chars[i][j].sprite.y = i * charHeight;
   }
-  // sprite.texture = new PIXI.Texture.fromCanvas(chars[i][j].bitmap);
+  const sprite = chars[i][j].sprite;
+  sprite.visible = true;
+
+  const props = highlightTable[hlId].calculated;
+  chars[i][j] = {
+    char,
+    bitmap: getCharBitmap(char, props),
+    bg: props.bgColor,
+    italic: props.hiItalic,
+    bold: props.hiBold,
+    hlId,
+    needsRedraw: false,
+    sprite,
+  };
+  sprite.texture = getCharTexture(char, props);
 
   // If this is the last col, fill the next char on extra col with it's bg
   if (j === cols - 1) {
@@ -286,74 +296,6 @@ const printChar = (i, j, char, hlId) => {
     } else {
       context.clearRect(...rect);
     }
-  }
-
-  context.drawImage(
-    chars[i][j].bitmap,
-    0,
-    0,
-    charWidth * 3,
-    charHeight,
-    (j - 1) * charWidth,
-    i * charHeight,
-    charWidth * 3,
-    charHeight,
-  );
-};
-
-// If char previous to the current cursor is wider that char width, we need to draw that part
-// of it that overlaps the current cursor when we redraw it.
-const overlapPrev = ([i, j]) => {
-  if (chars[i] && chars[i][j - 1] && !chars[i][j - 1].needsRedraw) {
-    context.drawImage(
-      chars[i][j - 1].bitmap,
-      charWidth * 2,
-      0,
-      charWidth,
-      charHeight,
-      j * charWidth,
-      i * charHeight,
-      charWidth,
-      charHeight,
-    );
-  }
-};
-
-// Same with next
-const overlapNext = ([i, j]) => {
-  if (chars[i] && chars[i][j + 1] && !chars[i][j + 1].needsRedraw) {
-    context.drawImage(
-      chars[i][j + 1].bitmap,
-      0,
-      0,
-      charWidth,
-      charHeight,
-      j * charWidth,
-      i * charHeight,
-      charWidth,
-      charHeight,
-    );
-  }
-};
-
-// Clean char from previous overlapping left and right symbols.
-const cleanOverlap = ([i, j]) => {
-  if (chars[i] && chars[i][j] && !chars[i][j].needsRedraw) {
-    context.fillStyle = chars[i][j].bg;
-    context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
-    context.drawImage(
-      chars[i][j].bitmap,
-      charWidth,
-      0,
-      charWidth,
-      charHeight,
-      j * charWidth,
-      i * charHeight,
-      charWidth,
-      charHeight,
-    );
-    overlapPrev([i, j]);
-    overlapNext([i, j]);
   }
 };
 
@@ -595,7 +537,10 @@ const redrawCmd = {
   bell: () => {},
   visual_bell: () => {},
 
-  flush: () => {},
+  flush: () => {
+    redrawCursor(); // TODO: check if char under cursor changed first
+    // ticker.update();
+  },
 
   // New api
   grid_resize: (props) => {
@@ -608,6 +553,7 @@ const redrawCmd = {
     canvasEl.height = rows * charHeight;
     context.fillStyle = getBgColor();
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    renderer.resize(canvasEl.width, canvasEl.height);
   },
 
   default_colors_set: (...p) => {
@@ -680,12 +626,6 @@ const redrawCmd = {
         );
         lineLength += length;
       });
-
-      cleanOverlap([row, col - 1]);
-      overlapPrev([row, col]);
-
-      overlapNext([row, col + lineLength - 1]);
-      cleanOverlap([row, col + lineLength]);
     });
     redrawChars();
   },
@@ -695,6 +635,7 @@ const redrawCmd = {
     context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
     chars = {};
+    stage.removeChildren();
   },
 
   grid_destroy: () => {},
@@ -708,6 +649,7 @@ const redrawCmd = {
   },
 
   grid_scroll: ([_grid, top, bottom, left, right, scrollCount]) => {
+    // Scroll backgroudn
     const x = left * charWidth; // region left
     let y; // region top
     let w = (right - left) * charWidth; // clipped part width
@@ -731,26 +673,48 @@ const redrawCmd = {
     }
 
     // Copy scrolled lines
-    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+    https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
     context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
 
+    // Scroll chars
     const iterateJ = (i) => {
       for (let j = left; j <= right - 1; j += 1) {
         if (!chars[i]) chars[i] = {};
         if (chars[i + scrollCount] && chars[i + scrollCount][j]) {
           chars[i][j] = chars[i + scrollCount][j];
+          chars[i][j].sprite.x = (j - 1) * charWidth;
+          chars[i][j].sprite.y = i * charHeight;
+          chars[i + scrollCount][j] = {};
         } else {
+          // stage.removeChild(chars[i][j].sprite);
           chars[i][j] = null;
         }
       }
     };
     if (scrollCount > 0) {
       // scroll down
+      for (let i = top; i <= top + scrollCount - 1; i += 1) {
+        for (let j = left; j <= right - 1; j += 1) {
+          if (chars[i] && chars[i][j]) {
+            stage.removeChild(chars[i][j].sprite);
+            chars[i][j] = null;
+          }
+        }
+      }
+
       for (let i = top; i <= bottom - scrollCount - 1; i += 1) {
         iterateJ(i);
       }
     } else {
       // scroll up
+      for (let i = bottom + scrollCount; i <= bottom - 1; i += 1) {
+        for (let j = left; j <= right - 1; j += 1) {
+          if (chars[i] && chars[i][j]) {
+            stage.removeChild(chars[i][j].sprite);
+            chars[i][j] = null;
+          }
+        }
+      }
       for (let i = bottom - 1; i >= top - scrollCount; i -= 1) {
         iterateJ(i);
       }
@@ -797,15 +761,16 @@ const redrawCmd = {
 
 const handleNotification = async (method, args) => {
   if (method === 'redraw') {
+    ticker.start();
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (redrawCmd[cmd]) {
         redrawCmd[cmd](...props);
+        debounce(ticker.stop, 100);
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
     }
-    redrawCursor(); // TODO: check if char under cursor changed first
   }
 };
 
