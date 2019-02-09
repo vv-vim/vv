@@ -2,13 +2,14 @@ import debounce from 'lodash/debounce';
 import isFinite from 'lodash/isFinite';
 // import log from '../../lib/log';
 
+// import * as PIXI from 'pixi.js';
+
 const [body] = document.getElementsByTagName('body');
 
 let screenContainer;
 let nvim;
 
-let cursorEl;
-let cursorCanvasEl;
+let cursorEl; let cursorCanvasEl;
 let cursorContext;
 let cursor;
 let cursorAnimation;
@@ -78,12 +79,15 @@ const initCursor = () => {
   cursor = [0, 0];
 };
 
+// let stage;
+
 const initScreen = () => {
   screenEl = document.createElement('div');
 
   screenEl.style.contain = 'strict';
   screenEl.style.overflow = 'hidden';
 
+  // ====================
   canvasEl = document.createElement('canvas');
 
   canvasEl.style.position = 'absolute';
@@ -92,8 +96,21 @@ const initScreen = () => {
 
   context = canvasEl.getContext('2d', { alpha: false });
 
-  screenEl.appendChild(canvasEl);
+  screenEl.appendChild(canvasEl); //
+  // ====================
+
+
+  // const pixi = new PIXI.Application({
+  //   width: 1600,
+  //   height: 1600,
+  //   transparent: true,
+  // });
+  //
+  // screenEl.appendChild(pixi.view);
+
   screenContainer.appendChild(screenEl);
+
+  // stage = pixi.stage;
 };
 
 const RETINA_SCALE = 2;
@@ -225,6 +242,15 @@ const getCharBitmap = (char, props) => {
 
 const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
+  // if (!chars[i][j]) chars[i][j] = {};
+  //
+  // if (!chars[i][j].sprite) {
+  //   chars[i][j].sprite = new PIXI.Sprite();
+  //   stage.addChild(chars[i][j].sprite);
+  //   chars[i][j].sprite.x = (j - 1) * charWidth;
+  //   chars[i][j].sprite.y = i * charHeight;
+  // }
+  // const sprite = chars[i][j].sprite;
 
   if (isFinite(hlId)) {
     const props = highlightTable[hlId].calculated;
@@ -236,6 +262,7 @@ const printChar = (i, j, char, hlId) => {
       bold: props.hiBold,
       hlId,
       needsRedraw: false,
+      // sprite,
     };
   } else {
     chars[i][j] = {
@@ -245,8 +272,10 @@ const printChar = (i, j, char, hlId) => {
       italic: hiItalic,
       bold: hiBold,
       needsRedraw: false,
+      // sprite,
     };
   }
+  // sprite.texture = new PIXI.Texture.fromCanvas(chars[i][j].bitmap);
 
   // If this is the last col, fill the next char on extra col with it's bg
   if (j === cols - 1) {
@@ -258,6 +287,7 @@ const printChar = (i, j, char, hlId) => {
       context.clearRect(...rect);
     }
   }
+
   context.drawImage(
     chars[i][j].bitmap,
     0,
