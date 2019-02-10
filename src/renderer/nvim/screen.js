@@ -55,6 +55,7 @@ let showUndercurl = true;
 
 const colorsCache = {};
 let charsCache = {};
+const texturesCache = {};
 
 let chars = {};
 
@@ -169,26 +170,6 @@ const font = p => [
   fontFamily,
 ].join(' ');
 
-const textureCache = {};
-
-const getCharTexture = (char, props) => {
-  const p = props || {
-    fgColor: getFgColor(),
-    bgColor: getBgColor(),
-    spColor: getSpColor(),
-    hiItalic,
-    hiBold,
-    hiUnderline,
-    hiUndercurl,
-  };
-  // Constructing key with string template appears much faster than array join
-  const key = `${char}-${p.fgColor}-${p.bgColor}-${p.spColor}-${p.hiItalic}-${p.hiBold}-${p.hiUnderline}-${p.hiUndercurl}`;
-
-  if (!textureCache[key]) {
-    textureCache[key] = new PIXI.Texture.fromCanvas(getCharBitmap(char, props));
-  }
-  return textureCache[key];
-};
 
 const getCharBitmap = (char, props) => {
   const p = props || {
@@ -261,6 +242,26 @@ const getCharBitmap = (char, props) => {
   return charsCache[key];
 };
 
+
+const getCharTexture = (char, props) => {
+  const p = props || {
+    fgColor: getFgColor(),
+    bgColor: getBgColor(),
+    spColor: getSpColor(),
+    hiItalic,
+    hiBold,
+    hiUnderline,
+    hiUndercurl,
+  };
+  // Constructing key with string template appears much faster than array join
+  const key = `${char}-${p.fgColor}-${p.bgColor}-${p.spColor}-${p.hiItalic}-${p.hiBold}-${p.hiUnderline}-${p.hiUndercurl}`;
+
+  if (!texturesCache[key]) {
+    texturesCache[key] = PIXI.Texture.fromCanvas(getCharBitmap(char, props));
+  }
+  return texturesCache[key];
+};
+
 const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
   if (!chars[i][j]) chars[i][j] = {};
@@ -271,8 +272,7 @@ const printChar = (i, j, char, hlId) => {
     chars[i][j].sprite.x = (j - 1) * charWidth;
     chars[i][j].sprite.y = i * charHeight;
   }
-  const sprite = chars[i][j].sprite;
-  sprite.visible = true;
+  const { sprite } = chars[i][j];
 
   const props = highlightTable[hlId].calculated;
   chars[i][j] = {
@@ -313,7 +313,7 @@ const clearCursor = () => {
   cursorContext.clearRect(0, 0, charWidth, charHeight);
 };
 
-const redrawCursor = async () => {
+const redrawCursor = () => {
   const m = modeInfoSet && modeInfoSet[mode];
   if (!m) return;
   clearCursor();
@@ -327,8 +327,9 @@ const redrawCursor = async () => {
     cursorChar = chars[cursor[0]][cursor[1]];
   }
 
-  // Default cursor colors if no hl_id is set
-  const highlightAttrs = highlightTable[0] ? {
+  const hiAttrs = highlightTable[m.hl_id];
+
+  const highlightAttrs = hiAttrs ? {
     bgColor: highlightTable[0].calculated.fgColor,
     fgColor: highlightTable[0].calculated.bgColor,
     spColor: highlightTable[0].calculated.bgColor,
@@ -341,30 +342,6 @@ const redrawCursor = async () => {
     hiBold: cursorChar.bold,
     hiItalic: cursorChar.italic,
   };
-
-  // TODO: check this
-  // Get custom cursor colors if hl_id is set
-  if (m.hl_id) {
-    // TODO: tmp code. getHighlightById when it will be available
-    // TODO: async command does not work with r mode, it fires only after symbol was replaced
-    const hiAttrsResult = await nvim.commandOutput(
-      `VVhighlightAttrs ${m.hl_id}`,
-    );
-    if (hiAttrsResult) {
-      let hiAttrs;
-      try {
-        hiAttrs = JSON.parse(hiAttrsResult.replace(/'/g, '"'));
-      } catch (e) {} // eslint-disable-line no-empty
-      if (hiAttrs) {
-        const reverse = hiAttrs.reverse || hiAttrs.standout;
-        if (hiAttrs.fg) highlightAttrs.fgColor = reverse ? hiAttrs.bg : hiAttrs.fg;
-        if (hiAttrs.bg) highlightAttrs.bgColor = reverse ? hiAttrs.fg : hiAttrs.bg;
-        if (hiAttrs.sp) highlightAttrs.spColor = hiAttrs.bg;
-        highlightAttrs.hiBold = showBold && !!hiAttrs.bold;
-        highlightAttrs.hiItalic = showItalic && !!hiAttrs.italic;
-      }
-    }
-  }
 
   if (m.cursor_shape === 'block') {
     const char = m.name.indexOf('cmdline') === -1 ? cursorChar.char : null;
