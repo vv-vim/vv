@@ -55,7 +55,7 @@ let showUndercurl = true;
 
 const colorsCache = {};
 let charsCache = {};
-const texturesCache = {};
+let texturesCache = {};
 
 let chars = {};
 
@@ -84,6 +84,8 @@ let stage;
 let ticker;
 let renderer;
 
+const debouncedTickerStop = debounce(() => ticker.stop(), 100);
+
 const initScreen = () => {
   screenEl = document.createElement('div');
 
@@ -100,7 +102,8 @@ const initScreen = () => {
   screenContainer.appendChild(screenEl);
 
   ({ stage, ticker, renderer } = pixi);
-  ticker.stop();
+
+  stage.interactiveChildren = false;
 
   canvasEl = document.createElement('canvas');
 
@@ -151,6 +154,7 @@ const measureCharSize = () => {
     cursorEl.style.height = `${charHeight}px`;
 
     charsCache = {};
+    texturesCache = {};
   }
   screenEl.removeChild(char);
 };
@@ -171,7 +175,7 @@ const font = p => [
 ].join(' ');
 
 
-const getCharBitmap = (char, props) => {
+const getCharBitmap = (char, props, hlId) => {
   const p = props || {
     fgColor: getFgColor(),
     bgColor: getBgColor(),
@@ -181,8 +185,7 @@ const getCharBitmap = (char, props) => {
     hiUnderline,
     hiUndercurl,
   };
-  // Constructing key with string template appears much faster than array join
-  const key = `${char}-${p.fgColor}-${p.bgColor}-${p.spColor}-${p.hiItalic}-${p.hiBold}-${p.hiUnderline}-${p.hiUndercurl}`;
+  const key = hlId ? (char + '-' + hlId) : `${char}-${p.fgColor}-${p.bgColor}-${p.spColor}-${p.hiItalic}-${p.hiBold}-${p.hiUnderline}-${p.hiUndercurl}`;
 
   if (!charsCache[key]) {
     const c = document.createElement('canvas');
@@ -243,21 +246,11 @@ const getCharBitmap = (char, props) => {
 };
 
 
-const getCharTexture = (char, props) => {
-  const p = props || {
-    fgColor: getFgColor(),
-    bgColor: getBgColor(),
-    spColor: getSpColor(),
-    hiItalic,
-    hiBold,
-    hiUnderline,
-    hiUndercurl,
-  };
-  // Constructing key with string template appears much faster than array join
-  const key = `${char}-${p.fgColor}-${p.bgColor}-${p.spColor}-${p.hiItalic}-${p.hiBold}-${p.hiUnderline}-${p.hiUndercurl}`;
-
+const getCharTexture = (char, hlId) => {
+  const props = highlightTable[hlId].calculated;
+  const key = char + '-' + hlId;
   if (!texturesCache[key]) {
-    texturesCache[key] = PIXI.Texture.fromCanvas(getCharBitmap(char, props));
+    texturesCache[key] = PIXI.Texture.fromCanvas(getCharBitmap(char, props, hlId));
   }
   return texturesCache[key];
 };
@@ -272,31 +265,15 @@ const printChar = (i, j, char, hlId) => {
     chars[i][j].sprite.x = (j - 1) * charWidth;
     chars[i][j].sprite.y = i * charHeight;
   }
-  const { sprite } = chars[i][j];
 
   const props = highlightTable[hlId].calculated;
-  chars[i][j] = {
-    char,
-    bitmap: getCharBitmap(char, props),
-    bg: props.bgColor,
-    italic: props.hiItalic,
-    bold: props.hiBold,
-    hlId,
-    needsRedraw: false,
-    sprite,
-  };
-  sprite.texture = getCharTexture(char, props);
 
-  // If this is the last col, fill the next char on extra col with it's bg
-  if (j === cols - 1) {
-    const rect = [cols * charWidth, i * charHeight, charWidth, charHeight];
-    if (chars[i][j]) {
-      context.fillStyle = chars[i][j].bg;
-      context.fillRect(...rect);
-    } else {
-      context.clearRect(...rect);
-    }
-  }
+  chars[i][j].char = char;
+  chars[i][j].italic = props.hiItalic;
+  chars[i][j].bold = props.hiBold;
+  chars[i][j].hlId = hlId;
+  chars[i][j].needsRedraw = false;
+  chars[i][j].sprite.texture = getCharTexture(char, hlId);
 };
 
 const getColor = (c, defaultColor = null) => {
@@ -516,7 +493,8 @@ const redrawCmd = {
 
   flush: () => {
     redrawCursor(); // TODO: check if char under cursor changed first
-    // ticker.update();
+    ticker.start();
+    debouncedTickerStop();
   },
 
   // New api
@@ -570,40 +548,35 @@ const redrawCmd = {
   },
 
   grid_line: (...props) => {
-    props.forEach(([_grid, row, col, cells]) => {
-      // eslint-disable-line no-unused-vars
+    for (let gridKey = 0, gridLength = props.length; gridKey < gridLength; gridKey += 1) {
+      const [_grid, row, col, cells] = props[gridKey]; // eslint-disable-line no-unused-vars
+
       let lineLength = 0;
-
-      // Fill background for the whole set of chars
-      // TODO: refactor
       let currentHlId;
-      cells.forEach(([char, hlId, length = 1]) => { // eslint-disable-line no-unused-vars
-        if (isFinite(hlId)) {
-          currentHlId = hlId;
-        }
-        context.fillStyle = highlightTable[currentHlId].calculated.bgColor;
-        Array.from({ length }, (_v, i) => context.fillRect(
-          (col + lineLength + i) * charWidth,
-          row * charHeight,
-          charWidth,
-          charHeight,
-        ));
-        lineLength += length;
-      });
 
-      lineLength = 0;
-      currentHlId = undefined;
-      cells.forEach(([char, hlId, length = 1]) => {
+      for (let cellKey = 0, cellsLength = cells.length; cellKey < cellsLength; cellKey += 1) {
+        const [char, hlId, length = 1] = cells[cellKey];
         if (isFinite(hlId)) {
           currentHlId = hlId;
+          context.fillStyle = highlightTable[currentHlId].calculated.bgColor;
         }
-        Array.from(
-          { length },
-          (_v, i) => printChar(row, col + lineLength + i, char, currentHlId),
-        );
+        for (let j = 0; j < length; j += 1) {
+          const offset = col + lineLength + j;
+          context.fillRect(
+            offset * charWidth,
+            row * charHeight,
+            charWidth,
+            charHeight,
+          );
+          // If this is the last col, fill the next char on extra col with it's bg
+          if (offset === cols - 1) {
+            context.fillRect((offset + 1) * charWidth, row * charHeight, charWidth, charHeight);
+          }
+          printChar(row, offset, char, currentHlId);
+        }
         lineLength += length;
-      });
-    });
+      }
+    }
     redrawChars();
   },
 
@@ -650,7 +623,7 @@ const redrawCmd = {
     }
 
     // Copy scrolled lines
-    https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
     context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
 
     // Scroll chars
@@ -738,12 +711,12 @@ const redrawCmd = {
 
 const handleNotification = async (method, args) => {
   if (method === 'redraw') {
-    ticker.start();
+    // ticker.start();
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (redrawCmd[cmd]) {
         redrawCmd[cmd](...props);
-        debounce(ticker.stop, 100);
+        // debounce(ticker.stop, 100);
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
