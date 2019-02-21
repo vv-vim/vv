@@ -89,7 +89,7 @@ const replaceResult = result =>
     '<C-2>': '<C-@>',
   }[result] || result);
 
-const eventKeyCode = async (event) => {
+const eventKeyCode = async event => {
   const { key } = event;
 
   if (skip(key)) return null;
@@ -109,19 +109,17 @@ const eventKeyCode = async (event) => {
   const keyCode = special || key;
 
   const result =
-    modifier || (special && special !== '<lt>')
-      ? `<${modifier}${shift}${keyCode}>`
-      : keyCode;
+    modifier || (special && special !== '<lt>') ? `<${modifier}${shift}${keyCode}>` : keyCode;
 
   return replaceResult(filterResult(result));
 };
 
-const handleKeydown = async (event) => {
+const handleKeydown = async event => {
   const key = await eventKeyCode(event);
   if (key) nvim.input(key);
 };
 
-const initKeyboard = (newNvim) => {
+const initKeyboard = newNvim => {
   nvim = newNvim;
   document.addEventListener('keydown', handleKeydown);
 };
