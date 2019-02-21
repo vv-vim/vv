@@ -34,18 +34,7 @@ const defaultSpColor = 'rgb(255,255,255)';
 
 let cols;
 let rows;
-let hiFgColor;
-let hiBgColor;
-let hiSpColor;
-let hiItalic;
-let hiBold;
-let hiUnderline;
-let hiUndercurl;
 
-const fgColor = defaultFgColor;
-const bgColor = defaultBgColor;
-
-let reverseColor;
 let modeInfoSet;
 let mode;
 
@@ -61,6 +50,11 @@ let texturesCache = {};
 let chars = {};
 
 const highlightTable = {};
+
+// WebGL
+let stage;
+let ticker;
+let renderer;
 
 export const getCursorElement = () => cursorEl;
 
@@ -81,10 +75,6 @@ const initCursor = () => {
   cursor = [0, 0];
 };
 
-let stage;
-let ticker;
-let renderer;
-
 const debouncedTickerStop = debounce(() => ticker.stop(), 100);
 
 const initScreen = () => {
@@ -93,6 +83,7 @@ const initScreen = () => {
   screenEl.style.contain = 'strict';
   screenEl.style.overflow = 'hidden';
 
+  // Init WebGL for text
   const pixi = new PIXI.Application({
     transparent: true,
     autostart: false,
@@ -106,6 +97,7 @@ const initScreen = () => {
 
   stage.interactiveChildren = false;
 
+  // Init screen for background
   canvasEl = document.createElement('canvas');
 
   canvasEl.style.position = 'absolute';
@@ -115,7 +107,7 @@ const initScreen = () => {
 
   context = canvasEl.getContext('2d', { alpha: false });
 
-  screenEl.appendChild(canvasEl); //
+  screenEl.appendChild(canvasEl);
 };
 
 const RETINA_SCALE = 2;
@@ -161,12 +153,6 @@ const measureCharSize = () => {
 };
 
 const debouncedMeasureCharSize = debounce(measureCharSize, 10);
-
-const getFgColor = () => (reverseColor ? hiBgColor : hiFgColor);
-
-const getBgColor = () => (reverseColor ? hiFgColor : hiBgColor);
-
-const getSpColor = () => (reverseColor ? hiSpColor : hiSpColor);
 
 const font = p =>
   [p.hiItalic ? 'italic' : '', p.hiBold ? 'bold' : '', `${scaledFontSize()}px`, fontFamily].join(
@@ -238,11 +224,7 @@ const printChar = (i, j, char, hlId) => {
     chars[i][j].sprite.y = i * charHeight;
   }
 
-  const props = highlightTable[hlId].calculated;
-
   chars[i][j].char = char;
-  chars[i][j].italic = props.hiItalic;
-  chars[i][j].bold = props.hiBold;
   chars[i][j].hlId = hlId;
   chars[i][j].needsRedraw = false;
   chars[i][j].sprite.texture = getCharTexture(char, hlId);
@@ -383,6 +365,8 @@ const recalculateHighlightTable = () => {
         };
       }
     });
+    charsCache = {};
+    texturesCache = {};
   }
 };
 
@@ -470,7 +454,9 @@ const redrawCmd = {
     screenEl.style.height = `${rows * charHeight}px`;
     canvasEl.width = (cols + 1) * charWidth;
     canvasEl.height = rows * charHeight;
-    context.fillStyle = getBgColor();
+    context.fillStyle = highlightTable[0]
+      ? highlightTable[0].calculated.background
+      : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
     renderer.clear();
@@ -560,7 +546,7 @@ const redrawCmd = {
   },
 
   grid_scroll: ([_grid, top, bottom, left, right, scrollCount]) => {
-    // Scroll backgroudn
+    // Scroll background
     const x = left * charWidth; // region left
     let y; // region top
     let w = (right - left) * charWidth; // clipped part width
@@ -588,7 +574,7 @@ const redrawCmd = {
     context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
 
     // Scroll chars
-    const iterateJ = i => {
+    const scrollJ = i => {
       for (let j = left; j <= right - 1; j += 1) {
         if (!chars[i]) chars[i] = {};
         if (chars[i + scrollCount] && chars[i + scrollCount][j]) {
@@ -597,37 +583,35 @@ const redrawCmd = {
           chars[i][j].sprite.y = i * charHeight;
           chars[i + scrollCount][j] = {};
         } else {
-          // stage.removeChild(chars[i][j].sprite);
           chars[i][j] = null;
         }
       }
     };
+
+    const cleanJ = i => {
+      for (let j = left; j <= right - 1; j += 1) {
+        if (chars[i] && chars[i][j]) {
+          stage.removeChild(chars[i][j].sprite);
+          chars[i][j] = null;
+        }
+      }
+    };
+
     if (scrollCount > 0) {
       // scroll down
       for (let i = top; i <= top + scrollCount - 1; i += 1) {
-        for (let j = left; j <= right - 1; j += 1) {
-          if (chars[i] && chars[i][j]) {
-            stage.removeChild(chars[i][j].sprite);
-            chars[i][j] = null;
-          }
-        }
+        cleanJ(i);
       }
-
       for (let i = top; i <= bottom - scrollCount - 1; i += 1) {
-        iterateJ(i);
+        scrollJ(i);
       }
     } else {
       // scroll up
       for (let i = bottom + scrollCount; i <= bottom - 1; i += 1) {
-        for (let j = left; j <= right - 1; j += 1) {
-          if (chars[i] && chars[i][j]) {
-            stage.removeChild(chars[i][j].sprite);
-            chars[i][j] = null;
-          }
-        }
+        cleanJ(i);
       }
       for (let i = bottom - 1; i >= top - scrollCount; i -= 1) {
-        iterateJ(i);
+        scrollJ(i);
       }
     }
   },
