@@ -75,7 +75,7 @@ const initCursor = () => {
   cursor = [0, 0];
 };
 
-const debouncedTickerStop = debounce(() => ticker.stop(), 100);
+const debouncedTickerStop = debounce(() => ticker.stop(), 200);
 
 const initScreen = () => {
   screenEl = document.createElement('div');
@@ -224,10 +224,19 @@ const printChar = (i, j, char, hlId) => {
     chars[i][j].sprite.y = i * charHeight;
   }
 
+  // Print char to WebGL
   chars[i][j].char = char;
   chars[i][j].hlId = hlId;
   chars[i][j].needsRedraw = false;
   chars[i][j].sprite.texture = getCharTexture(char, hlId);
+
+  // Draw background in canvas
+  context.fillStyle = highlightTable[hlId].calculated.bgColor;
+  context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
+  // If this is the last col, fill the next char on extra col with it's bg
+  if (j === cols - 1) {
+    context.fillRect((j + 1) * charWidth, i * charHeight, charWidth, charHeight);
+  }
 };
 
 const getColor = (c, defaultColor = null) => {
@@ -370,6 +379,18 @@ const recalculateHighlightTable = () => {
   }
 };
 
+const redrawChars = debounce(() => {
+  for (let i = 0; i <= rows; i += 1) {
+    if (chars[i]) {
+      for (let j = 0; j <= cols; j += 1) {
+        if (chars[i][j] && chars[i][j].needsRedraw) {
+          printChar(i, j, chars[i][j].char, chars[i][j].hlId);
+        }
+      }
+    }
+  }
+}, 10);
+
 // When we get `default_colors_set`, we need to redraw chars that have colors referenced to
 // default colors. First we mark all chars with `needsRedraw`, then on each `printChar` we set
 // it to `false`. After `grid_line` we redraw chars that still have `needsRedraw`.
@@ -387,19 +408,8 @@ const requireRedrawAll = () => {
       }
     }
   }
+  redrawChars();
 };
-
-const redrawChars = debounce(() => {
-  for (let i = 0; i <= rows; i += 1) {
-    if (chars[i]) {
-      for (let j = 0; j <= cols; j += 1) {
-        if (chars[i][j] && chars[i][j].needsRedraw) {
-          printChar(i, j, chars[i][j].char, chars[i][j].hlId);
-        }
-      }
-    }
-  }
-}, 10);
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
@@ -441,8 +451,6 @@ const redrawCmd = {
 
   flush: () => {
     redrawCursor(); // TODO: check if char under cursor changed first
-    ticker.start();
-    debouncedTickerStop();
   },
 
   // New api
@@ -510,21 +518,14 @@ const redrawCmd = {
         const [char, hlId, length = 1] = cells[cellKey];
         if (isFinite(hlId)) {
           currentHlId = hlId;
-          context.fillStyle = highlightTable[currentHlId].calculated.bgColor;
         }
         for (let j = 0; j < length; j += 1) {
           const offset = col + lineLength + j;
-          context.fillRect(offset * charWidth, row * charHeight, charWidth, charHeight);
-          // If this is the last col, fill the next char on extra col with it's bg
-          if (offset === cols - 1) {
-            context.fillRect((offset + 1) * charWidth, row * charHeight, charWidth, charHeight);
-          }
           printChar(row, offset, char, currentHlId);
         }
         lineLength += length;
       }
     }
-    redrawChars();
   },
 
   grid_clear: () => {
@@ -656,16 +657,16 @@ const redrawCmd = {
 
 const handleNotification = async (method, args) => {
   if (method === 'redraw') {
-    // ticker.start();
+    ticker.start();
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (redrawCmd[cmd]) {
         redrawCmd[cmd](...props);
-        // debounce(ticker.stop, 100);
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
     }
+    debouncedTickerStop();
   }
 };
 
