@@ -1,28 +1,25 @@
 const { ipcRenderer } = global.require('electron');
 let nvim;
 
-const handlePaste = async (event) => {
+// https://neovim.io/doc/user/eval.html#mode()
+const handlePaste = async event => {
   event.preventDefault();
   event.stopPropagation();
-  const clipboardText = event.clipboardData
-    .getData('text')
-    .replace(/</g, '<lt>');
+  const clipboardText = event.clipboardData.getData('text').replace(/</g, '<lt>');
   const { mode } = await nvim.mode;
-  // :help mode
-  if (mode === 'i') {
+  const shortMode = mode.replace('CTRL-', '')[0];
+  if (shortMode === 'i') {
     await nvim.command('set paste');
     await nvim.input(clipboardText);
     await nvim.command('set nopaste');
-  } else if (['c', 't', 'ce', 'cv', 's', 'S', 'R', 'Rv'].includes(mode)) {
-    nvim.input(clipboardText);
-  } else if (['no', 'r', 'rm', 'r?', '!'].includes(mode)) {
-    // do nothing
-  } else {
+  } else if (['n', 'v', 'V', 's', 'S'].includes(shortMode)) {
     nvim.input('"*p');
+  } else {
+    nvim.input(clipboardText);
   }
 };
 
-const handleCopy = async (event) => {
+const handleCopy = async event => {
   event.preventDefault();
   event.stopPropagation();
   const { mode } = await nvim.mode;
@@ -35,7 +32,7 @@ const handleSelectAll = () => {
   nvim.input('ggVG');
 };
 
-const initCopyPaste = (newNvim) => {
+const initCopyPaste = newNvim => {
   nvim = newNvim;
   document.addEventListener('copy', handleCopy);
   document.addEventListener('paste', handlePaste);

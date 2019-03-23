@@ -3915,12 +3915,14 @@ neo-async@^2.5.0:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.5.1.tgz#acb909e327b1e87ec9ef15f41b8a269512ad41ee"
 
-neovim@^4.2.1:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/neovim/-/neovim-4.2.1.tgz#25e99703831fafd9e26190feec15366bebfda8c0"
+neovim@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/neovim/-/neovim-4.4.0.tgz#e50b4dae933c9f1548d2a57af27ed227cb4f25a4"
+  integrity sha512-zFsmjUeiK7vJNXsSljaAXt8eUmwKIJ4d7iTn7Mq2PmTEPmtBCuaVEGRpkl5z3AWJKPmOYNzlIu9Lgyq4s4FTew==
   dependencies:
     lodash "^4.17.4"
     msgpack-lite "^0.1.26"
+    semver "^5.6.0"
     traverse "^0.6.6"
     winston "^2.3.1"
 

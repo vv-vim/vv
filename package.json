@@ -70,7 +70,7 @@
     "webpack-merge": "^4.1.2"
   },
   "dependencies": {
-    "neovim": "^4.2.1",
+    "neovim": "^4.4.0",
     "pixi.js": "^4.8.5"
   }
 }
