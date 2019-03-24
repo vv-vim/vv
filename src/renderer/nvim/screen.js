@@ -4,10 +4,11 @@ import isFinite from 'lodash/isFinite';
 
 import * as PIXI from 'pixi.js';
 
+import { nvim } from './api';
+
 const [body] = document.getElementsByTagName('body');
 
 let screenContainer;
-let nvim;
 
 let cursorEl;
 let cursorCanvasEl;
@@ -335,9 +336,9 @@ const optionSet = {
   guifont: newFont => {
     const [newFontFamily, newFontSize] = newFont.trim().split(':h');
     if (newFontFamily && newFontFamily !== '') {
-      nvim.command(`VVset fontfamily=${newFontFamily}`);
+      nvim().command(`VVset fontfamily=${newFontFamily}`);
       if (newFontSize && newFontFamily !== '') {
-        nvim.command(`VVset fontsize=${newFontSize}`);
+        nvim().command(`VVset fontsize=${newFontSize}`);
       }
     }
   },
@@ -677,8 +678,7 @@ const setScale = () => {
   screenContainer.style.height = `${scale * 100}%`;
 };
 
-const screen = (containerId, newNvim) => {
-  nvim = newNvim;
+const screen = (containerId) => {
   screenContainer = document.getElementById(containerId);
   if (!screenContainer) return false;
 
@@ -691,14 +691,14 @@ const screen = (containerId, newNvim) => {
   initCursor();
   measureCharSize();
 
-  nvim.on('notification', handleNotification);
+  nvim().on('notification', handleNotification);
 
   // Detect when you drag between retina/non-retina displays
   window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
     canvasEl.style.opacity = 0;
     setScale();
     measureCharSize();
-    await nvim.uiTryResize(cols, rows);
+    await nvim().uiTryResize(cols, rows);
     canvasEl.style.opacity = 1;
   });
 

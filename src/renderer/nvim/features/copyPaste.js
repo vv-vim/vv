@@ -1,39 +1,45 @@
+import { nvim } from '../api';
+
 const { ipcRenderer } = global.require('electron');
-let nvim;
+
+// Fetch current mode from nvim, leaves only first letter to match groups of modes.
+export const shortMode = async () => {
+  const { mode } = await nvim().mode;
+  return mode.replace('CTRL-', '')[0];
+};
 
 // https://neovim.io/doc/user/eval.html#mode()
 const handlePaste = async event => {
   event.preventDefault();
   event.stopPropagation();
   const clipboardText = event.clipboardData.getData('text').replace(/</g, '<lt>');
-  const { mode } = await nvim.mode;
-  const shortMode = mode.replace('CTRL-', '')[0];
-  if (shortMode === 'i') {
-    await nvim.command('set paste');
-    await nvim.input(clipboardText);
-    await nvim.command('set nopaste');
-  } else if (['n', 'v', 'V', 's', 'S'].includes(shortMode)) {
-    nvim.input('"*p');
+
+  const mode = await shortMode();
+  if (mode === 'i') {
+    await nvim().command('set paste');
+    await nvim().input(clipboardText);
+    await nvim().command('set nopaste');
+  } else if (['n', 'v', 'V', 's', 'S'].includes(mode)) {
+    nvim().input('"*p');
   } else {
-    nvim.input(clipboardText);
+    nvim().input(clipboardText);
   }
 };
 
 const handleCopy = async event => {
   event.preventDefault();
   event.stopPropagation();
-  const { mode } = await nvim.mode;
+  const mode = await shortMode();
   if (mode === 'v' || mode === 'V') {
-    nvim.input('"*y');
+    nvim().input('"*y');
   }
 };
 
 const handleSelectAll = () => {
-  nvim.input('ggVG');
+  nvim().input('ggVG');
 };
 
-const initCopyPaste = newNvim => {
-  nvim = newNvim;
+const initCopyPaste = () => {
   document.addEventListener('copy', handleCopy);
   document.addEventListener('paste', handlePaste);
   ipcRenderer.on('selectAll', handleSelectAll);

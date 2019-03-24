@@ -1,6 +1,7 @@
+import { nvim } from '../api';
+
 const { remote: { getCurrentWindow, dialog } } = global.require('electron');
 
-let nvim;
 const currentWindow = getCurrentWindow();
 let changedBuffers = {};
 let enabled = true;
@@ -28,7 +29,7 @@ const showChangedDialog = async () => {
       buttons,
     });
     if (response === 0) {
-      nvim.command(
+      nvim().command(
         `VVrefresh ${Object.keys(changedBuffers)
           .map(k => changedBuffers[k].bufnr)
           .join(' ')}`,
@@ -40,46 +41,43 @@ const showChangedDialog = async () => {
 
 const checktimeAll = async () => {
   checking = true;
-  await nvim.command('VVchecktimeAll');
+  await nvim().command('VVchecktimeAll');
   checking = false;
   showChangedDialog();
 };
 
 const enable = (newEnabled = true) => {
   enabled = newEnabled;
-  nvim.command(`VVenableReloadChanged ${enabled ? '1' : '0'}`);
+  nvim().command(`VVenableReloadChanged ${enabled ? '1' : '0'}`);
 };
 
-const initReloadChanged = (newNvim) => {
-  if (!nvim) {
-    nvim = newNvim;
-
-    nvim.on('notification', (method, args) => {
-      if (enabled && method === 'vv:file_changed') {
-        const [buffer] = args;
-        if (!changedBuffers[buffer.bufnr]) {
-          changedBuffers[buffer.bufnr] = buffer;
-        }
-        if (!checking) {
-          checktimeAll();
-        }
+const initReloadChanged = () => {
+  nvim().on('notification', (method, args) => {
+    if (enabled && method === 'vv:file_changed') {
+      const [buffer] = args;
+      if (!changedBuffers[buffer.bufnr]) {
+        changedBuffers[buffer.bufnr] = buffer;
       }
-      if (method === 'vv:set') {
-        const [option, ...props] = args;
-        if (option === 'reloadchanged') {
-          enable(props[0]);
-        }
-      }
-    });
-
-    currentWindow.on('focus', () => {
-      if (enabled) {
+      if (!checking) {
         checktimeAll();
       }
-    });
+    }
+    if (method === 'vv:set') {
+      const [option, ...props] = args;
+      if (option === 'reloadchanged') {
+        enable(props[0]);
+      }
+    }
+  });
 
-    nvim.subscribe('vv:file_changed');
-  }
+  currentWindow.on('focus', () => {
+    if (enabled) {
+      checktimeAll();
+    }
+  });
+
+  nvim().subscribe('vv:file_changed');
+
   enable();
 };
 

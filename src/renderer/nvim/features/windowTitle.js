@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { nvim } from '../api';
 
 const { remote: { getCurrentWindow } } = global.require('electron');
 
@@ -27,16 +28,16 @@ const handleNotification = async (method, args) => {
   }
 };
 
-const initWindowTitle = (nvim) => {
-  nvim.on('notification', (method, args) => {
+const initWindowTitle = () => {
+  nvim().on('notification', (method, args) => {
     handleNotification(method, args);
   });
 
-  nvim.subscribe('vv:filename');
+  nvim().subscribe('vv:filename');
 
   // title and filename don't fire on startup, doing it manually
-  nvim.command('set title');
-  nvim.command('call rpcnotify(0, "vv:filename", expand("%:p"))');
+  nvim().command('set title');
+  nvim().command('call rpcnotify(0, "vv:filename", expand("%:p"))');
 };
 
 export default initWindowTitle;

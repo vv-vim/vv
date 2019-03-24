@@ -1,8 +1,7 @@
 import throttle from 'lodash/throttle';
-import { screenCoords } from '../screen';
 import { modifierPrefix, shiftPrefix } from './keyboard';
-
-let nvim;
+import { screenCoords } from '../screen';
+import { nvim } from '../api';
 
 const SCROLL_STEP_X = 6;
 const SCROLL_STEP_Y = 3;
@@ -14,7 +13,7 @@ let scrollDeltaY = 0;
 let mouseCoords = [];
 let mouseButtonDown;
 
-const mouseCoordsChanged = (event) => {
+const mouseCoordsChanged = event => {
   const newCoords = screenCoords(event.clientX, event.clientY);
   if (newCoords[0] !== mouseCoords[0] || newCoords[1] !== mouseCoords[1]) {
     mouseCoords = newCoords;
@@ -23,27 +22,25 @@ const mouseCoordsChanged = (event) => {
   return false;
 };
 
-const buttonName = (event, type) => [
-  '<',
-  shiftPrefix(event),
-  modifierPrefix(event),
-  event.buttons ? MOUSE_BUTTON[event.button] : '',
-  type,
-  '>',
-].join('');
+const buttonName = (event, type) =>
+  [
+    '<',
+    shiftPrefix(event),
+    modifierPrefix(event),
+    event.buttons ? MOUSE_BUTTON[event.button] : '',
+    type,
+    '>',
+  ].join('');
 
 const mousePosition = event => `<${screenCoords(event.clientX, event.clientY).join(',')}>`;
 
 const mouseInput = (event, type) => {
   mouseCoordsChanged(event);
-  nvim.input(`${buttonName(event, type)}${mousePosition(event)}`);
+  nvim().input(`${buttonName(event, type)}${mousePosition(event)}`);
 };
 
-const calculateScroll = (event) => {
-  let [scrollX, scrollY] = screenCoords(
-    Math.abs(scrollDeltaX),
-    Math.abs(scrollDeltaY),
-  );
+const calculateScroll = event => {
+  let [scrollX, scrollY] = screenCoords(Math.abs(scrollDeltaX), Math.abs(scrollDeltaY));
   scrollX = Math.floor(scrollX / SCROLL_STEP_X);
   scrollY = Math.floor(scrollY / SCROLL_STEP_Y);
 
@@ -62,7 +59,7 @@ const calculateScroll = (event) => {
 
 const throttledCalculateScroll = throttle(calculateScroll, 10);
 
-const handleMousewheel = (event) => {
+const handleMousewheel = event => {
   const { deltaX, deltaY } = event;
   if (scrollDeltaY * deltaY < 0) scrollDeltaY = 0;
   scrollDeltaX += deltaX;
@@ -70,14 +67,14 @@ const handleMousewheel = (event) => {
   throttledCalculateScroll(event);
 };
 
-const handleMousedown = (event) => {
+const handleMousedown = event => {
   event.preventDefault();
   event.stopPropagation();
   mouseButtonDown = true;
   mouseInput(event, 'Mouse');
 };
 
-const handleMouseup = (event) => {
+const handleMouseup = event => {
   if (mouseButtonDown) {
     event.preventDefault();
     event.stopPropagation();
@@ -85,7 +82,7 @@ const handleMouseup = (event) => {
   }
 };
 
-const mousemove = (event) => {
+const mousemove = event => {
   if (mouseButtonDown) {
     event.preventDefault();
     event.stopPropagation();
@@ -95,8 +92,7 @@ const mousemove = (event) => {
 
 const handleMousemove = throttle(mousemove, 50);
 
-const initMouse = (newNvim) => {
-  nvim = newNvim;
+const initMouse = () => {
   document.addEventListener('mousedown', handleMousedown);
   document.addEventListener('mouseup', handleMouseup);
   document.addEventListener('mousemove', handleMousemove);

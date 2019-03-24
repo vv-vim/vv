@@ -1,10 +1,9 @@
-import { getCursorElement } from './../screen';
+// Insert emojis and speech
 
-let nvim;
+import { nvim } from '../api';
+import { getCursorElement } from '../screen';
 
-const initInsertSymbols = (newNvim) => {
-  nvim = newNvim;
-
+const initInsertSymbols = () => {
   const input = document.createElement('input');
 
   input.style.position = 'absolute';
@@ -28,13 +27,13 @@ const initInsertSymbols = (newNvim) => {
       ignoreNextInput = false;
       return;
     }
-    nvim.input(event.data.replace(insertedText, ''));
+    nvim().input(event.data.replace(insertedText, ''));
     if (event.isComposing) {
       insertedText = event.data;
     }
   });
 
-  nvim.on('notification', (method, args) => {
+  nvim().on('notification', (method, args) => {
     if (method === 'redraw') {
       for (let i = 0; i < args.length; i += 1) {
         const [cmd, ...props] = args[i];

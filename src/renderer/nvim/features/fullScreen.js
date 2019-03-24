@@ -1,6 +1,7 @@
+import { nvim } from '../api';
+
 const { remote: { getCurrentWindow }, ipcRenderer } = global.require('electron');
 
-let nvim;
 const currentWindow = getCurrentWindow();
 
 let simpleFullScreen = true;
@@ -36,11 +37,10 @@ const handleSet = {
 };
 
 const handleToggleFullScreen = () => {
-  nvim.command('VVset fullscreen!');
+  nvim().command('VVset fullscreen!');
 };
 
-const initFullScreen = (newNvim) => {
-  nvim = newNvim;
+const initFullScreen = () => {
   ipcRenderer.on('toggleFullScreen', handleToggleFullScreen);
   return handleSet;
 };
