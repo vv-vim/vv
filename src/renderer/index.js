@@ -22,6 +22,7 @@ import initInsertSymbols from './nvim/features/insertSymbols';
 const {
   remote: { getCurrentWindow },
   screen: { getPrimaryDisplay },
+  ipcRenderer,
 } = require('electron');
 
 const currentWindow = getCurrentWindow();
@@ -69,11 +70,7 @@ let debouncedShowWindow = () => {};
 
 const resize = () => {
   const [newCols, newRows] = screenCoords(...currentWindow.getContentSize(), true);
-  if (
-    newCols > 0
-    && newRows > 0
-    && (newCols !== cols || newRows !== rows || !uiAttached)
-  ) {
+  if (newCols > 0 && newRows > 0 && (newCols !== cols || newRows !== rows || !uiAttached)) {
     cols = newCols;
     rows = newRows;
 
@@ -102,8 +99,7 @@ const showWindow = () => {
 const updateWindowSize = () => {
   if (!settings.fullscreen) {
     const topOffset = Math.round(
-      getPrimaryDisplay().bounds.height
-        - getPrimaryDisplay().workAreaSize.height,
+      getPrimaryDisplay().bounds.height - getPrimaryDisplay().workAreaSize.height,
     );
     currentWindow.setBounds(
       {
@@ -120,45 +116,43 @@ const updateWindowSize = () => {
 };
 
 const handleSet = {
-  windowwidth: (w) => {
+  windowwidth: w => {
     if (noResize) return;
     let width = parseInt(w, 10);
     if (w.toString().indexOf('%') !== -1) {
-      width = Math.round(getPrimaryDisplay().workAreaSize.width * width / 100);
+      width = Math.round((getPrimaryDisplay().workAreaSize.width * width) / 100);
     }
     windowWidth = width;
     // handleSet.windowleft(windowLeftOriginal);
   },
-  windowheight: (h) => {
+  windowheight: h => {
     if (noResize) return;
     let height = parseInt(h, 10);
     if (h.toString().indexOf('%') !== -1) {
-      height = Math.round(
-        getPrimaryDisplay().workAreaSize.height * height / 100,
-      );
+      height = Math.round((getPrimaryDisplay().workAreaSize.height * height) / 100);
     }
     windowHeight = height;
     // handleSet.windowtop(windowTopOriginal);
   },
-  windowleft: (l) => {
+  windowleft: l => {
     if (noResize) return;
     // windowLeftOriginal = l;
     let left = parseInt(l, 10);
     if (l.toString().indexOf('%') !== -1) {
       const displayWidth = getPrimaryDisplay().workAreaSize.width;
       const winWidth = windowWidth;
-      left = Math.round((displayWidth - winWidth) * left / 100);
+      left = Math.round(((displayWidth - winWidth) * left) / 100);
     }
     windowLeft = left;
   },
-  windowtop: (t) => {
+  windowtop: t => {
     if (noResize) return;
     // windowTopOriginal = t;
     let top = parseInt(t, 10);
     if (t.toString().indexOf('%') !== -1) {
       const displayHeight = getPrimaryDisplay().workAreaSize.height;
       const winHeight = windowHeight;
-      top = Math.round((displayHeight - winHeight) * top / 100);
+      top = Math.round(((displayHeight - winHeight) * top) / 100);
     }
     windowTop = top;
   },
@@ -177,7 +171,7 @@ const handleSet = {
 
 const applyAllSettings = () => {
   let hasChanges = false;
-  Object.keys(newSettings).forEach((key) => {
+  Object.keys(newSettings).forEach(key => {
     if (settings[key] !== newSettings[key] && handleSet[key]) {
       handleSet[key](newSettings[key]);
       settings[key] = newSettings[key];
@@ -204,16 +198,12 @@ const handleNotification = (method, params) => {
       debouncedShowWindow = () => {};
       showWindow();
     }, 10);
-  } else if (
-    !['vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)
-  ) {
+  } else if (!['vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)) {
     console.warn('Unknown notification', method, params); // eslint-disable-line no-console
   }
 };
 
-const initNvim = async () => {
-  const { args, cwd, resourcesPath } = currentWindow;
-
+const initNvim = async ({ args, cwd, resourcesPath }) => {
   await initApi({ args, cwd, resourcesPath });
 
   nvim().on('notification', handleNotification);
@@ -241,4 +231,6 @@ const initNvim = async () => {
   initReloadChanged();
 };
 
-document.addEventListener('DOMContentLoaded', initNvim);
+ipcRenderer.on('initNvim', (_event, props) => {
+  initNvim(props);
+});
