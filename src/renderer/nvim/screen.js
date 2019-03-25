@@ -44,7 +44,6 @@ let showItalic = true;
 let showUnderline = true;
 let showUndercurl = true;
 
-const colorsCache = {};
 let charsCache = {};
 let texturesCache = {};
 
@@ -242,12 +241,7 @@ const printChar = (i, j, char, hlId) => {
 
 const getColor = (c, defaultColor = null) => {
   if (typeof c !== 'number' || c === -1) return defaultColor;
-  if (!colorsCache[c]) {
-    colorsCache[c] = `rgb(${[c >> 16, c >> 8, c] // eslint-disable-line no-bitwise
-      .map(cc => cc & 0xff) // eslint-disable-line no-bitwise
-      .join(',')})`;
-  }
-  return colorsCache[c];
+  return `rgb(${(c >> 16) & 0xff},${(c >> 8) & 0xff},${c & 0xff})`; // eslint-disable-line no-bitwise
 };
 
 const clearCursor = () => {
@@ -678,7 +672,7 @@ const setScale = () => {
   screenContainer.style.height = `${scale * 100}%`;
 };
 
-const screen = (containerId) => {
+const screen = containerId => {
   screenContainer = document.getElementById(containerId);
   if (!screenContainer) return false;
 
