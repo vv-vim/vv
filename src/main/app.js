@@ -31,7 +31,9 @@ const handleAllClosed = () => {
   }
 };
 
-const doCreateWindow = (args = [], cwd) => {
+const emptyWindows = [];
+
+const createEmptyWindow = () => {
   const options = {
     width: 800,
     height: 600,
@@ -51,21 +53,8 @@ const doCreateWindow = (args = [], cwd) => {
     noResize = true;
   }
   let win = new BrowserWindow(options);
-  win.args = args;
-  win.cwd = cwd;
-  win.resourcesPath = path.join(app.getAppPath(), isDev('./', '../'));
   win.zoomLevel = 0;
   win.noResize = noResize;
-
-  win.loadURL(
-    process.env.DEV_SERVER
-      ? 'http://localhost:3000'
-      : `file://${path.join(__dirname, './index.html')}`,
-  );
-
-  win.focus();
-
-  windows.push(win);
 
   win.on('closed', async () => {
     if (currentWindow === win) currentWindow = null;
@@ -83,7 +72,47 @@ const doCreateWindow = (args = [], cwd) => {
     refreshMenu(currentWindow);
   });
 
-  if (isDev()) openDeveloperTools(win);
+  win.loadURL(
+    process.env.DEV_SERVER
+      ? 'http://localhost:3000'
+      : `file://${path.join(__dirname, './index.html')}`,
+  );
+
+  return win;
+};
+
+const getEmptyWindow = () => {
+  if (emptyWindows.length > 0) {
+    return emptyWindows.pop()
+  }
+  return createEmptyWindow();
+}
+
+const doCreateWindow = (args = [], cwd) => {
+  const win = getEmptyWindow();
+
+  const initNvim = () => {
+    win.webContents.send('initNvim', {
+      args,
+      cwd,
+      resourcesPath: path.join(app.getAppPath(), isDev('./', '../')),
+    })
+    setTimeout(() =>
+      emptyWindows.push(createEmptyWindow())
+    , 1000);
+  }
+
+  if (win.webContents.isLoading()) {
+    win.webContents.on('did-finish-load', initNvim);
+  } else {
+    initNvim();
+  }
+
+  win.focus();
+
+  windows.push(win);
+
+  // if (isDev()) openDeveloperTools(win);
 
   return win;
 };
