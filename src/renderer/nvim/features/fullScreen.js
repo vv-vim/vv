@@ -1,6 +1,9 @@
 import { nvim } from '../api';
 
-const { remote: { getCurrentWindow }, ipcRenderer } = global.require('electron');
+const {
+  remote: { getCurrentWindow },
+  ipcRenderer,
+} = global.require('electron');
 
 const currentWindow = getCurrentWindow();
 
@@ -9,7 +12,7 @@ let simpleFullScreen = true;
 const boolValue = value => !!parseInt(value, 10);
 
 const handleSet = {
-  fullscreen: (value) => {
+  fullscreen: value => {
     if (simpleFullScreen) {
       currentWindow.setSimpleFullScreen(boolValue(value));
     } else {
@@ -20,7 +23,7 @@ const handleSet = {
     }
     currentWindow.webContents.focus();
   },
-  simplefullscreen: (value) => {
+  simplefullscreen: value => {
     simpleFullScreen = boolValue(value);
     if (simpleFullScreen && currentWindow.isFullScreen()) {
       currentWindow.setFullScreen(false);

@@ -1,15 +1,17 @@
 import fs from 'fs';
 import { nvim } from '../api';
 
-const { remote: { getCurrentWindow } } = global.require('electron');
+const {
+  remote: { getCurrentWindow },
+} = global.require('electron');
 
 const currentWindow = getCurrentWindow();
 
-const setTitle = (title) => {
+const setTitle = title => {
   currentWindow.setTitle(title);
 };
 
-const setFilename = (filename) => {
+const setFilename = filename => {
   if (fs.existsSync(filename)) {
     currentWindow.setRepresentedFilename(filename);
   }

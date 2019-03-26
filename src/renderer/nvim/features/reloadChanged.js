@@ -1,6 +1,8 @@
 import { nvim } from '../api';
 
-const { remote: { getCurrentWindow, dialog } } = global.require('electron');
+const {
+  remote: { getCurrentWindow, dialog },
+} = global.require('electron');
 
 const currentWindow = getCurrentWindow();
 let changedBuffers = {};
@@ -9,15 +11,15 @@ let checking = false;
 
 const showChangedDialog = async () => {
   if (currentWindow.isFocused() && Object.keys(changedBuffers).length > 0) {
-    const message = Object.keys(changedBuffers).length > 1
-      ? `${
-        Object.keys(changedBuffers).length
-      } opened files were changed outside. Do you want to reload them or keep your version?`
-      : 'File was changed outside. Do you want to reload it or keep your version?';
+    const message =
+      Object.keys(changedBuffers).length > 1
+        ? `${
+            Object.keys(changedBuffers).length
+          } opened files were changed outside. Do you want to reload them or keep your version?`
+        : 'File was changed outside. Do you want to reload it or keep your version?';
 
-    const buttons = Object.keys(changedBuffers).length > 1
-      ? ['Reload All', 'Keep All']
-      : ['Reload', 'Keep'];
+    const buttons =
+      Object.keys(changedBuffers).length > 1 ? ['Reload All', 'Keep All'] : ['Reload', 'Keep'];
 
     const response = dialog.showMessageBox(currentWindow, {
       message,

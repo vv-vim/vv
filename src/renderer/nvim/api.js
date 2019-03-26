@@ -13,7 +13,7 @@ let resourcesPath;
 const vvSourceCommand = () => `source ${path.join(resourcesPath, 'bin/vv.vim')}`;
 
 // Source vv specific ext on -u NONE
-const fixNoConfig = (args) => {
+const fixNoConfig = args => {
   const uFlagIndex = args.indexOf('-u');
   if (uFlagIndex !== -1 && args[uFlagIndex + 1] === 'NONE') {
     nvim.command(vvSourceCommand());
@@ -32,7 +32,7 @@ const startNvimProcess = ({ cwd, args }) => {
   // Pipe errors to std output and also send it in console as error.
   let errorStr = '';
   nvimProcess.stderr.pipe(process.stdout);
-  nvimProcess.stderr.on('data', (data) => {
+  nvimProcess.stderr.on('data', data => {
     errorStr += data.toString();
     debounce(() => {
       if (errorStr) console.error(errorStr); // eslint-disable-line no-console
@@ -53,13 +53,13 @@ export const initApi = async ({ args, cwd, resourcesPath: newResourcesPath }) =>
   nvim = await attach({ proc });
   fixNoConfig(args);
   return nvim;
-}
+};
 
 const getNvim = () => {
   if (!nvim) {
     throw new Error('Neovim is not initialized');
   }
   return nvim;
-}
+};
 export { getNvim as nvim };
 export default getNvim;

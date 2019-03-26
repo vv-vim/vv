@@ -21,7 +21,7 @@ const initInsertSymbols = () => {
     ignoreNextInput = true;
   });
 
-  input.addEventListener('input', (event) => {
+  input.addEventListener('input', event => {
     input.value = '';
     if (ignoreNextInput) {
       ignoreNextInput = false;
