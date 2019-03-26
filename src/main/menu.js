@@ -2,43 +2,41 @@ import { Menu } from 'electron';
 
 let menu;
 
-const selectAll = (item, win) => {
+const selectAll = (_item, win) => {
   win.webContents.send('selectAll');
 };
 
-const toggleFullScreen = (item, win) => {
+const toggleFullScreen = (_item, win) => {
   win.webContents.send('toggleFullScreen');
 };
 
-const disableActualSizeItem = (win) => {
+const disableActualSizeItem = win => {
   menu.getMenuItemById('actualSize').enabled = win.zoomLevel !== 0;
 };
 
-const zoomIn = (item, win) => {
+const zoomIn = (_item, win) => {
   win.zoomLevel += 1; // eslint-disable-line no-param-reassign
   win.webContents.send('zoom', 1);
   disableActualSizeItem(win);
 };
 
-const zoomOut = (item, win) => {
+const zoomOut = (_item, win) => {
   win.zoomLevel -= 1; // eslint-disable-line no-param-reassign
   win.webContents.send('zoom', -1);
   disableActualSizeItem(win);
 };
 
-const actualSize = (item, win) => {
+const actualSize = (_item, win) => {
   win.webContents.send('zoom', -win.zoomLevel);
   win.zoomLevel = 0; // eslint-disable-line no-param-reassign
   disableActualSizeItem(win);
 };
 
-export const refreshMenu = (win) => {
+export const refreshMenu = win => {
   disableActualSizeItem(win);
 };
 
-const createMenu = ({
-  createWindow, openFile, closeWindow, installCli,
-}) => {
+const createMenu = ({ createWindow, openFile, closeWindow, installCli }) => {
   const menuTemplate = [
     {
       label: 'VV',
@@ -133,12 +131,7 @@ const createMenu = ({
     },
     {
       role: 'window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        { type: 'separator' },
-        { role: 'front' },
-      ],
+      submenu: [{ role: 'minimize' }, { role: 'zoom' }, { type: 'separator' }, { role: 'front' }],
     },
   ];
   menu = Menu.buildFromTemplate(menuTemplate);

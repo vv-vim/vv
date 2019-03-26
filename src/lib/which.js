@@ -3,7 +3,7 @@ import shell from './shell';
 
 // Checks if command exists in shell
 // Returns path or false
-const which = (command) => {
+const which = command => {
   let result;
   try {
     result = execSync(`which ${command}`, {
