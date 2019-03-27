@@ -39,17 +39,8 @@ const createEmptyWindow = () => {
     show: false,
     fullscreenable: false,
   };
-  let noResize = false;
-  if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
-    const [x, y] = currentWindow.getPosition();
-    options.x = x + 20;
-    options.y = y; // + 20;
-    [options.width, options.height] = currentWindow.getSize();
-    noResize = true;
-  }
   let win = new BrowserWindow(options);
   win.zoomLevel = 0;
-  win.noResize = noResize;
 
   win.on('closed', async () => {
     if (currentWindow === win) currentWindow = null;
@@ -85,6 +76,12 @@ const getEmptyWindow = () => {
 
 const doCreateWindow = (args = [], cwd) => {
   const win = getEmptyWindow();
+
+  if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
+    const [x, y] = currentWindow.getPosition();
+    const [width, height] = currentWindow.getSize();
+    win.setBounds({ x: x + 20, y: y + 20, width, height }, false);
+  }
 
   const initNvim = () => {
     win.webContents.send('initNvim', {
