@@ -19,10 +19,10 @@ let g:vv_default_settings = {
       \  'lineheight': 1.25,
       \  'letterspacing': 0,
       \  'reloadchanged': 1,
-      \  'windowwidth': '60%',
-      \  'windowheight': '80%',
-      \  'windowleft': '50%',
-      \  'windowtop': '50%'
+      \  'windowwidth': v:null,
+      \  'windowheight': v:null,
+      \  'windowleft': v:null,
+      \  'windowtop': v:null
       \}
 
 let g:vv_settings = deepcopy(g:vv_default_settings)

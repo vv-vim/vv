@@ -34,7 +34,7 @@ yarn
 yarn electron:build
 ```
 
-This will generate a VV.app binary in the dist directory.  Copy VV.app to your /Applications folder and add the CLI launcher `vv` to your `/usr/local/bin`.
+This will generate a VV.app binary in the dist directory. Copy VV.app to your /Applications folder and add the CLI launcher `vv` to your `/usr/local/bin`.
 
 Command Line Launcher
 ---------------------
@@ -67,12 +67,12 @@ You can setup VV-specific options via the `:VVset` command. It works the same as
 * `lineheight`: Line height related to font size. Pixel value is `fontsize * lineheight`. Default: `1.25`.
 * `letterspacing`: Fine-tuning letter spacing in retina pixels. Can be a negative value. For retina screens the value is physical pixels. For non-retina screens it works differently: it divides the value by 2 and rounds it. For example, `:VVset letterspacing=1` will make characters 1 pixel wider on retina displays and will do nothing on non-retina displays. Value 2 is 2 physical pixels on retina and 1 physical pixel on non-retina. Default: `0`.
 * `reloadchanged`: Show dialog when opened files are changed externally. For example, when you switch git branches. It will prompt you to keep your changes or reload the file. Default: `1`.
-* `windowwidth`, `width`: Window width. Can be a number in pixels or percentage of display width. Default: `60%`.
-* `windowheight`, `height`: Window height. Default: `80%`.
-* `windowleft`, `left`: Window position from left. Can be a number in pixels or a percentage. Percent values work the same as the `background-position` rule in CSS. For example: 20% means the window’s left border will be offset 20% of your screen. 0% — the very left, 100% — the very right, 50% — center. Default: `50%`.
-* `windowtop`, `top`: Window position top. Default: `50%`.
+* `windowwidth`, `width`: Window width. Can be a number in pixels or percentage of display width.
+* `windowheight`, `height`: Window height.
+* `windowleft`, `left`: Window position from left. Can be a number in pixels or a percentage. Percent values work the same as the `background-position` rule in CSS. For example: 20% means the window’s left border will be offset 20% of your screen. 0% — the very left, 100% — the very right, 50% — center.
+* `windowtop`, `top`: Window position top.
 
-You can use these settings in your `init.vim`.  You can check if VV is loaded by checking the `g:vv` variable:
+You can use these settings in your `init.vim`. You can check if VV is loaded by checking the `g:vv` variable:
 
 ```
 if exists('g:vv')
@@ -98,7 +98,7 @@ Then you can run the app:
 yarn start
 ```
 
-This app is in active development. This project was started as personal experiements with Neovim API, so the code is quite chaotic.  There are no tests, no static typing etc; so, any PRs or feedback are highly welcome.
+This app is in active development. This project was started as personal experiements with Neovim API, so the code is quite chaotic. There are no tests, no static typing etc; so, any PRs or feedback are highly welcome.
 
 Testing
 -------
