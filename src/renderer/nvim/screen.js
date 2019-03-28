@@ -4,7 +4,7 @@ import isFinite from 'lodash/isFinite';
 
 import * as PIXI from 'pixi.js';
 
-import { nvim } from './api';
+import nvim from './api';
 
 const [body] = document.getElementsByTagName('body');
 
@@ -330,9 +330,9 @@ const optionSet = {
   guifont: newFont => {
     const [newFontFamily, newFontSize] = newFont.trim().split(':h');
     if (newFontFamily && newFontFamily !== '') {
-      nvim().command(`VVset fontfamily=${newFontFamily}`);
+      nvim.command(`VVset fontfamily=${newFontFamily}`);
       if (newFontSize && newFontFamily !== '') {
-        nvim().command(`VVset fontsize=${newFontSize}`);
+        nvim.command(`VVset fontsize=${newFontSize}`);
       }
     }
   },
@@ -650,19 +650,17 @@ const redrawCmd = {
   },
 };
 
-const handleNotification = async (method, args) => {
-  if (method === 'redraw') {
-    ticker.start();
-    for (let i = 0; i < args.length; i += 1) {
-      const [cmd, ...props] = args[i];
-      if (redrawCmd[cmd]) {
-        redrawCmd[cmd](...props);
-      } else {
-        console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
-      }
+const redraw = (args) => {
+  ticker.start();
+  for (let i = 0; i < args.length; i += 1) {
+    const [cmd, ...props] = args[i];
+    if (redrawCmd[cmd]) {
+      redrawCmd[cmd](...props);
+    } else {
+      console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
     }
-    debouncedTickerStop();
   }
+  debouncedTickerStop();
 };
 
 const setScale = () => {
@@ -685,14 +683,14 @@ const screen = containerId => {
   initCursor();
   measureCharSize();
 
-  nvim().on('notification', handleNotification);
+  nvim.on('redraw', redraw);
 
   // Detect when you drag between retina/non-retina displays
   window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
     canvasEl.style.opacity = 0;
     setScale();
     measureCharSize();
-    await nvim().uiTryResize(cols, rows);
+    await nvim.uiTryResize(cols, rows);
     canvasEl.style.opacity = 1;
   });
 

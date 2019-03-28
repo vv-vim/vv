@@ -3,7 +3,7 @@
     [
       "@babel/preset-env", {
         "targets": {
-          "electron": "2.0.11"
+          "electron": "2.0.18"
         }
       }
     ]

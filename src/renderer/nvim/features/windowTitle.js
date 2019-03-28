@@ -1,45 +1,35 @@
 import fs from 'fs';
-import { nvim } from '../api';
+import { remote } from 'electron';
 
-const {
-  remote: { getCurrentWindow },
-} = global.require('electron');
+import nvim from '../api';
 
-const currentWindow = getCurrentWindow();
+const currentWindow = remote.getCurrentWindow();
 
 const setTitle = title => {
   currentWindow.setTitle(title);
 };
 
-const setFilename = filename => {
+const setFilename = ([filename]) => {
   if (fs.existsSync(filename)) {
     currentWindow.setRepresentedFilename(filename);
   }
 };
 
-const handleNotification = async (method, args) => {
-  if (method === 'redraw') {
+const initWindowTitle = () => {
+  nvim.on('redraw', args => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (cmd === 'set_title') {
         setTitle(props[0][0]);
       }
     }
-  } else if (method === 'vv:filename') {
-    setFilename(args[0]);
-  }
-};
-
-const initWindowTitle = () => {
-  nvim().on('notification', (method, args) => {
-    handleNotification(method, args);
   });
 
-  nvim().subscribe('vv:filename');
+  nvim.on('vv:filename', setFilename);
 
   // title and filename don't fire on startup, doing it manually
-  nvim().command('set title');
-  nvim().command('call rpcnotify(0, "vv:filename", expand("%:p"))');
+  nvim.command('set title');
+  nvim.command('call rpcnotify(0, "vv:filename", expand("%:p"))');
 };
 
 export default initWindowTitle;

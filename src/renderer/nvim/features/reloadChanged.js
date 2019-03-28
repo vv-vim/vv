@@ -1,10 +1,9 @@
-import { nvim } from '../api';
+import { remote } from 'electron';
 
-const {
-  remote: { getCurrentWindow, dialog },
-} = global.require('electron');
+import nvim from '../api';
 
-const currentWindow = getCurrentWindow();
+const currentWindow = remote.getCurrentWindow();
+
 let changedBuffers = {};
 let enabled = true;
 let checking = false;
@@ -21,7 +20,7 @@ const showChangedDialog = async () => {
     const buttons =
       Object.keys(changedBuffers).length > 1 ? ['Reload All', 'Keep All'] : ['Reload', 'Keep'];
 
-    const response = dialog.showMessageBox(currentWindow, {
+    const response = remote.dialog.showMessageBox(currentWindow, {
       message,
       detail: `${Object.keys(changedBuffers)
         .map(k => changedBuffers[k].name)
@@ -31,7 +30,7 @@ const showChangedDialog = async () => {
       buttons,
     });
     if (response === 0) {
-      nvim().command(
+      nvim.command(
         `VVrefresh ${Object.keys(changedBuffers)
           .map(k => changedBuffers[k].bufnr)
           .join(' ')}`,
@@ -43,19 +42,19 @@ const showChangedDialog = async () => {
 
 const checktimeAll = async () => {
   checking = true;
-  await nvim().command('VVchecktimeAll');
+  await nvim.command('VVchecktimeAll');
   checking = false;
   showChangedDialog();
 };
 
 const enable = (newEnabled = true) => {
   enabled = newEnabled;
-  nvim().command(`VVenableReloadChanged ${enabled ? '1' : '0'}`);
+  nvim.command(`VVenableReloadChanged ${enabled ? '1' : '0'}`);
 };
 
 const initReloadChanged = () => {
-  nvim().on('notification', (method, args) => {
-    if (enabled && method === 'vv:file_changed') {
+  nvim.on('vv:file_changed', (args) => {
+    if (enabled) {
       const [buffer] = args;
       if (!changedBuffers[buffer.bufnr]) {
         changedBuffers[buffer.bufnr] = buffer;
@@ -64,11 +63,11 @@ const initReloadChanged = () => {
         checktimeAll();
       }
     }
-    if (method === 'vv:set') {
-      const [option, ...props] = args;
-      if (option === 'reloadchanged') {
-        enable(props[0]);
-      }
+  });
+
+  nvim.on('vv:set', ([option, isEnabled]) => {
+    if (option === 'reloadchanged') {
+      enable(isEnabled);
     }
   });
 
@@ -77,8 +76,6 @@ const initReloadChanged = () => {
       checktimeAll();
     }
   });
-
-  nvim().subscribe('vv:file_changed');
 
   enable();
 };

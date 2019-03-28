@@ -1,4 +1,4 @@
-import { nvim } from '../api';
+import nvim from '../api';
 
 // :help keyCode
 const specialKey = ({ key, code }) =>
@@ -96,7 +96,7 @@ const eventKeyCode = async event => {
 
   // Just insert the key as-is if you type special char with Alt.
   if (event.altKey) {
-    const { mode } = await nvim().mode;
+    const { mode } = await nvim.getMode();
     if (['i', 'c', 't', 'ce', 'cv', 's', 'S', 'R', 'Rv'].includes(mode)) {
       return key;
     }
@@ -116,7 +116,7 @@ const eventKeyCode = async event => {
 
 const handleKeydown = async event => {
   const key = await eventKeyCode(event);
-  if (key) nvim().input(key);
+  if (key) nvim.input(key);
 };
 
 const initKeyboard = () => {
