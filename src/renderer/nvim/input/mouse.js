@@ -1,7 +1,8 @@
 import throttle from 'lodash/throttle';
+
 import { modifierPrefix, shiftPrefix } from './keyboard';
 import { screenCoords } from '../screen';
-import { nvim } from '../api';
+import nvim from '../api';
 
 const SCROLL_STEP_X = 6;
 const SCROLL_STEP_Y = 3;
@@ -36,7 +37,7 @@ const mousePosition = event => `<${screenCoords(event.clientX, event.clientY).jo
 
 const mouseInput = (event, type) => {
   mouseCoordsChanged(event);
-  nvim().input(`${buttonName(event, type)}${mousePosition(event)}`);
+  nvim.input(`${buttonName(event, type)}${mousePosition(event)}`);
 };
 
 const calculateScroll = event => {

@@ -1,9 +1,9 @@
-import { nvim } from '../api';
+import { ipcRenderer } from 'electron';
 
-const { ipcRenderer } = global.require('electron');
+import nvim from '../api';
 
 const handleZoom = (_sender, level) => {
-  nvim().command(`VVset fontsize${level > 0 ? '+' : '-'}=${Math.abs(level)}`);
+  nvim.command(`VVset fontsize${level > 0 ? '+' : '-'}=${Math.abs(level)}`);
 };
 
 const initFullScreen = () => {

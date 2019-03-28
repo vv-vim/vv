@@ -1,24 +1,25 @@
 import { spawn } from 'child_process';
+import { createDecodeStream } from 'msgpack-lite/lib/decode-stream';
+import { createEncodeStream } from 'msgpack-lite/lib/encode-stream';
+import { encode } from 'msgpack-lite';
+
 import path from 'path';
 import debounce from 'lodash/debounce';
 
 import nvimCommand from '../../lib/nvimCommand';
 import shell from '../../lib/shell';
 
-const { attach } = global.require('neovim'); // ~100 ms lost here
-
-let nvim;
+let proc;
+let msgpackIn;
+let msgpackOut;
 let resourcesPath;
 
-const vvSourceCommand = () => `source ${path.join(resourcesPath, 'bin/vv.vim')}`;
+let requestId = 0;
+const requestPromises = {};
 
-// Source vv specific ext on -u NONE
-const fixNoConfig = args => {
-  const uFlagIndex = args.indexOf('-u');
-  if (uFlagIndex !== -1 && args[uFlagIndex + 1] === 'NONE') {
-    nvim.command(vvSourceCommand());
-  }
-};
+const subscriptions = [];
+
+const vvSourceCommand = () => `source ${path.join(resourcesPath, 'bin/vv.vim')}`;
 
 const startNvimProcess = ({ cwd, args }) => {
   const nvimArgs = ['--embed', '--cmd', vvSourceCommand(), ...args];
@@ -47,19 +48,98 @@ const startNvimProcess = ({ cwd, args }) => {
   return nvimProcess;
 };
 
-export const initApi = async ({ args, cwd, resourcesPath: newResourcesPath }) => {
-  resourcesPath = newResourcesPath;
-  const proc = startNvimProcess({ args, cwd });
-  nvim = await attach({ proc });
-  fixNoConfig(args);
-  return nvim;
+const handleResponse = (id, error, result) => {
+  if (requestPromises[id]) {
+    if (error) {
+      requestPromises[id].reject(error);
+    } else {
+      requestPromises[id].resolve(result);
+    }
+    requestPromises[id] = null;
+  }
 };
 
-const getNvim = () => {
-  if (!nvim) {
+const send = (command, ...params) => {
+  if (!msgpackOut) {
     throw new Error('Neovim is not initialized');
   }
-  return nvim;
+  requestId += 1;
+  msgpackOut.write(encode([0, requestId, `nvim_${command}`, params]));
+  return new Promise((resolve, reject) => {
+    requestPromises[requestId] = {
+      resolve,
+      reject,
+    };
+  });
 };
-export { getNvim as nvim };
-export default getNvim;
+
+const subscribe = callback => {
+  if (!msgpackIn) {
+    throw new Error('Neovim is not initialized');
+  }
+  subscriptions.push(callback);
+};
+
+const filterMethod = (methodToFilter, callback) => (method, ...params) => {
+  if (method === methodToFilter) {
+    callback(...params);
+  }
+};
+
+const on = (method, callback) => {
+  if (method === 'disconnect') {
+    proc.on('exit', callback);
+  } else {
+    send('subscribe', method);
+    subscribe(filterMethod(method, callback));
+  }
+};
+
+const commandFactory = (name) => (...params) => send(name, ...params)
+
+const nvim = {
+  command: commandFactory('command'),
+  input: commandFactory('input'),
+  getMode: commandFactory('get_mode'),
+  uiTryResize: commandFactory('ui_try_resize'),
+  uiAttach: commandFactory('ui_attach'),
+}
+
+// Source vv specific ext on -u NONE
+const fixNoConfig = args => {
+  const uFlagIndex = args.indexOf('-u');
+  if (uFlagIndex !== -1 && args[uFlagIndex + 1] === 'NONE') {
+    nvim.command(vvSourceCommand());
+  }
+};
+
+const initApi = ({ args, cwd, resourcesPath: newResourcesPath }) => {
+  resourcesPath = newResourcesPath;
+  proc = startNvimProcess({ args, cwd });
+
+  const decodeStream = createDecodeStream();
+  const encodeStream = createEncodeStream();
+
+  msgpackIn = proc.stdout.pipe(decodeStream); // .on('data', console.log);
+  msgpackOut = encodeStream.pipe(proc.stdin);
+
+  msgpackIn.on('data', ([type, ...params]) => {
+    if (type === 0) { // TODO
+      console.log('request', type, params);
+    } else if (type === 1) {
+      handleResponse(params[0], params[1], params[2]);
+    } else if (type === 2) {
+      subscriptions.forEach(c => c(params[0], params[1]));
+    }
+  });
+
+  fixNoConfig(args);
+};
+
+export default {
+  initApi,
+  on,
+  subscribe,
+  send,
+  ...nvim,
+};

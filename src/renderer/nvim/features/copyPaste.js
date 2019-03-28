@@ -1,10 +1,10 @@
-import { nvim } from '../api';
+import { ipcRenderer } from 'electron';
 
-const { ipcRenderer } = global.require('electron');
+import nvim from '../api';
 
 // Fetch current mode from nvim, leaves only first letter to match groups of modes.
 export const shortMode = async () => {
-  const { mode } = await nvim().mode;
+  const { mode } = await nvim.getMode();
   return mode.replace('CTRL-', '')[0];
 };
 
@@ -16,13 +16,13 @@ const handlePaste = async event => {
 
   const mode = await shortMode();
   if (mode === 'i') {
-    await nvim().command('set paste');
-    await nvim().input(clipboardText);
-    await nvim().command('set nopaste');
+    await nvim.command('set paste');
+    await nvim.input(clipboardText);
+    await nvim.command('set nopaste');
   } else if (['n', 'v', 'V', 's', 'S'].includes(mode)) {
-    nvim().input('"*p');
+    nvim.input('"*p');
   } else {
-    nvim().input(clipboardText);
+    nvim.input(clipboardText);
   }
 };
 
@@ -31,12 +31,12 @@ const handleCopy = async event => {
   event.stopPropagation();
   const mode = await shortMode();
   if (mode === 'v' || mode === 'V') {
-    nvim().input('"*y');
+    nvim.input('"*y');
   }
 };
 
 const handleSelectAll = () => {
-  nvim().input('ggVG');
+  nvim.input('ggVG');
 };
 
 const initCopyPaste = () => {

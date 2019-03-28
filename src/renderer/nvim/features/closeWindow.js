@@ -1,23 +1,17 @@
-import { nvim } from '../api';
+import { remote, ipcRenderer } from 'electron';
 
-const {
-  remote: { getCurrentWindow },
-  ipcRenderer,
-} = global.require('electron');
+import nvim from '../api';
 
-const currentWindow = getCurrentWindow();
+const currentWindow = remote.getCurrentWindow();
 
 const handleCloseWindow = () => {
-  nvim().command('VVcloseWindow');
+  nvim.command('VVcloseWindow');
 };
 
 const initCloseWindow = () => {
-  nvim().on('notification', method => {
-    if (method === 'vv:close_window') {
-      currentWindow.webContents.send('quit');
-    }
+  nvim.on('vv:close_window', () => {
+    currentWindow.webContents.send('quit');
   });
-  nvim().subscribe('vv:close_window');
 
   ipcRenderer.on('closeWindow', handleCloseWindow);
 };

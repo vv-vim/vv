@@ -3,7 +3,7 @@ import debounce from 'lodash/debounce';
 import store from '../lib/store';
 // import log from '../lib/log';
 
-import { initApi, nvim } from './nvim/api';
+import nvim from './nvim/api';
 
 import initScreen, { screenCoords } from './nvim/screen';
 
@@ -70,10 +70,10 @@ const resize = () => {
     rows = newRows;
 
     if (uiAttached) {
-      nvim().uiTryResize(cols, rows);
+      nvim.uiTryResize(cols, rows);
     } else {
       uiAttached = true;
-      nvim().uiAttach(cols, rows, { ext_linegrid: true });
+      nvim.uiAttach(cols, rows, { ext_linegrid: true });
     }
   }
 };
@@ -84,7 +84,7 @@ const showWindow = () => {
   if (!isWindowShown) {
     currentWindow.show();
     isWindowShown = true;
-    nvim().command('doautocmd <nomodeline> GUIEnter');
+    nvim.command('doautocmd <nomodeline> GUIEnter');
     store.set('initialSettings', initialSettings);
     window.addEventListener('resize', debouncedResize);
   }
@@ -176,32 +176,29 @@ const applyAllSettings = () => {
 
 const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
 
-const handleNotification = (method, params) => {
-  if (method === 'vv:set') {
-    const [option, props] = params;
-    if (props !== null) {
-      newSettings[option] = props;
-      debouncedApplyAllSettings();
-    }
-  } else if (method === 'redraw') {
-    debouncedShowWindow();
-  } else if (method === 'vv:vim_enter') {
-    debouncedShowWindow = debounce(() => {
-      debouncedShowWindow = () => {};
-      showWindow();
-    }, 10);
-  } else if (!['vv:unsaved_buffers', 'vv:filename', 'vv:file_changed'].includes(method)) {
-    console.warn('Unknown notification', method, params); // eslint-disable-line no-console
+const applySetting = ([option, props]) => {
+  if (props !== null) {
+    newSettings[option] = props;
+    debouncedApplyAllSettings();
   }
-};
+}
 
-const initNvim = async ({ args, cwd, resourcesPath }) => {
+const vimEnter = () => {
+  // TODO: refactor this part
+  debouncedShowWindow = debounce(() => {
+    debouncedShowWindow = () => {};
+    showWindow();
+  }, 10);
+}
+
+const initNvim = async (_event, { args, cwd, resourcesPath }) => {
   ({ x: windowLeft, y: windowTop, width: windowWidth, height: windowHeight} = currentWindow.getBounds())
-  await initApi({ args, cwd, resourcesPath });
+  nvim.initApi({ args, cwd, resourcesPath });
 
-  nvim().on('notification', handleNotification);
-  nvim().subscribe('vv:set');
-  nvim().subscribe('vv:vim_enter');
+  await nvim.send('subscribe', 'vv:vim_enter');
+  nvim.on('vv:vim_enter', vimEnter);
+  nvim.on('vv:set', applySetting);
+  nvim.on('redraw', () => debouncedShowWindow());
 
   screen = initScreen('screen');
   fullScreen = initFullScreen();
@@ -225,6 +222,4 @@ const initNvim = async ({ args, cwd, resourcesPath }) => {
   initReloadChanged();
 };
 
-ipcRenderer.on('initNvim', (_event, props) => {
-  initNvim(props);
-});
+ipcRenderer.on('initNvim', initNvim);

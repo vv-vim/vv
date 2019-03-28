@@ -1,7 +1,8 @@
 // Insert emojis and speech
 
-import { nvim } from '../api';
 import { getCursorElement } from '../screen';
+
+import nvim from '../api';
 
 const initInsertSymbols = () => {
   const input = document.createElement('input');
@@ -27,23 +28,21 @@ const initInsertSymbols = () => {
       ignoreNextInput = false;
       return;
     }
-    nvim().input(event.data.replace(insertedText, ''));
+    nvim.input(event.data.replace(insertedText, ''));
     if (event.isComposing) {
       insertedText = event.data;
     }
   });
 
-  nvim().on('notification', (method, args) => {
-    if (method === 'redraw') {
-      for (let i = 0; i < args.length; i += 1) {
-        const [cmd, ...props] = args[i];
-        if (cmd === 'mode_change') {
-          if (['insert', 'replace', 'cmdline_normal'].includes(props[0][0])) {
-            input.value = '';
-            input.focus();
-          } else {
-            input.blur();
-          }
+  nvim.on('redraw', (args) => {
+    for (let i = 0; i < args.length; i += 1) {
+      const [cmd, ...props] = args[i];
+      if (cmd === 'mode_change') {
+        if (['insert', 'replace', 'cmdline_normal'].includes(props[0][0])) {
+          input.value = '';
+          input.focus();
+        } else {
+          input.blur();
         }
       }
     }
