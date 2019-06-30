@@ -191,9 +191,9 @@ const vimEnter = () => {
   }, 10);
 }
 
-const initNvim = async (_event, { args, cwd, resourcesPath }) => {
+const initNvim = async (_event, { args, cwd, env, resourcesPath }) => {
   ({ x: windowLeft, y: windowTop, width: windowWidth, height: windowHeight} = currentWindow.getBounds())
-  nvim.initApi({ args, cwd, resourcesPath });
+  nvim.initApi({ args, cwd, env, resourcesPath });
 
   await nvim.send('subscribe', 'vv:vim_enter');
   nvim.on('vv:vim_enter', vimEnter);

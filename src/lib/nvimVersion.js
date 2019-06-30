@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 
 import nvimCommand from './nvimCommand';
-import shell from './shell';
+import shellEnv from './shellEnv';
 
 let version;
 
@@ -11,10 +11,11 @@ let version;
 const nvimVersion = () => {
   if (version) return version;
 
+  const env = shellEnv();
   try {
-    const execResult = execSync(`${nvimCommand()} --version`, {
+    const execResult = execSync(`${nvimCommand(env)} --version`, {
       encoding: 'UTF-8',
-      shell,
+      env,
     });
     if (execResult) {
       const match = execResult.match(/NVIM v(\d+)\.(\d+).(\d+)/);

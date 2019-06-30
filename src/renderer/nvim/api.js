@@ -7,7 +7,6 @@ import path from 'path';
 import debounce from 'lodash/debounce';
 
 import nvimCommand from '../../lib/nvimCommand';
-import shell from '../../lib/shell';
 
 let proc;
 let msgpackIn;
@@ -21,13 +20,13 @@ const subscriptions = [];
 
 const vvSourceCommand = () => `source ${path.join(resourcesPath, 'bin/vv.vim')}`;
 
-const startNvimProcess = ({ cwd, args }) => {
+const startNvimProcess = ({ cwd, env, args }) => {
   const nvimArgs = ['--embed', '--cmd', vvSourceCommand(), ...args];
 
   const nvimProcess = spawn(
-    nvimCommand(),
-    nvimArgs.map(arg => `'${arg.replace(/'/g, "'\\''")}'`), // Escaping is broken with shell
-    { cwd, shell }, // exec through shell is required to have correct env variables (ex. PATH)
+    nvimCommand(env),
+    nvimArgs,
+    { cwd, env },
   );
 
   // Pipe errors to std output and also send it in console as error.
@@ -113,9 +112,9 @@ const fixNoConfig = args => {
   }
 };
 
-const initApi = ({ args, cwd, resourcesPath: newResourcesPath }) => {
+const initApi = ({ args, cwd, env, resourcesPath: newResourcesPath }) => {
   resourcesPath = newResourcesPath;
-  proc = startNvimProcess({ args, cwd });
+  proc = startNvimProcess({ args, env, cwd });
 
   const decodeStream = createDecodeStream();
   const encodeStream = createEncodeStream();

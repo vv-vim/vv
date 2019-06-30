@@ -9,16 +9,7 @@
       "argsIgnorePattern": "^_"
     }],
     "import/no-extraneous-dependencies": "off",
-    "prefer-destructuring": ["warn", {
-      "VariableDeclarator": {
-        "array": false,
-        "object": true
-      },
-      "AssignmentExpression": {
-        "array": false,
-        "object": true
-      }
-    }],
+    "prefer-destructuring": "off",
     "no-mixed-operators": [
       "warn",
       {
@@ -31,5 +22,5 @@
         "allowSamePrecedence": true
       }
     ]
-  },
+  }
 }

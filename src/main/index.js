@@ -5,6 +5,7 @@ import path from 'path';
 import menu, { refreshMenu } from './menu';
 import installCli from './installCli';
 import checkNeovim from './checkNeovim';
+import shellEnv from '../lib/shellEnv';
 
 // import log from '../lib/log';
 
@@ -87,6 +88,7 @@ const doCreateWindow = (args = [], cwd) => {
     win.webContents.send('initNvim', {
       args,
       cwd,
+      env: shellEnv(),
       resourcesPath: path.join(app.getAppPath(), isDev('./', '../')),
     });
     setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
