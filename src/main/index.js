@@ -146,7 +146,7 @@ const openFile = () => {
     {
       properties: ['openFile', 'openDirectory', 'createDirectory', 'multiSelections'],
     },
-    filePaths => {
+    (filePaths = []) => {
       for (let i = 0; i < filePaths.length; i += 1) {
         createWindow([filePaths[i]]);
       }
@@ -182,10 +182,11 @@ app.on('ready', () => {
 });
 
 app.on('before-quit', e => {
-  if (windows.length > 0) {
+  const visibleWindows = windows.filter(w => w.isVisible());
+  if (visibleWindows.length > 0) {
     e.preventDefault();
     shouldQuit = true;
-    (currentWindow || windows[0]).webContents.send('quit');
+    (currentWindow || visibleWindows[0]).webContents.send('quit');
   }
 });
 
