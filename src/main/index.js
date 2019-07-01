@@ -75,7 +75,8 @@ const getEmptyWindow = () => {
   return createEmptyWindow();
 };
 
-const doCreateWindow = (args = [], cwd) => {
+const createWindow = (args = [], newCwd) => {
+  const cwd = newCwd || process.cwd();
   const win = getEmptyWindow();
 
   if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
@@ -109,35 +110,12 @@ const doCreateWindow = (args = [], cwd) => {
   return win;
 };
 
-// Find files in args and create window with each file.
-// If file is a directory, create window in context of this directory.
-const createWindow = (args = [], newCwd) => {
-  const cwd = newCwd || process.cwd();
-  const fileArgs = ['--cmd', '-c', '-i', '-r', '-s', '-S', '-u', '-w', '-W', '--startuptime'];
-  let fileNames = [];
-  const filesSeparator = args.indexOf('--');
-  if (filesSeparator !== -1) {
-    fileNames = args.splice(filesSeparator).splice(1);
+const openFileOrDir = fileName => {
+  app.addRecentDocument(fileName);
+  if (existsSync(fileName) && statSync(fileName).isDirectory()) {
+    createWindow([fileName], fileName);
   } else {
-    for (let i = args.length - 1; i >= 0; i -= 1) {
-      if (['-', '+'].includes(args[i][0]) || (args[i - 1] && fileArgs.includes(args[i - 1]))) {
-        break;
-      }
-      fileNames.push(args.pop());
-    }
-  }
-  if (fileNames.length > 0) {
-    for (let i = 0; i < fileNames.length; i += 1) {
-      app.addRecentDocument(fileNames[i]);
-      if (existsSync(fileNames[i]) && statSync(fileNames[i]).isDirectory()) {
-        doCreateWindow(args, fileNames[i]);
-      } else {
-        doCreateWindow([...args, '--', fileNames[i]], cwd);
-      }
-    }
-  } else {
-    app.addRecentDocument(cwd);
-    doCreateWindow(args, cwd);
+    createWindow([fileName]);
   }
 };
 
@@ -146,11 +124,7 @@ const openFile = () => {
     {
       properties: ['openFile', 'openDirectory', 'createDirectory', 'multiSelections'],
     },
-    (filePaths = []) => {
-      for (let i = 0; i < filePaths.length; i += 1) {
-        createWindow([filePaths[i]]);
-      }
-    },
+    (fileNames = []) => fileNames.forEach(openFileOrDir),
   );
 };
 
@@ -161,9 +135,7 @@ const closeWindow = () => {
 };
 
 app.on('will-finish-launching', () => {
-  app.on('open-file', (_e, windowPath) => {
-    createWindow([windowPath]);
-  });
+  app.on('open-file', (_e, file) => openFileOrDir(file));
 });
 
 ipcMain.on('cancel-quit', () => {

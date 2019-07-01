@@ -10,18 +10,9 @@ Usage:
 Options:
   --debug               Debug mode. Keep process attached to terminal and
                         output errors.
-  -h, --help            Print this help message
-  --                    Only file names after this
 
-  [file ...]            One or more space separated files or directories.
-                        They will be opened in separate windows. If no files
-                        are passed, it will open current directory.
-                        Note: if you pass directory name, it will also use it
-                        as current working directory. This is different from
-                        the default nvim behavior.
-
-All other options will be passed to nvim as is. You can check available options
-here: nvim --help
+All other options will be passed to nvim. You can check available options
+by running: nvim --help
 END
 
 else

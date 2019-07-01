@@ -47,9 +47,7 @@ ln -s -f /Applications/VV.app/Contents/Resources/bin/vv [dir from $PATH]/vv
 
 Usage: `vv [options] [file ...]`
 
-You can specify one or more space-separated files or directories. These will be opened in separate windows. If no files are passed, VV will open the current directory.
-
-Options are passed to `nvim` as is. You can check available options in nvim help: `nvim --help`.
+Options are passed to `nvim`. You can check available options in nvim help: `nvim --help`.
 
 Settings
 --------
