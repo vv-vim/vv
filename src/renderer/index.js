@@ -20,8 +20,10 @@ import initCloseWindow from './nvim/features/closeWindow';
 import initInsertSymbols from './nvim/features/insertSymbols';
 
 const {
-  remote: { getCurrentWindow },
-  screen: { getPrimaryDisplay },
+  remote: {
+    getCurrentWindow,
+    screen: { getPrimaryDisplay },
+  },
   ipcRenderer,
 } = require('electron');
 
