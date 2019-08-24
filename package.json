@@ -2,7 +2,7 @@
   "name": "VV",
   "description": "Neovim GUI Client",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
-  "version": "1.5.3",
+  "version": "1.6.0",
   "private": true,
   "keywords": [
     "vim",
@@ -21,9 +21,9 @@
     "start:renderer": "webpack-dev-server --config ./config/webpack.renderer.config.js",
     "start:devserver": "DEV_SERVER=true electron .",
     "start": "electron .",
-    "preelectron:build": "yarn webpack:build",
-    "electron:build": "build -c.extraMetadata.main=build/main.js",
-    "postelectron:build": "cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
+    "prebuild": "yarn webpack:build",
+    "build": "electron-builder -c.extraMetadata.main=build/main.js",
+    "postbuild": "cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
   },
   "build": {
     "appId": "app.vvim.vv",
@@ -52,7 +52,7 @@
     "babel-core": "7.0.0-bridge.0",
     "babel-loader": "^7.1.4",
     "electron": "^5.0",
-    "electron-builder": "^20.39.0",
+    "electron-builder": "^21.1",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-config-prettier": "^4.0.0",
