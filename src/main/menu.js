@@ -1,4 +1,4 @@
-import { Menu } from 'electron';
+import { Menu, app, globalShortcut } from 'electron';
 
 let menu;
 
@@ -114,7 +114,7 @@ const createMenu = ({ createWindow, openFile, closeWindow, installCli }) => {
         },
         {
           label: 'Zoom In',
-          accelerator: 'CmdOrCtrl+Plus',
+          accelerator: 'CmdOrCtrl+=',
           click: zoomIn,
         },
         {

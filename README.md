@@ -31,7 +31,7 @@ You can also build it manually. You will need [Node.js](https://nodejs.org/en/do
 git clone git@github.com:vv-vim/vv.git
 cd vv
 yarn
-yarn electron:build
+yarn build
 ```
 
 This will generate a VV.app binary in the dist directory. Copy VV.app to your /Applications folder and add the CLI launcher `vv` to your `/usr/local/bin`.

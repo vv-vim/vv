@@ -39,6 +39,9 @@ const createEmptyWindow = () => {
     height: 600,
     show: false,
     fullscreenable: false,
+    webPreferences: {
+      nodeIntegration: true,
+    },
   };
   let win = new BrowserWindow(options);
   win.zoomLevel = 0;
@@ -171,11 +174,14 @@ app.on('activate', async () => {
 });
 
 if (!isDev()) {
-  const doQuit = app.makeSingleInstance((args, cwd) => {
-    createWindow(cliArgs(args), cwd);
-  });
+  const gotTheLock = app.requestSingleInstanceLock();
 
-  if (doQuit) {
+  if (!gotTheLock) {
     app.quit();
+  } else {
+    app.on('second-instance', (_e, args, cwd) => {
+      createWindow(cliArgs(args), cwd);
+    });
   }
 }
+
