@@ -10,13 +10,11 @@ import initScreen, { screenCoords } from './nvim/screen';
 import initKeyboard from './nvim/input/keyboard';
 import initMouse from './nvim/input/mouse';
 
-import initQuit from './nvim/features/quit';
 import initCopyPaste from './nvim/features/copyPaste';
 import initFullScreen from './nvim/features/fullScreen';
 import initZoom from './nvim/features/zoom';
 import initWindowTitle from './nvim/features/windowTitle';
 import initReloadChanged from './nvim/features/reloadChanged';
-import initCloseWindow from './nvim/features/closeWindow';
 import initInsertSymbols from './nvim/features/insertSymbols';
 
 const {
@@ -193,9 +191,9 @@ const vimEnter = () => {
   }, 10);
 }
 
-const initNvim = async (_event, { args, cwd, env, resourcesPath }) => {
+const initRenderer = async (_event) => {
   ({ x: windowLeft, y: windowTop, width: windowWidth, height: windowHeight} = currentWindow.getBounds())
-  nvim.initApi({ args, cwd, env, resourcesPath });
+  nvim.initApi();
 
   await nvim.send('subscribe', 'vv:vim_enter');
   nvim.on('vv:vim_enter', vimEnter);
@@ -218,10 +216,8 @@ const initNvim = async (_event, { args, cwd, env, resourcesPath }) => {
   initMouse();
   initCopyPaste();
   initWindowTitle();
-  initCloseWindow();
-  initQuit();
   initInsertSymbols();
   initReloadChanged();
 };
 
-ipcRenderer.on('initNvim', initNvim);
+ipcRenderer.on('initRenderer', initRenderer);

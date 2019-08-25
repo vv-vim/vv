@@ -1,20 +1,21 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, dialog } from 'electron';
 import { statSync, existsSync } from 'fs';
 import path from 'path';
 
 import menu, { refreshMenu } from './menu';
 import installCli from './installCli';
 import checkNeovim from './checkNeovim';
-import shellEnv from '../lib/shellEnv';
+
+import { setShouldQuit } from './nvim/features/quit';
+
+import isDev from '../lib/isDev';
+
+import initNvim from './nvim/nvim.js';
 
 // import log from '../lib/log';
 
 const windows = [];
 let currentWindow;
-let shouldQuit = false;
-
-const isDev = (dev = true, notDev = false) =>
-  process.env.NODE_ENV === 'development' ? dev : notDev;
 
 const cliArgs = args => (args || process.argv).slice(isDev(2, 1));
 
@@ -26,7 +27,7 @@ const openDeveloperTools = win => {
 };
 
 const handleAllClosed = () => {
-  if (shouldQuit || process.platform !== 'darwin') {
+  if (process.platform !== 'darwin') {
     app.quit();
   }
 };
@@ -53,7 +54,6 @@ const createEmptyWindow = () => {
     if (i !== -1) windows.splice(i, 1);
     win = null;
 
-    if (shouldQuit) app.quit();
     if (windows.length === 0) handleAllClosed();
   });
 
@@ -88,27 +88,28 @@ const createWindow = (args = [], newCwd) => {
     win.setBounds({ x: x + 20, y: y + 20, width, height }, false);
   }
 
-  const initNvim = () => {
-    win.webContents.send('initNvim', {
-      args,
-      cwd,
-      env: shellEnv(),
-      resourcesPath: path.join(app.getAppPath(), isDev('./', '../')),
-    });
+  initNvim({
+    args,
+    cwd,
+    win,
+  });
+
+  const initRenderer = () => {
+    win.webContents.send('initRenderer');
     setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
   };
 
   if (win.webContents.isLoading()) {
-    win.webContents.on('did-finish-load', initNvim);
+    win.webContents.on('did-finish-load', initRenderer);
   } else {
-    initNvim();
+    initRenderer();
   }
 
   win.focus();
 
   windows.push(win);
 
-  if (isDev()) openDeveloperTools(win);
+  // if (isDev()) openDeveloperTools(win);
 
   return win;
 };
@@ -131,18 +132,8 @@ const openFile = () => {
   );
 };
 
-const closeWindow = () => {
-  if (currentWindow) {
-    currentWindow.webContents.send('closeWindow');
-  }
-};
-
 app.on('will-finish-launching', () => {
   app.on('open-file', (_e, file) => openFileOrDir(file));
-});
-
-ipcMain.on('cancel-quit', () => {
-  shouldQuit = false;
 });
 
 app.on('ready', () => {
@@ -152,16 +143,16 @@ app.on('ready', () => {
     createWindow,
     openFile,
     installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
-    closeWindow,
+    // closeWindow,
   });
 });
 
 app.on('before-quit', e => {
+  setShouldQuit(true);
   const visibleWindows = windows.filter(w => w.isVisible());
   if (visibleWindows.length > 0) {
     e.preventDefault();
-    shouldQuit = true;
-    (currentWindow || visibleWindows[0]).webContents.send('quit');
+    (currentWindow || visibleWindows[0]).close();
   }
 });
 

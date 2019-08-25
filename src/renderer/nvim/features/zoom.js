@@ -6,8 +6,8 @@ const handleZoom = (_sender, level) => {
   nvim.command(`VVset fontsize${level > 0 ? '+' : '-'}=${Math.abs(level)}`);
 };
 
-const initFullScreen = () => {
+const initZoom = () => {
   ipcRenderer.on('zoom', handleZoom);
 };
 
-export default initFullScreen;
+export default initZoom;

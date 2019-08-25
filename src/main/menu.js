@@ -1,5 +1,7 @@
 import { Menu, app, globalShortcut } from 'electron';
 
+// import { handleCloseWindow } from './nvim/features/closeWindow';
+
 let menu;
 
 const selectAll = (_item, win) => {
@@ -36,7 +38,7 @@ export const refreshMenu = win => {
   disableActualSizeItem(win);
 };
 
-const createMenu = ({ createWindow, openFile, closeWindow, installCli }) => {
+const createMenu = ({ createWindow, openFile, installCli }) => {
   const menuTemplate = [
     {
       label: 'VV',
@@ -77,12 +79,14 @@ const createMenu = ({ createWindow, openFile, closeWindow, installCli }) => {
             },
           ],
         },
-        { type: 'separator' },
-        {
-          label: 'Close',
-          accelerator: 'CmdOrCtrl+W',
-          click: closeWindow,
-        },
+        /*
+          { type: 'separator' },
+          {
+            label: 'Close',
+            accelerator: 'CmdOrCtrl+W',
+            click: handleCloseWindow,
+          },
+        */
       ],
     },
     {
