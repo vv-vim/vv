@@ -19,18 +19,5 @@ function! VVunsavedBuffers()
   call filter(l:buffers, "v:val['changed'] == 1")
   let l:buffers = map(l:buffers , "{ 'name': v:val['name'] }" )
   call rpcnotify(0, "vv:unsaved_buffers", l:buffers)
+  return l:buffers
 endfunction
-command! -nargs=0 VVunsavedBuffers :call VVunsavedBuffers()
-
-" Close window
-" If we have opened tabs or splits, just does :q
-" If this is the last window, notify client to close window
-function! VVcloseWindow()
-  if tabpagenr('$') > 1 || winnr('$') > 1
-    q
-  else
-    echo 'close'
-    call rpcnotify(0, "vv:close_window")
-  endif
-endfunction
-command! -nargs=0 VVcloseWindow :call VVcloseWindow()
