@@ -69,17 +69,29 @@ const api = ({ args, cwd }) => {
     });
   };
 
+  const commandFactory = name => (...params) => send(null, name, ...params);
+
+  const nvim = {
+    eval: commandFactory('eval'),
+    callFunction: commandFactory('call_function'),
+    command: commandFactory('command'),
+    input: commandFactory('input'),
+    getMode: commandFactory('get_mode'),
+    uiTryResize: commandFactory('ui_try_resize'),
+    uiAttach: commandFactory('ui_attach'),
+    // Fetch current mode from nvim, leaves only first letter to match groups of modes.
+    // https://neovim.io/doc/user/eval.html#mode()
+    getShortMode: async () => {
+      const { mode } = await nvim.getMode();
+      return mode.replace('CTRL-', '')[0];
+    },
+  };
+
   const subscribe = callback => {
     if (!msgpackIn) {
       throw new Error('Neovim is not initialized');
     }
     subscriptions.push(callback);
-  };
-
-  const filterMethod = (methodToFilter, callback) => (method, ...params) => {
-    if (method === methodToFilter) {
-      callback(...params);
-    }
   };
 
   const on = (method, callback) => {
@@ -89,26 +101,12 @@ const api = ({ args, cwd }) => {
       msgpackIn.on('data', callback);
     } else {
       send(null, 'subscribe', method);
-      subscribe(filterMethod(method, callback));
+      subscribe((m, ...params) => {
+        if (method === m) {
+          callback(...params);
+        }
+      });
     }
-  };
-
-  const commandFactory = name => (...params) => send(null, name, ...params);
-
-  const nvim = {
-    callFunction: commandFactory('call_function'),
-    command: commandFactory('command'),
-    input: commandFactory('input'),
-    getMode: commandFactory('get_mode'),
-    uiTryResize: commandFactory('ui_try_resize'),
-    uiAttach: commandFactory('ui_attach'),
-  };
-
-  // Fetch current mode from nvim, leaves only first letter to match groups of modes.
-  // https://neovim.io/doc/user/eval.html#mode()
-  const getShortMode = async () => {
-    const { mode } = await nvim.getMode();
-    return mode.replace('CTRL-', '')[0];
   };
 
   proc = startNvimProcess({ args, cwd });
@@ -149,7 +147,6 @@ const api = ({ args, cwd }) => {
     on,
     subscribe,
     send,
-    getShortMode,
     ...nvim,
   };
 };
