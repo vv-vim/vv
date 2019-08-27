@@ -2,8 +2,9 @@ import { Menu } from 'electron';
 
 // import { handleCloseWindow } from './nvim/features/closeWindow';
 
-import { copy, paste, selectAll } from './nvim/features/copyPaste';
-import { zoomIn, zoomOut, actualSize} from './nvim/features/zoom'
+import { copyMenuItem, pasteMenuItem, selectAllMenuItem } from './nvim/features/copyPaste';
+import { zoomInMenuItem, zoomOutMenuItem, actualSizeMenuItem } from './nvim/features/zoom'
+import { closeWindowMenuItem } from './nvim/features/closeWindow'
 
 let menu;
 
@@ -52,14 +53,12 @@ const createMenu = ({ createWindow, openFile, installCli }) => {
             },
           ],
         },
-        /*
-          { type: 'separator' },
-          {
-            label: 'Close',
-            accelerator: 'CmdOrCtrl+W',
-            click: handleCloseWindow,
-          },
-        */
+        { type: 'separator' },
+        {
+          label: 'Close',
+          accelerator: 'CmdOrCtrl+W',
+          click: closeWindowMenuItem,
+        },
       ],
     },
     {
@@ -68,17 +67,17 @@ const createMenu = ({ createWindow, openFile, installCli }) => {
         {
           label: 'Copy',
           accelerator: 'CmdOrCtrl+C',
-          click: copy,
+          click: copyMenuItem,
         },
         {
           label: 'Paste',
           accelerator: 'CmdOrCtrl+V',
-          click: paste,
+          click: pasteMenuItem,
         },
         {
           label: 'Select All',
           accelerator: 'CmdOrCtrl+A',
-          click: selectAll,
+          click: selectAllMenuItem,
         },
       ],
     },
@@ -94,18 +93,18 @@ const createMenu = ({ createWindow, openFile, installCli }) => {
           label: 'Actual Size',
           id: 'actualSize',
           accelerator: 'CmdOrCtrl+0',
-          click: actualSize,
+          click: actualSizeMenuItem,
           enabled: false,
         },
         {
           label: 'Zoom In',
           accelerator: 'CmdOrCtrl+=',
-          click: zoomIn,
+          click: zoomInMenuItem,
         },
         {
           label: 'Zoom Out',
           accelerator: 'CmdOrCtrl+-',
-          click: zoomOut,
+          click: zoomOutMenuItem,
         },
         { type: 'separator' },
         {

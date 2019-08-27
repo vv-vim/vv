@@ -2,7 +2,7 @@ import { clipboard } from 'electron';
 
 import { getNvimByWindow } from '../nvimByWindow';
 
-export const paste = async (_item, win) => {
+export const pasteMenuItem = async (_item, win) => {
   const clipboardText = clipboard.readText().replace(/</g, '<lt>');
   const nvim = getNvimByWindow(win);
   const mode = await nvim.getShortMode();
@@ -17,7 +17,7 @@ export const paste = async (_item, win) => {
   }
 };
 
-export const copy = async (_item, win) => {
+export const copyMenuItem = async (_item, win) => {
   const nvim = getNvimByWindow(win);
   const mode = await nvim.getShortMode();
   if (mode === 'v' || mode === 'V') {
@@ -25,7 +25,7 @@ export const copy = async (_item, win) => {
   }
 };
 
-export const selectAll = (_item, win) => {
+export const selectAllMenuItem = (_item, win) => {
   const nvim = getNvimByWindow(win);
   if (nvim) {
     nvim.input('ggVG');

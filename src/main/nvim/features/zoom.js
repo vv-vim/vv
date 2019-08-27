@@ -14,28 +14,28 @@ const disableActualSizeItem = (win) => {
   }
 };
 
-export const zoomIn = (_item, win) => {
+export const zoomInMenuItem = (_item, win) => {
   win.zoomLevel += 1; // eslint-disable-line no-param-reassign
   nvimChangeZoom(win, 1)
   disableActualSizeItem(win);
 };
 
-export const zoomOut = (_item, win) => {
+export const zoomOutMenuItem = (_item, win) => {
   win.zoomLevel -= 1; // eslint-disable-line no-param-reassign
   nvimChangeZoom(win, -1)
   disableActualSizeItem(win);
 };
 
-export const actualSize = (_item, win) => {
+export const actualSizeMenuItem = (_item, win) => {
   nvimChangeZoom(win, -win.zoomLevel)
   win.zoomLevel = 0; // eslint-disable-line no-param-reassign
   disableActualSizeItem(win);
 };
 
-const zoom = ({ win }) => {
+const initZoom = ({ win }) => {
   win.on('focus', () => {
     disableActualSizeItem(win);
   });
 }
 
-export default zoom;
+export default initZoom;
