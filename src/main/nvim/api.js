@@ -104,6 +104,13 @@ const api = ({ args, cwd }) => {
     uiAttach: commandFactory('ui_attach'),
   };
 
+  // Fetch current mode from nvim, leaves only first letter to match groups of modes.
+  // https://neovim.io/doc/user/eval.html#mode()
+  const getShortMode = async () => {
+    const { mode } = await nvim.getMode();
+    return mode.replace('CTRL-', '')[0];
+  };
+
   proc = startNvimProcess({ args, cwd });
 
   const decodeStream = createDecodeStream();
@@ -142,6 +149,7 @@ const api = ({ args, cwd }) => {
     on,
     subscribe,
     send,
+    getShortMode,
     ...nvim,
   };
 };

@@ -1,41 +1,14 @@
-import { Menu, app, globalShortcut } from 'electron';
+import { Menu } from 'electron';
 
 // import { handleCloseWindow } from './nvim/features/closeWindow';
 
-let menu;
+import { copy, paste, selectAll } from './nvim/features/copyPaste';
+import { zoomIn, zoomOut, actualSize} from './nvim/features/zoom'
 
-const selectAll = (_item, win) => {
-  win.webContents.send('selectAll');
-};
+let menu;
 
 const toggleFullScreen = (_item, win) => {
   win.webContents.send('toggleFullScreen');
-};
-
-const disableActualSizeItem = win => {
-  menu.getMenuItemById('actualSize').enabled = win.zoomLevel !== 0;
-};
-
-const zoomIn = (_item, win) => {
-  win.zoomLevel += 1; // eslint-disable-line no-param-reassign
-  win.webContents.send('zoom', 1);
-  disableActualSizeItem(win);
-};
-
-const zoomOut = (_item, win) => {
-  win.zoomLevel -= 1; // eslint-disable-line no-param-reassign
-  win.webContents.send('zoom', -1);
-  disableActualSizeItem(win);
-};
-
-const actualSize = (_item, win) => {
-  win.webContents.send('zoom', -win.zoomLevel);
-  win.zoomLevel = 0; // eslint-disable-line no-param-reassign
-  disableActualSizeItem(win);
-};
-
-export const refreshMenu = win => {
-  disableActualSizeItem(win);
 };
 
 const createMenu = ({ createWindow, openFile, installCli }) => {
@@ -92,8 +65,16 @@ const createMenu = ({ createWindow, openFile, installCli }) => {
     {
       label: 'Edit',
       submenu: [
-        { role: 'copy' },
-        { role: 'paste' },
+        {
+          label: 'Copy',
+          accelerator: 'CmdOrCtrl+C',
+          click: copy,
+        },
+        {
+          label: 'Paste',
+          accelerator: 'CmdOrCtrl+V',
+          click: paste,
+        },
         {
           label: 'Select All',
           accelerator: 'CmdOrCtrl+A',

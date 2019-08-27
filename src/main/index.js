@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog } from 'electron';
 import { statSync, existsSync } from 'fs';
 import path from 'path';
 
-import menu, { refreshMenu } from './menu';
+import menu from './menu';
 import installCli from './installCli';
 import checkNeovim from './checkNeovim';
 
@@ -59,7 +59,6 @@ const createEmptyWindow = () => {
 
   win.on('focus', () => {
     currentWindow = win;
-    refreshMenu(currentWindow);
   });
 
   win.loadURL(
