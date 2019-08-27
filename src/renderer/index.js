@@ -9,13 +9,9 @@ import initScreen, { screenCoords } from './nvim/screen';
 
 import initKeyboard from './nvim/input/keyboard';
 import initMouse from './nvim/input/mouse';
-
-import initCopyPaste from './nvim/features/copyPaste';
-import initFullScreen from './nvim/features/fullScreen';
-import initZoom from './nvim/features/zoom';
-import initWindowTitle from './nvim/features/windowTitle';
-import initReloadChanged from './nvim/features/reloadChanged';
 import initInsertSymbols from './nvim/features/insertSymbols';
+
+import initFullScreen from './nvim/features/fullScreen';
 
 const {
   remote: {
@@ -140,6 +136,7 @@ const handleSet = {
   },
 
   fullscreen: value => fullScreen.fullscreen(value),
+  simplefullscreen: value => fullScreen.simplefullscreen(value),
 
   bold: value => screen.vv_bold(value),
   italic: value => screen.vv_italic(value),
@@ -211,13 +208,9 @@ const initRenderer = async (_event) => {
   // until user action. If that happens, show window anyway.
   setTimeout(showWindow, 2000);
 
-  initZoom();
   initKeyboard();
   initMouse();
-  initCopyPaste();
-  initWindowTitle();
   initInsertSymbols();
-  initReloadChanged();
 };
 
 ipcRenderer.on('initRenderer', initRenderer);
