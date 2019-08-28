@@ -93,22 +93,18 @@ const createWindow = (args = [], newCwd) => {
     win,
   });
 
-  const initRenderer = () => {
-    win.webContents.send('initRenderer');
-    setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
-  };
-
   if (win.webContents.isLoading()) {
-    win.webContents.on('did-finish-load', initRenderer);
+    win.webContents.on('did-finish-load', () => win.webContents.send('initRenderer'));
   } else {
-    initRenderer();
+    win.webContents.send('initRenderer');
   }
 
   win.focus();
-
   windows.push(win);
 
   // if (isDev()) openDeveloperTools(win);
+
+  setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
 
   return win;
 };

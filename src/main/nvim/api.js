@@ -49,7 +49,7 @@ const api = ({ args, cwd }) => {
   let requestId = 0;
   const requestPromises = {};
 
-  const subscriptions = [];
+  let subscriptions = [];
 
   const send = (customId, command, ...params) => {
     if (!msgpackOut) {
@@ -69,6 +69,13 @@ const api = ({ args, cwd }) => {
     });
   };
 
+  // Fetch current mode from nvim, leaves only first letter to match groups of modes.
+  // https://neovim.io/doc/user/eval.html#mode()
+  const getShortMode = async () => {
+    const { mode } = await nvim.getMode();
+    return mode.replace('CTRL-', '')[0];
+  };
+
   const commandFactory = name => (...params) => send(null, name, ...params);
 
   const nvim = {
@@ -79,19 +86,8 @@ const api = ({ args, cwd }) => {
     getMode: commandFactory('get_mode'),
     uiTryResize: commandFactory('ui_try_resize'),
     uiAttach: commandFactory('ui_attach'),
-    // Fetch current mode from nvim, leaves only first letter to match groups of modes.
-    // https://neovim.io/doc/user/eval.html#mode()
-    getShortMode: async () => {
-      const { mode } = await nvim.getMode();
-      return mode.replace('CTRL-', '')[0];
-    },
-  };
-
-  const subscribe = callback => {
-    if (!msgpackIn) {
-      throw new Error('Neovim is not initialized');
-    }
-    subscriptions.push(callback);
+    subscribe: commandFactory('subscribe'),
+    getShortMode,
   };
 
   const on = (method, callback) => {
@@ -100,13 +96,13 @@ const api = ({ args, cwd }) => {
     } else if (method === 'data') {
       msgpackIn.on('data', callback);
     } else {
-      send(null, 'subscribe', method);
-      subscribe((m, ...params) => {
-        if (method === m) {
-          callback(...params);
-        }
-      });
+      nvim.subscribe(method);
+      subscriptions.push([method, callback]);
     }
+  };
+
+  const off = (method, callback) => {
+    subscriptions = subscriptions.filter(([m, c]) => !(method === m && callback === c))
   };
 
   proc = startNvimProcess({ args, cwd });
@@ -133,7 +129,12 @@ const api = ({ args, cwd }) => {
     } else if (type === 2) {
       // Receive notification
       const [method, params] = rest;
-      subscriptions.forEach(c => c(method, params));
+      subscriptions.forEach(([m, c]) => {
+        if (m === method) {
+          c(method, params)
+        }
+      });
+
     }
   });
 
@@ -145,7 +146,7 @@ const api = ({ args, cwd }) => {
 
   return {
     on,
-    subscribe,
+    off,
     send,
     ...nvim,
   };
