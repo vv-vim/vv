@@ -57,8 +57,6 @@ const defaultSettings = {
   letterspacing: 0,
 };
 
-let debouncedShowWindow = () => {};
-
 const resize = () => {
   const [newCols, newRows] = screenCoords(...currentWindow.getContentSize(), true);
   if (newCols > 0 && newRows > 0 && (newCols !== cols || newRows !== rows || !uiAttached)) {
@@ -76,15 +74,15 @@ const resize = () => {
 
 const debouncedResize = debounce(resize, 100);
 
-const showWindow = () => {
-  if (!isWindowShown) {
-    currentWindow.show();
-    isWindowShown = true;
-    nvim.command('doautocmd <nomodeline> GUIEnter');
-    store.set('initialSettings', initialSettings);
-    window.addEventListener('resize', debouncedResize);
-  }
-};
+// const showWindow = () => {
+//   if (!isWindowShown) {
+//     currentWindow.show();
+//     isWindowShown = true;
+//     nvim.command('doautocmd <nomodeline> GUIEnter');
+//     store.set('initialSettings', initialSettings);
+//     window.addEventListener('resize', debouncedResize);
+//   }
+// };
 
 const updateWindowSize = () => {
   if (!settings.fullscreen) {
@@ -180,22 +178,12 @@ const applySetting = ([option, props]) => {
   }
 }
 
-const vimEnter = () => {
-  // TODO: refactor this part
-  debouncedShowWindow = debounce(() => {
-    debouncedShowWindow = () => {};
-    showWindow();
-  }, 10);
-}
-
 const initRenderer = async (_event) => {
   ({ x: windowLeft, y: windowTop, width: windowWidth, height: windowHeight} = currentWindow.getBounds())
   nvim.initApi();
 
   await nvim.send('subscribe', 'vv:vim_enter');
-  nvim.on('vv:vim_enter', vimEnter);
   nvim.on('vv:set', applySetting);
-  nvim.on('redraw', () => debouncedShowWindow());
 
   screen = initScreen('screen');
   fullScreen = initFullScreen();
@@ -204,13 +192,11 @@ const initRenderer = async (_event) => {
   initialSettings = {};
   newSettings = defaultSettings;
 
-  // If nvim has startup errors or swapfile warning it will not trigger VimEnter
-  // until user action. If that happens, show window anyway.
-  setTimeout(showWindow, 2000);
-
   initKeyboard();
   initMouse();
   initInsertSymbols();
+
+  window.addEventListener('resize', debouncedResize);
 };
 
 ipcRenderer.on('initRenderer', initRenderer);

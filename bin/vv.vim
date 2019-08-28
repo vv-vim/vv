@@ -18,6 +18,5 @@ function! VVunsavedBuffers()
   let l:buffers = getbufinfo()
   call filter(l:buffers, "v:val['changed'] == 1")
   let l:buffers = map(l:buffers , "{ 'name': v:val['name'] }" )
-  call rpcnotify(0, "vv:unsaved_buffers", l:buffers)
   return l:buffers
 endfunction
