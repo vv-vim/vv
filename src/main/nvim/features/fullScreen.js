@@ -38,7 +38,6 @@ const initFullScreen = ({ win }) => {
 
   onChangeSettings(win, (settings) => {
     Object.keys(settings).forEach(key => {
-      console.log('hey', key);
       if (handleSet[key]) {
         handleSet[key](settings[key]);
       }

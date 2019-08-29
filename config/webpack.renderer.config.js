@@ -12,7 +12,7 @@ const config = merge(common, {
       template: './src/renderer/index.html',
     }),
   ],
-  target: 'electron-renderer',
+  target: 'web',
   devtool: 'inline-source-map',
   devServer: {
     compress: true,

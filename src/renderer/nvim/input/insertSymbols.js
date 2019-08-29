@@ -2,7 +2,7 @@
 
 import { getCursorElement } from '../screen';
 
-import nvim from '../api';
+import nvim from '../nvim';
 
 const initInsertSymbols = () => {
   const input = document.createElement('input');
