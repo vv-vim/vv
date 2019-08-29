@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+import { ipcRenderer } from '../preloaded/electron';
 
 let requestId = 0;
 const requestPromises = {};
@@ -43,6 +43,7 @@ const on = (method, callback) => {
 const commandFactory = name => (...params) => send(name, ...params);
 
 const nvim = {
+  eval: commandFactory('eval'),
   callFunction: commandFactory('call_function'),
   command: commandFactory('command'),
   input: commandFactory('input'),
@@ -51,7 +52,7 @@ const nvim = {
   uiAttach: commandFactory('ui_attach'),
 };
 
-const initApi = () =>
+export const initNvim = () =>
   ipcRenderer.on('nvim-data', (_e, [type, ...params]) => {
     if (type === 1) {
       handleResponse(params[0], params[1], params[2]);
@@ -61,7 +62,6 @@ const initApi = () =>
   });
 
 export default {
-  initApi,
   on,
   subscribe,
   send,

@@ -34,7 +34,8 @@
       "build/**/*"
     ],
     "extraResources": [
-      "bin/**/*"
+      "bin/**/*",
+      "src/main/preload.js"
     ],
     "directories": {
       "buildResources": "assets"
@@ -70,6 +71,6 @@
     "electron-store": "^4.0",
     "lodash": "^4.17.15",
     "msgpack-lite": "^0.1.26",
-    "pixi.js": "^4.8.5"
+    "pixi.js": "^5.1"
   }
 }

@@ -2,7 +2,7 @@ import throttle from 'lodash/throttle';
 
 import { modifierPrefix, shiftPrefix } from './keyboard';
 import { screenCoords } from '../screen';
-import nvim from '../api';
+import nvim from '../nvim';
 
 const SCROLL_STEP_X = 6;
 const SCROLL_STEP_Y = 3;

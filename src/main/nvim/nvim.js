@@ -11,14 +11,13 @@ import windowTitle from './features/windowTitle';
 import zoom from './features/zoom';
 import reloadChanged from './features/reloadChanged';
 import fullscreen from './features/fullscreen';
+import windowSize from './features/windowSize';
 
 import settings from './settings';
 
 import showWindow from './showWindow';
 
 import nvimApi from './api';
-
-// import store from '../../lib/store';
 
 ipcMain.on('nvim-send', ({ sender: { id } }, payload) => {
   const nvim = getNvimByWindow(id);
@@ -40,13 +39,16 @@ const initNvim = ({ args, cwd, win }) => {
   });
 
   settings({ win, nvim });
-  showWindow({ win, nvim });
+
+  fullscreen({ win, nvim });
+  windowSize({ win });
 
   quit({ win, nvim });
   windowTitle({ win, nvim });
   zoom({ win });
   reloadChanged({ win, nvim });
-  fullscreen({ win, nvim });
+
+  showWindow({ win, nvim });
 };
 
 export default initNvim;

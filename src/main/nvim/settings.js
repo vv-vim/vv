@@ -2,27 +2,30 @@ import debounce from 'lodash/debounce';
 
 import store from '../../lib/store';
 
-const defaultSettings = {
-  fullscreen: 0,
-  simplefullscreen: 1,
-  bold: 1,
-  italic: 1,
-  underline: 1,
-  undercurl: 1,
-  fontfamily: 'monospace',
-  fontsize: 12,
-  lineheight: 1.25,
-  letterspacing: 0,
-  windowwidth: '80%',
-  windowheight: '80%',
-  windowleft: '50%',
-  windowtop: '50%',
+export const getDefaultSettings = (win) => {
+  const { x: windowleft, y: windowtop, width: windowwidth, height: windowheight} = win.getBounds();
+  return {
+    fullscreen: 0,
+    simplefullscreen: 1,
+    bold: 1,
+    italic: 1,
+    underline: 1,
+    undercurl: 1,
+    fontfamily: 'monospace',
+    fontsize: 12,
+    lineheight: 1.25,
+    letterspacing: 0,
+    windowleft,
+    windowtop,
+    windowwidth,
+    windowheight,
+  };
 };
 
 // Store initial settings to make window open faster. When window is shown current settings are
 // stored to initialSettings. And next time when new window is created we use these settings by
 // default and change it if settings from vim config are changed.
-export const getInitialSettings = () => store.get('initialSettings') || defaultSettings;
+export const getInitialSettings = (win) => store.get('initialSettings') || getDefaultSettings(win);
 
 const onChangeSettingsCallbacks = {};
 
@@ -33,9 +36,9 @@ export const onChangeSettings = (win, callback) => {
   onChangeSettingsCallbacks[win.webContents.id].push(callback);
 }
 
-const initSettings = ({ win, nvim }) => {
-  let initialSettings = getInitialSettings();
-  let settings = defaultSettings;
+const initSettings = ({win, nvim}) => {
+  let initialSettings = getInitialSettings(win);
+  let settings = getDefaultSettings(win);
 
   let newSettings = {};
 
@@ -47,16 +50,17 @@ const initSettings = ({ win, nvim }) => {
     });
 
     if (initialSettings) {
-      newSettings = Object.keys(settings).reduce((result, key) => {
-        if (initialSettings[key] !== settings[key]) {
-          return {
-            ...result,
-            [key]: settings[key],
+      newSettings = Object.keys(settings).reduce(
+        (result, key) => {
+          if (initialSettings[key] !== settings[key]) {
+            return {
+              ...result,
+              [key]: settings[key],
+            }
           }
+          return result;
         }
-        return result;
-      }
-      ,{});
+        , {});
       store.set('initialSettings', settings);
       initialSettings = null;
     }

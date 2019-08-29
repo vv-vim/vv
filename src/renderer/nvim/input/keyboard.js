@@ -1,4 +1,4 @@
-import nvim from '../api';
+import nvim from '../nvim';
 
 // :help keyCode
 const specialKey = ({ key, code }) =>
@@ -79,6 +79,7 @@ const filterResult = result =>
     '<D-q>': true, // Cmd+Q: Quit
     '<D-o>': true, // Cmd+O: Open file
     '<D-n>': true, // Cmd+N: New window
+    '<D-w>': true, // Cmd+W: Close window
   }[result] && result;
 
 // https://github.com/rhysd/NyaoVim/issues/87

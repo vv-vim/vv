@@ -1,10 +1,14 @@
 import debounce from 'lodash/debounce';
 import isFinite from 'lodash/isFinite';
-// import log from '../../lib/log';
 
 import * as PIXI from 'pixi.js';
 
-import nvim from './api';
+import { ipcRenderer } from '../preloaded/electron';
+import { resize } from './resize';
+
+import nvim from './nvim';
+
+// import log from '../../lib/log';
 
 const [body] = document.getElementsByTagName('body');
 
@@ -152,8 +156,6 @@ const measureCharSize = () => {
   screenEl.removeChild(char);
 };
 
-const debouncedMeasureCharSize = debounce(measureCharSize, 10);
-
 const font = p =>
   [p.hiItalic ? 'italic' : '', p.hiBold ? 'bold' : '', `${scaledFontSize()}px`, fontFamily].join(
     ' ',
@@ -208,7 +210,7 @@ const getCharTexture = (char, hlId) => {
   const key = char + '-' + hlId; // eslint-disable-line prefer-template
   if (!texturesCache[key]) {
     const props = highlightTable[hlId].calculated;
-    texturesCache[key] = PIXI.Texture.fromCanvas(getCharBitmap(char, props, key));
+    texturesCache[key] = PIXI.Texture.from(getCharBitmap(char, props, key));
   }
   return texturesCache[key];
 };
@@ -611,41 +613,39 @@ const redrawCmd = {
       }
     }
   },
+};
 
-  // VV specific commands
-  vv_fontfamily: newFontFamily => {
+
+const handleSet = {
+  fontfamily: newFontFamily => {
     fontFamily = newFontFamily;
-    debouncedMeasureCharSize();
   },
 
-  vv_fontsize: newFontSize => {
+  fontsize: newFontSize => {
     fontSize = parseInt(newFontSize, 10);
-    debouncedMeasureCharSize();
   },
 
-  vv_letterspacing: newLetterSpacing => {
+  letterspacing: newLetterSpacing => {
     letterSpacing = parseInt(newLetterSpacing, 10);
-    debouncedMeasureCharSize();
   },
 
-  vv_lineheight: newLineHeight => {
+  lineheight: newLineHeight => {
     lineHeight = parseFloat(newLineHeight);
-    debouncedMeasureCharSize();
   },
 
-  vv_bold: value => {
+  bold: value => {
     showBold = value;
   },
 
-  vv_italic: value => {
+  italic: value => {
     showItalic = value;
   },
 
-  vv_underline: value => {
+  underline: value => {
     showUnderline = value;
   },
 
-  vv_undercurl: value => {
+  undercurl: value => {
     showUndercurl = value;
   },
 };
@@ -670,7 +670,21 @@ const setScale = () => {
   screenContainer.style.height = `${scale * 100}%`;
 };
 
-const screen = containerId => {
+const updateSettings = settings => {
+  let isChanged = false;
+  Object.keys(settings).forEach(key => {
+    if (handleSet[key]) {
+      isChanged = true;
+      handleSet[key](settings[key]);
+    }
+  });
+  if (isChanged) {
+    measureCharSize();
+    resize(true);
+  }
+};
+
+const screen = (containerId, settings) => {
   screenContainer = document.getElementById(containerId);
   if (!screenContainer) return false;
 
@@ -681,7 +695,6 @@ const screen = containerId => {
 
   initScreen();
   initCursor();
-  measureCharSize();
 
   nvim.on('redraw', redraw);
 
@@ -694,13 +707,13 @@ const screen = containerId => {
     canvasEl.style.opacity = 1;
   });
 
+  updateSettings(settings);
+  ipcRenderer.on('updateSettings', (_e, settings) => updateSettings(settings));
+
   return redrawCmd;
 };
 
-export const screenCoords = (width, height, checkCharSize = false) => {
-  if (checkCharSize) {
-    debouncedMeasureCharSize.flush();
-  }
+export const screenCoords = (width, height) => {
   return [Math.floor((width * scale) / charWidth), Math.floor((height * scale) / charHeight)];
 };
 

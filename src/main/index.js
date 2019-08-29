@@ -42,7 +42,7 @@ const createEmptyWindow = () => {
     show: false,
     fullscreenable: false,
     webPreferences: {
-      nodeIntegration: true,
+      preload: path.join(app.getAppPath(), isDev('./', '../'), 'src/main/preload.js'),
     },
   };
   let win = new BrowserWindow(options);
@@ -66,6 +66,11 @@ const createEmptyWindow = () => {
     process.env.DEV_SERVER
       ? 'http://localhost:3000'
       : `file://${path.join(__dirname, './index.html')}`,
+
+    {
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36',
+    },
   );
 
   return win;
@@ -94,7 +99,7 @@ const createWindow = (args = [], newCwd) => {
     win,
   });
 
-  const initRenderer = () => win.webContents.send('initRenderer', getInitialSettings())
+  const initRenderer = () => win.webContents.send('initRenderer', getInitialSettings(win));
 
   if (win.webContents.isLoading()) {
     win.webContents.on('did-finish-load', initRenderer);
@@ -105,7 +110,7 @@ const createWindow = (args = [], newCwd) => {
   win.focus();
   windows.push(win);
 
-  // if (isDev()) openDeveloperTools(win);
+  if (isDev()) openDeveloperTools(win);
 
   setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
 
@@ -173,4 +178,3 @@ if (!isDev()) {
     });
   }
 }
-
