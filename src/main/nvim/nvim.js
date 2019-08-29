@@ -10,6 +10,9 @@ import quit from './features/quit';
 import windowTitle from './features/windowTitle';
 import zoom from './features/zoom';
 import reloadChanged from './features/reloadChanged';
+import fullscreen from './features/fullscreen';
+
+import settings from './settings';
 
 import showWindow from './showWindow';
 
@@ -36,34 +39,14 @@ const initNvim = ({ args, cwd, win }) => {
     deleteNvimByWindow(win);
   });
 
-  
-
-  // Store initial settings to make window open faster. When window is shown current settings are
-  // stored to initialSettings. And next time when new window is created we use these settings by
-  // default and change it if settings from vim config are changed.
-  // let newSettings = store.get('initialSettings') || {};
-  // let initialSettings;
-  // const settings = {};
-  //
-  // const defaultSettings = {
-  //   fullscreen: 0,
-  //   simplefullscreen: 1,
-  //   bold: 1,
-  //   italic: 1,
-  //   underline: 1,
-  //   undercurl: 1,
-  //   fontfamily: 'monospace',
-  //   fontsize: 12,
-  //   lineheight: 1.25,
-  //   letterspacing: 0,
-  // };
-
+  settings({ win, nvim });
   showWindow({ win, nvim });
 
   quit({ win, nvim });
   windowTitle({ win, nvim });
   zoom({ win });
   reloadChanged({ win, nvim });
+  fullscreen({ win, nvim });
 };
 
 export default initNvim;

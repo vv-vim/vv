@@ -7,6 +7,7 @@ import installCli from './installCli';
 import checkNeovim from './checkNeovim';
 
 import { setShouldQuit } from './nvim/features/quit';
+import { getInitialSettings } from './nvim/settings';
 
 import isDev from '../lib/isDev';
 
@@ -93,10 +94,12 @@ const createWindow = (args = [], newCwd) => {
     win,
   });
 
+  const initRenderer = () => win.webContents.send('initRenderer', getInitialSettings())
+
   if (win.webContents.isLoading()) {
-    win.webContents.on('did-finish-load', () => win.webContents.send('initRenderer'));
+    win.webContents.on('did-finish-load', initRenderer);
   } else {
-    win.webContents.send('initRenderer');
+    initRenderer();
   }
 
   win.focus();

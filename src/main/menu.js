@@ -5,12 +5,9 @@ import { Menu } from 'electron';
 import { copyMenuItem, pasteMenuItem, selectAllMenuItem } from './nvim/features/copyPaste';
 import { zoomInMenuItem, zoomOutMenuItem, actualSizeMenuItem } from './nvim/features/zoom'
 import { closeWindowMenuItem } from './nvim/features/closeWindow'
+import { toggleFullScreenMenuItem } from './nvim/features/fullScreen'
 
 let menu;
-
-const toggleFullScreen = (_item, win) => {
-  win.webContents.send('toggleFullScreen');
-};
 
 const createMenu = ({ createWindow, openFile, installCli }) => {
   const menuTemplate = [
@@ -87,7 +84,7 @@ const createMenu = ({ createWindow, openFile, installCli }) => {
         {
           label: 'Toggle Full Screen',
           accelerator: 'Cmd+Ctrl+F',
-          click: toggleFullScreen,
+          click: toggleFullScreenMenuItem,
         },
         {
           label: 'Actual Size',

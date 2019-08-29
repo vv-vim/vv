@@ -13,13 +13,10 @@ const showWindow = ({ win, nvim }) => {
       if (showWindowTimeout) clearTimeout(showWindowTimeout);
       win.show();
       nvim.command('doautocmd <nomodeline> GUIEnter');
-      // store.set('initialSettings', initialSettings);
-      // window.addEventListener('resize', debouncedResize);
     }
   };
 
   nvim.on('vv:vim_enter', () => {
-    nvim.on('redraw', () => { console.log('redraw') });
     nvim.on('redraw', debouncedShowWindow);
   });
 

@@ -1,6 +1,5 @@
 import debounce from 'lodash/debounce';
 
-import store from '../lib/store';
 // import log from '../lib/log';
 
 import nvim from './nvim/api';
@@ -10,8 +9,6 @@ import initScreen, { screenCoords } from './nvim/screen';
 import initKeyboard from './nvim/input/keyboard';
 import initMouse from './nvim/input/mouse';
 import initInsertSymbols from './nvim/features/insertSymbols';
-
-import initFullScreen from './nvim/features/fullScreen';
 
 const {
   remote: {
@@ -26,7 +23,6 @@ const currentWindow = getCurrentWindow();
 let cols;
 let rows;
 let screen;
-let fullScreen;
 
 let uiAttached = false;
 
@@ -35,27 +31,7 @@ let windowTop;
 let windowWidth;
 let windowHeight;
 
-let isWindowShown = false;
-
-// Store initial settings to make window open faster. When window is shown current settings are
-// stored to initialSettings. And next time when new window is created we use these settings by
-// default and change it if settings from vim config are changed.
-let newSettings = store.get('initialSettings') || {};
-let initialSettings;
 const settings = {};
-
-const defaultSettings = {
-  fullscreen: 0,
-  simplefullscreen: 1,
-  bold: 1,
-  italic: 1,
-  underline: 1,
-  undercurl: 1,
-  fontfamily: 'monospace',
-  fontsize: 12,
-  lineheight: 1.25,
-  letterspacing: 0,
-};
 
 const resize = () => {
   const [newCols, newRows] = screenCoords(...currentWindow.getContentSize(), true);
@@ -71,18 +47,6 @@ const resize = () => {
     }
   }
 };
-
-const debouncedResize = debounce(resize, 100);
-
-// const showWindow = () => {
-//   if (!isWindowShown) {
-//     currentWindow.show();
-//     isWindowShown = true;
-//     nvim.command('doautocmd <nomodeline> GUIEnter');
-//     store.set('initialSettings', initialSettings);
-//     window.addEventListener('resize', debouncedResize);
-//   }
-// };
 
 const updateWindowSize = () => {
   if (!settings.fullscreen) {
@@ -133,9 +97,6 @@ const handleSet = {
     windowTop = top;
   },
 
-  fullscreen: value => fullScreen.fullscreen(value),
-  simplefullscreen: value => fullScreen.simplefullscreen(value),
-
   bold: value => screen.vv_bold(value),
   italic: value => screen.vv_italic(value),
   underline: value => screen.vv_underline(value),
@@ -146,57 +107,31 @@ const handleSet = {
   letterspacing: value => screen.vv_letterspacing(value),
 };
 
-const applyAllSettings = () => {
-  let hasChanges = false;
+const updateSettings = (newSettings) => {
   Object.keys(newSettings).forEach(key => {
-    if (settings[key] !== newSettings[key] && handleSet[key]) {
-      handleSet[key](newSettings[key]);
-      settings[key] = newSettings[key];
-      hasChanges = true;
+    settings[key] = newSettings[key];
+    if (handleSet[key]) {
+      handleSet[key](settings[key]);
     }
   });
-
-  if (!isWindowShown && initialSettings) {
-    initialSettings = {
-      ...initialSettings,
-      ...newSettings,
-    }
-  }
-
-  if (hasChanges || Object.keys(newSettings).length === 0) {
-    updateWindowSize();
-  }
-  newSettings = {};
+  updateWindowSize();
 };
 
-const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
-
-const applySetting = ([option, props]) => {
-  if (props !== null) {
-    newSettings[option] = props;
-    debouncedApplyAllSettings();
-  }
-}
-
-const initRenderer = async (_event) => {
+const initRenderer = async (_event, settings) => {
   ({ x: windowLeft, y: windowTop, width: windowWidth, height: windowHeight} = currentWindow.getBounds())
   nvim.initApi();
 
-  await nvim.send('subscribe', 'vv:vim_enter');
-  nvim.on('vv:set', applySetting);
-
   screen = initScreen('screen');
-  fullScreen = initFullScreen();
-
-  applyAllSettings();
-  initialSettings = {};
-  newSettings = defaultSettings;
 
   initKeyboard();
   initMouse();
   initInsertSymbols();
 
-  window.addEventListener('resize', debouncedResize);
+  updateSettings(settings);
+
+  ipcRenderer.on('updateSettings', (_e, settings) => updateSettings(settings));
+
+  window.addEventListener('resize', debounce(resize, 100));
 };
 
 ipcRenderer.on('initRenderer', initRenderer);
