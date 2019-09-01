@@ -2,7 +2,7 @@
 const path = require('path');
 const eslint = require('eslint');
 
-const configFile = path.join(process.cwd(), '.eslintrc');
+const configFile = path.join(__dirname, '.eslintrc');
 const cliEngine = new eslint.CLIEngine({ useEslintrc: false, configFile });
 
 const config = cliEngine.getConfigForFile();

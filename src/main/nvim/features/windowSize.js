@@ -1,7 +1,7 @@
 import { screen } from 'electron';
 import { getInitialSettings, getDefaultSettings, onChangeSettings } from '../settings';
 
-const initWindowSize = ({ win }) => {
+const initWindowSize = ({ win, args }) => {
   let bounds = {
     x: null,
     y: null,
@@ -59,7 +59,7 @@ const initWindowSize = ({ win }) => {
     }
   };
 
-  updateWindowSize(getInitialSettings(win), getDefaultSettings(win));
+  updateWindowSize(getInitialSettings(win, args), getDefaultSettings(win));
   onChangeSettings(win, updateWindowSize);
 };
 
