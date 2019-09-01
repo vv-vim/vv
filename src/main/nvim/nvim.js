@@ -10,7 +10,7 @@ import quit from './features/quit';
 import windowTitle from './features/windowTitle';
 import zoom from './features/zoom';
 import reloadChanged from './features/reloadChanged';
-import fullscreen from './features/fullscreen';
+import fullscreen from './features/fullScreen';
 import windowSize from './features/windowSize';
 
 import settings from './settings';

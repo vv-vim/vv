@@ -3,9 +3,9 @@ import { Menu } from 'electron';
 // import { handleCloseWindow } from './nvim/features/closeWindow';
 
 import { copyMenuItem, pasteMenuItem, selectAllMenuItem } from './nvim/features/copyPaste';
-import { zoomInMenuItem, zoomOutMenuItem, actualSizeMenuItem } from './nvim/features/zoom'
-import { closeWindowMenuItem } from './nvim/features/closeWindow'
-import { toggleFullScreenMenuItem } from './nvim/features/fullScreen'
+import { zoomInMenuItem, zoomOutMenuItem, actualSizeMenuItem } from './nvim/features/zoom';
+import { closeWindowMenuItem } from './nvim/features/closeWindow';
+import { toggleFullScreenMenuItem } from './nvim/features/fullScreen';
 
 let menu;
 
