@@ -38,10 +38,10 @@ const initNvim = ({ args, cwd, win }) => {
     deleteNvimByWindow(win);
   });
 
-  settings({ win, nvim });
+  settings({ win, nvim, args });
 
   fullscreen({ win, nvim });
-  windowSize({ win });
+  windowSize({ win, args });
 
   quit({ win, nvim });
   windowTitle({ win, nvim });

@@ -99,7 +99,7 @@ const createWindow = (args = [], newCwd) => {
     win,
   });
 
-  const initRenderer = () => win.webContents.send('initRenderer', getInitialSettings(win));
+  const initRenderer = () => win.webContents.send('initRenderer', getInitialSettings(win, args));
 
   if (win.webContents.isLoading()) {
     win.webContents.on('did-finish-load', initRenderer);
@@ -110,7 +110,7 @@ const createWindow = (args = [], newCwd) => {
   win.focus();
   windows.push(win);
 
-  if (isDev()) openDeveloperTools(win);
+  // if (isDev()) openDeveloperTools(win);
 
   setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
 

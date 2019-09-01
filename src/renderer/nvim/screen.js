@@ -8,9 +8,13 @@ import { resize } from './resize';
 
 import nvim from './nvim';
 
+import getColor from '../../lib/getColor';
+
 // import log from '../../lib/log';
 
 const [body] = document.getElementsByTagName('body');
+
+let vimEnter = false;
 
 let screenContainer;
 
@@ -33,9 +37,9 @@ let fontSize = 12;
 let lineHeight = 1.25;
 let letterSpacing = 0;
 
-const defaultFgColor = 'rgb(255,255,255)';
-const defaultBgColor = 'rgb(0,0,0)';
-const defaultSpColor = 'rgb(255,255,255)';
+let defaultFgColor = 'rgb(255,255,255)';
+let defaultBgColor = 'rgb(0,0,0)';
+let defaultSpColor = 'rgb(255,255,255)';
 
 let cols;
 let rows;
@@ -241,11 +245,6 @@ const printChar = (i, j, char, hlId) => {
   }
 };
 
-const getColor = (c, defaultColor = null) => {
-  if (typeof c !== 'number' || c === -1) return defaultColor;
-  return `rgb(${(c >> 16) & 0xff},${(c >> 8) & 0xff},${c & 0xff})`; // eslint-disable-line no-bitwise
-};
-
 const clearCursor = () => {
   cursorContext.clearRect(0, 0, charWidth, charHeight);
 };
@@ -340,6 +339,22 @@ const optionSet = {
   },
 };
 
+const setDefaultHl = ({ bgColor, fgColor, spColor }) => {
+  const calculated = {
+    bgColor,
+    fgColor,
+    spColor,
+    hiItalic: false,
+    hiBold: false,
+    hiUnderline: false,
+    hiUndercurl: false,
+  };
+  highlightTable[0] = {
+    calculated,
+  };
+  body.style.background = calculated.bgColor;
+};
+
 const recalculateHighlightTable = () => {
   if (highlightTable[0]) {
     Object.keys(highlightTable).forEach(id => {
@@ -397,7 +412,7 @@ const requireRedrawAll = () => {
     if (chars[i]) {
       for (let j = 0; j <= cols; j += 1) {
         if (chars[i][j] && isFinite(chars[i][j].hlId)) {
-          const { foreground, background, special } = highlightTable[chars[i][j].hlId].value;
+          const { foreground, background, special } = highlightTable[chars[i][j].hlId].value || {};
           if (!chars[i][j].hlId || !foreground || !background || !special) {
             chars[i][j].needsRedraw = true;
           }
@@ -469,29 +484,17 @@ const redrawCmd = {
   },
 
   default_colors_set: (...p) => {
+    if (!vimEnter) return;
     const props = p[p.length - 1];
     const [foreground, background, special] = props;
-    const calculated = {
+    setDefaultHl({
       bgColor: getColor(background, defaultBgColor),
       fgColor: getColor(foreground, defaultFgColor),
       spColor: getColor(special, defaultSpColor),
-      hiItalic: false,
-      hiBold: false,
-      hiUnderline: false,
-      hiUndercurl: false,
-    };
-    body.style.background = calculated.bgColor;
-    highlightTable[0] = {
-      value: {
-        foreground,
-        background,
-        special,
-      },
-      calculated,
-    };
+    });
     recalculateHighlightTable();
     requireRedrawAll();
-    context.fillStyle = calculated.bgColor;
+    context.fillStyle = highlightTable[0].calculated.bgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
 
@@ -615,7 +618,6 @@ const redrawCmd = {
   },
 };
 
-
 const handleSet = {
   fontfamily: newFontFamily => {
     fontFamily = newFontFamily;
@@ -648,9 +650,21 @@ const handleSet = {
   undercurl: value => {
     showUndercurl = value;
   },
+
+  defaultbgcolor: value => {
+    defaultBgColor = value;
+  },
+
+  defaultfgcolor: value => {
+    defaultFgColor = value;
+  },
+
+  defaultspcolor: value => {
+    defaultSpColor = value;
+  },
 };
 
-const redraw = (args) => {
+const redraw = args => {
   ticker.start();
   for (let i = 0; i < args.length; i += 1) {
     const [cmd, ...props] = args[i];
@@ -670,21 +684,41 @@ const setScale = () => {
   screenContainer.style.height = `${scale * 100}%`;
 };
 
-const updateSettings = settings => {
-  let isChanged = false;
+const updateSettings = (settings, isInitial = false) => {
+  let requireRedraw = false;
+  const requireRedrawProps = [
+    'fontfamily',
+    'fontsize',
+    'letterspacing',
+    'lineheight',
+    'bold',
+    'italic',
+    'underline',
+    'undercurl',
+  ];
+
   Object.keys(settings).forEach(key => {
     if (handleSet[key]) {
-      isChanged = true;
+      requireRedraw = requireRedraw || requireRedrawProps.includes(key);
       handleSet[key](settings[key]);
     }
   });
-  if (isChanged) {
+
+  setDefaultHl({
+    bgColor: defaultBgColor,
+    fgColor: defaultFgColor,
+    spColor: defaultSpColor,
+  });
+
+  if (!isInitial && requireRedraw) {
     measureCharSize();
     resize(true);
   }
 };
 
 const screen = (containerId, settings) => {
+  updateSettings(settings, true);
+
   screenContainer = document.getElementById(containerId);
   if (!screenContainer) return false;
 
@@ -707,7 +741,11 @@ const screen = (containerId, settings) => {
     canvasEl.style.opacity = 1;
   });
 
-  updateSettings(settings);
+  measureCharSize();
+  resize(true);
+
+  nvim.on('vv:vim_enter', () => (vimEnter = true));
+
   ipcRenderer.on('updateSettings', (_e, settings) => updateSettings(settings));
 
   return redrawCmd;

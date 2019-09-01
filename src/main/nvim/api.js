@@ -87,6 +87,7 @@ const api = ({ args, cwd }) => {
     uiTryResize: commandFactory('ui_try_resize'),
     uiAttach: commandFactory('ui_attach'),
     subscribe: commandFactory('subscribe'),
+    getHlByName: commandFactory('get_hl_by_name'),
     getShortMode,
   };
 
