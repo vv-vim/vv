@@ -56,9 +56,12 @@
     "electron-builder": "^21.1",
     "eslint": "^6.2",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-config-prettier": "^4.0.0",
+    "eslint-config-prettier": "^6.1.0",
     "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-prettier": "^3.1.0",
     "html-webpack-plugin": "^3.2.0",
+    "husky": "^3.0.5",
+    "lint-staged": ">=8",
     "prettier": "^1.16.4",
     "uglify-es": "3.3.9",
     "webpack": "^4.9.1",
@@ -72,5 +75,20 @@
     "lodash": "^4.17.15",
     "msgpack-lite": "^0.1.26",
     "pixi.js": "^5.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,css,json,md}": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
   }
 }
