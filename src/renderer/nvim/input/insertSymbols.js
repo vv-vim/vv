@@ -34,7 +34,7 @@ const initInsertSymbols = () => {
     }
   });
 
-  nvim.on('redraw', (args) => {
+  nvim.on('redraw', args => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (cmd === 'mode_change') {

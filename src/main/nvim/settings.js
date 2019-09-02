@@ -93,7 +93,7 @@ const initSettings = ({ win, nvim, args }) => {
 
   const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
 
-  const applySetting = (_method, [option, props]) => {
+  const applySetting = ([option, props]) => {
     if (props !== null) {
       newSettings[option] = props;
       debouncedApplyAllSettings();
