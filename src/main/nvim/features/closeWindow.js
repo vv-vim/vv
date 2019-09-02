@@ -12,4 +12,3 @@ export const closeWindowMenuItem = async (_item, win) => {
     }
   }
 };
-

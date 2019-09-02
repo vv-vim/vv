@@ -69,13 +69,6 @@ const api = ({ args, cwd }) => {
     });
   };
 
-  // Fetch current mode from nvim, leaves only first letter to match groups of modes.
-  // https://neovim.io/doc/user/eval.html#mode()
-  const getShortMode = async () => {
-    const { mode } = await nvim.getMode();
-    return mode.replace('CTRL-', '')[0];
-  };
-
   const commandFactory = name => (...params) => send(null, name, ...params);
 
   const nvim = {
@@ -88,7 +81,13 @@ const api = ({ args, cwd }) => {
     uiAttach: commandFactory('ui_attach'),
     subscribe: commandFactory('subscribe'),
     getHlByName: commandFactory('get_hl_by_name'),
-    getShortMode,
+  };
+
+  // Fetch current mode from nvim, leaves only first letter to match groups of modes.
+  // https://neovim.io/doc/user/eval.html#mode()
+  nvim.getShortMode = async () => {
+    const { mode } = await nvim.getMode();
+    return mode.replace('CTRL-', '')[0];
   };
 
   const on = (method, callback) => {
@@ -103,7 +102,7 @@ const api = ({ args, cwd }) => {
   };
 
   const off = (method, callback) => {
-    subscriptions = subscriptions.filter(([m, c]) => !(method === m && callback === c))
+    subscriptions = subscriptions.filter(([m, c]) => !(method === m && callback === c));
   };
 
   proc = startNvimProcess({ args, cwd });
@@ -132,10 +131,9 @@ const api = ({ args, cwd }) => {
       const [method, params] = rest;
       subscriptions.forEach(([m, c]) => {
         if (m === method) {
-          c(params)
+          c(params);
         }
       });
-
     }
   });
 

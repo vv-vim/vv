@@ -11,7 +11,7 @@ import { getInitialSettings } from './nvim/settings';
 
 import isDev from '../lib/isDev';
 
-import initNvim from './nvim/nvim.js';
+import initNvim from './nvim/nvim';
 
 // import log from '../lib/log';
 

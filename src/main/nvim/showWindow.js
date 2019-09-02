@@ -4,19 +4,19 @@ const showWindow = ({ win, nvim }) => {
   let showWindowTimeout = null;
   let isVisible = false;
 
-  const debouncedShowWindow = debounce(() => {
-    nvim.off('redraw', debouncedShowWindow);
-    showWindow();
-  }, 10);
-
-  const showWindow = () => {
+  const doShowWindow = () => {
     if (showWindowTimeout) clearTimeout(showWindowTimeout);
-    if (!isVisible){
+    if (!isVisible) {
       win.show();
       nvim.command('doautocmd <nomodeline> GUIEnter');
       isVisible = true;
     }
   };
+
+  const debouncedShowWindow = debounce(() => {
+    nvim.off('redraw', debouncedShowWindow);
+    doShowWindow();
+  }, 10);
 
   nvim.on('vv:vim_enter', () => {
     nvim.on('redraw', debouncedShowWindow);
@@ -24,7 +24,7 @@ const showWindow = ({ win, nvim }) => {
 
   // If nvim has startup errors or swapfile warning it will not trigger VimEnter
   // until user action. If that happens, show window anyway.
-  showWindowTimeout = setTimeout(showWindow, 2000);
+  showWindowTimeout = setTimeout(doShowWindow, 2000);
 };
 
 export default showWindow;
