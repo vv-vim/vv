@@ -744,9 +744,9 @@ const screen = (containerId, settings) => {
   measureCharSize();
   resize(true);
 
-  nvim.on('vv:vim_enter', () => (vimEnter = true));
+  nvim.on('vv:vim_enter', () => { vimEnter = true; });
 
-  ipcRenderer.on('updateSettings', (_e, settings) => updateSettings(settings));
+  ipcRenderer.on('updateSettings', updateSettings);
 
   return redrawCmd;
 };

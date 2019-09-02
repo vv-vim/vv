@@ -132,7 +132,7 @@ const api = ({ args, cwd }) => {
       const [method, params] = rest;
       subscriptions.forEach(([m, c]) => {
         if (m === method) {
-          c(method, params)
+          c(params)
         }
       });
 

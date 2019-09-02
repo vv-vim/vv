@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 const initWindowTitle = ({ nvim, win }) => {
-  nvim.on('redraw', args => {
+  nvim.on('redraw', (args) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (cmd === 'set_title') {
@@ -16,8 +16,13 @@ const initWindowTitle = ({ nvim, win }) => {
     }
   });
 
-  // title and filename don't fire on startup, doing it manually
-  nvim.command('set title');
+  nvim.command('set title'); // Enable title
+  nvim.command('set titlestring&'); // Set default titlestring
+
+  // Send current file name to client on buffer enter
+  nvim.command('autocmd BufEnter * call rpcnotify(0, "vv:filename", expand(\'%:p\'))');
+
+  // Filename don't fire on startup, doing it manually
   nvim.command('call rpcnotify(0, "vv:filename", expand("%:p"))');
 };
 

@@ -18,6 +18,8 @@ import initNvim from './nvim/nvim.js';
 const windows = [];
 let currentWindow;
 
+const filterArgs = args => args.filter(a => !['--inspect'].includes(a));
+
 const cliArgs = args => (args || process.argv).slice(isDev(2, 1));
 
 const openDeveloperTools = win => {
@@ -94,7 +96,7 @@ const createWindow = (args = [], newCwd) => {
   }
 
   initNvim({
-    args,
+    args: filterArgs(args),
     cwd,
     win,
   });
@@ -110,7 +112,7 @@ const createWindow = (args = [], newCwd) => {
   win.focus();
   windows.push(win);
 
-  // if (isDev()) openDeveloperTools(win);
+  if (args.includes('--inspect')) openDeveloperTools(win);
 
   setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
 

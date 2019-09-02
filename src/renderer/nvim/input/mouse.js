@@ -94,6 +94,8 @@ const mousemove = event => {
 const handleMousemove = throttle(mousemove, 50);
 
 const initMouse = () => {
+  nvim.command('set mouse=a'); // Enable mouse events
+
   document.addEventListener('mousedown', handleMousedown);
   document.addEventListener('mouseup', handleMouseup);
   document.addEventListener('mousemove', handleMousemove);

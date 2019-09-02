@@ -49,7 +49,7 @@ const initReloadChanged = ({ nvim, win }) => {
     nvim.command(`VVenableReloadChanged ${enabled ? '1' : '0'}`);
   };
 
-  nvim.on('vv:file_changed', (args) => {
+  nvim.on('vv:file_changed', args => {
     if (enabled) {
       const [buffer] = args;
       if (!changedBuffers[buffer.bufnr]) {
@@ -69,11 +69,14 @@ const initReloadChanged = ({ nvim, win }) => {
 
   win.on('focus', () => {
     if (enabled) {
-      checktimeAll();
+      // The page will be blank on focus without timeout.
+      setTimeout(() => checktimeAll(), 10);
     }
   });
 
-  enable();
+  nvim.on('vv:vim_enter', () => {
+    enable();
+  });
 };
 
 export default initReloadChanged;
