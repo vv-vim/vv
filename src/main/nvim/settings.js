@@ -31,11 +31,15 @@ const customConfig = (args = []) => args.indexOf('-u') !== -1;
 // Store initial settings to make window open faster. When window is shown current settings are
 // stored to initialSettings. And next time when new window is created we use these settings by
 // default and change it if settings from vim config are changed.
+let initialSettingsCache;
 export const getInitialSettings = (win, args = []) => {
   if (customConfig(args)) {
     return getDefaultSettings(win);
   }
-  return store.get('initialSettings') || getDefaultSettings(win);
+  if (!initialSettingsCache) {
+    initialSettingsCache = store.get('initialSettings');
+  }
+  return initialSettingsCache || getDefaultSettings(win);
 };
 
 const onChangeSettingsCallbacks = {};
@@ -77,6 +81,7 @@ const initSettings = ({ win, nvim, args }) => {
         return result;
       }, {});
       store.set('initialSettings', settings);
+      initialSettingsCache = settings;
       initialSettings = null;
     }
 
