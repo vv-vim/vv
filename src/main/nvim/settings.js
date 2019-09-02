@@ -3,8 +3,8 @@ import debounce from 'lodash/debounce';
 import store from '../../lib/store';
 import getColor from '../../lib/getColor';
 
-export const getDefaultSettings = (win) => {
-  const { x: windowleft, y: windowtop, width: windowwidth, height: windowheight} = win.getBounds();
+export const getDefaultSettings = win => {
+  const { x: windowleft, y: windowtop, width: windowwidth, height: windowheight } = win.getBounds();
   return {
     fullscreen: 0,
     simplefullscreen: 1,
@@ -34,10 +34,9 @@ const customConfig = (args = []) => args.indexOf('-u') !== -1;
 export const getInitialSettings = (win, args = []) => {
   if (customConfig(args)) {
     return getDefaultSettings(win);
-  } else {
-    return store.get('initialSettings') || getDefaultSettings(win);
   }
-}
+  return store.get('initialSettings') || getDefaultSettings(win);
+};
 
 const onChangeSettingsCallbacks = {};
 
@@ -46,11 +45,11 @@ export const onChangeSettings = (win, callback) => {
     onChangeSettingsCallbacks[win.webContents.id] = [];
   }
   onChangeSettingsCallbacks[win.webContents.id].push(callback);
-}
+};
 
 const initSettings = ({ win, nvim, args }) => {
   let initialSettings = getInitialSettings(win, args);
-  let settings = getDefaultSettings(win);
+  const settings = getDefaultSettings(win);
 
   let newSettings = {};
 
@@ -68,17 +67,15 @@ const initSettings = ({ win, nvim, args }) => {
       settings.defaultfgcolor = getColor(highlight.foreground, initialSettings.defaultfgcolor);
       settings.defaultspcolor = getColor(highlight.foreground, initialSettings.defaultfgcolor);
 
-      newSettings = Object.keys(settings).reduce(
-        (result, key) => {
-          if (initialSettings[key] !== settings[key]) {
-            return {
-              ...result,
-              [key]: settings[key],
-            }
-          }
-          return result;
+      newSettings = Object.keys(settings).reduce((result, key) => {
+        if (initialSettings[key] !== settings[key]) {
+          return {
+            ...result,
+            [key]: settings[key],
+          };
         }
-        , {});
+        return result;
+      }, {});
       store.set('initialSettings', settings);
       initialSettings = null;
     }
@@ -98,7 +95,7 @@ const initSettings = ({ win, nvim, args }) => {
       newSettings[option] = props;
       debouncedApplyAllSettings();
     }
-  }
+  };
 
   nvim.on('vv:set', applySetting);
 };

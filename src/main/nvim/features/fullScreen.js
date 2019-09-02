@@ -13,7 +13,7 @@ const initFullScreen = ({ win }) => {
 
   const handleSet = {
     fullscreen: value => {
-      const boolValue = !!parseInt(value, 10)
+      const boolValue = !!parseInt(value, 10);
       if (simpleFullScreen) {
         win.setSimpleFullScreen(boolValue);
       } else {
@@ -36,7 +36,7 @@ const initFullScreen = ({ win }) => {
     },
   };
 
-  onChangeSettings(win, (settings) => {
+  onChangeSettings(win, settings => {
     Object.keys(settings).forEach(key => {
       if (handleSet[key]) {
         handleSet[key](settings[key]);

@@ -3,8 +3,7 @@ import isFinite from 'lodash/isFinite';
 
 import * as PIXI from 'pixi.js';
 
-import { ipcRenderer } from '../preloaded/electron';
-import { resize } from './resize';
+import { remote, ipcRenderer } from '../preloaded/electron';
 
 import nvim from './nvim';
 
@@ -353,6 +352,8 @@ const setDefaultHl = ({ bgColor, fgColor, spColor }) => {
     calculated,
   };
   body.style.background = calculated.bgColor;
+  const win = remote.getCurrentWindow();
+  win.setBackgroundColor(calculated.bgColor);
 };
 
 const recalculateHighlightTable = () => {
@@ -684,6 +685,30 @@ const setScale = () => {
   screenContainer.style.height = `${scale * 100}%`;
 };
 
+export const screenCoords = (width, height) => {
+  return [Math.floor((width * scale) / charWidth), Math.floor((height * scale) / charHeight)];
+};
+
+const resize = (forceRedraw = false) => {
+  const { getContentSize } = remote.getCurrentWindow();
+  const [newCols, newRows] = screenCoords(...getContentSize());
+  if (newCols !== cols || newRows !== rows || forceRedraw) {
+    cols = newCols;
+    rows = newRows;
+    nvim.uiTryResize(cols, rows);
+  }
+};
+
+const uiAttach = () => {
+  const { getContentSize } = remote.getCurrentWindow();
+  const [newCols, newRows] = screenCoords(...getContentSize());
+  cols = newCols;
+  rows = newRows;
+
+  nvim.uiAttach(cols, rows, { ext_linegrid: true });
+  window.addEventListener('resize', debounce(() => resize(), 50));
+};
+
 const updateSettings = (settings, isInitial = false) => {
   let requireRedraw = false;
   const requireRedrawProps = [
@@ -742,17 +767,15 @@ const screen = (containerId, settings) => {
   });
 
   measureCharSize();
-  resize(true);
+  uiAttach(true);
 
-  nvim.on('vv:vim_enter', () => { vimEnter = true; });
+  nvim.on('vv:vim_enter', () => {
+    vimEnter = true;
+  });
 
   ipcRenderer.on('updateSettings', updateSettings);
 
   return redrawCmd;
-};
-
-export const screenCoords = (width, height) => {
-  return [Math.floor((width * scale) / charWidth), Math.floor((height * scale) / charHeight)];
 };
 
 export default screen;

@@ -6,9 +6,7 @@ const mainConfig = require('./webpack.main.config');
 
 const prod = {
   mode: 'production',
-  plugins: [
-    new UglifyJSPlugin(),
-  ],
+  plugins: [new UglifyJSPlugin()],
 };
 
 const rendererConfigProd = merge(rendererConfig, prod);

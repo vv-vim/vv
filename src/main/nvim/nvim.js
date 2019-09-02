@@ -1,10 +1,6 @@
 import { ipcMain } from 'electron';
 
-import {
-  getNvimByWindow,
-  setNvimByWindow,
-  deleteNvimByWindow,
-} from './nvimByWindow';
+import { getNvimByWindow, setNvimByWindow, deleteNvimByWindow } from './nvimByWindow';
 
 import quit from './features/quit';
 import windowTitle from './features/windowTitle';
