@@ -1,4 +1,4 @@
-import { ipcRenderer } from '../preloaded/electron';
+import { ipcRenderer } from './preloaded/electron';
 
 let requestId = 0;
 const requestPromises = {};

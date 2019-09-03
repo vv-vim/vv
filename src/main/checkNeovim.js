@@ -1,5 +1,5 @@
 import { app, dialog, shell } from 'electron';
-import nvimVersion from '../lib/nvimVersion';
+import nvimVersion from './lib/nvimVersion';
 
 const checkNeovim = () => {
   const version = nvimVersion();

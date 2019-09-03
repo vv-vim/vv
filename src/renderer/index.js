@@ -1,12 +1,12 @@
 // import log from '../lib/log';
 
-import { initNvim } from './nvim/nvim';
+import { initNvim } from './nvim';
 
-import initScreen from './nvim/screen';
+import initScreen from './screen';
 
-import initKeyboard from './nvim/input/keyboard';
-import initMouse from './nvim/input/mouse';
-import initInsertSymbols from './nvim/input/insertSymbols';
+import initKeyboard from './input/keyboard';
+import initMouse from './input/mouse';
+import initInsertSymbols from './input/insertSymbols';
 
 import { ipcRenderer } from './preloaded/electron';
 

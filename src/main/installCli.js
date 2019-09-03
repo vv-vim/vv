@@ -1,6 +1,6 @@
 import { dialog } from 'electron';
 import { execSync } from 'child_process';
-import which from '../lib/which';
+import which from './lib/which';
 
 const showInstallCliDialog = () =>
   dialog.showMessageBox({

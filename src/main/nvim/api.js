@@ -9,8 +9,8 @@ import { encode } from 'msgpack-lite';
 
 import debounce from 'lodash/debounce';
 
-import shellEnv from '../../lib/shellEnv';
-import nvimCommand from '../../lib/nvimCommand';
+import shellEnv from '../lib/shellEnv';
+import nvimCommand from '../lib/nvimCommand';
 import isDev from '../../lib/isDev';
 
 const vvSourceCommand = () =>
