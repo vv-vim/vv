@@ -74,7 +74,10 @@
     "electron-store": "^4.0",
     "lodash": "^4.17.15",
     "msgpack-lite": "^0.1.26",
-    "pixi.js": "^5.1"
+    "@pixi/app": "^5.1.2",
+    "@pixi/core": "^5.1.2",
+    "@pixi/ticker": "^5.1.1",
+    "@pixi/sprite": "^5.1.2"
   },
   "husky": {
     "hooks": {

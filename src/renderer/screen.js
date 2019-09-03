@@ -1,15 +1,15 @@
 import debounce from 'lodash/debounce';
 import isFinite from 'lodash/isFinite';
 
-import * as PIXI from 'pixi.js';
+import * as PIXI from './lib/pixi';
 
-import { remote, ipcRenderer } from '../preloaded/electron';
+import { remote, ipcRenderer } from './preloaded/electron';
 
 import nvim from './nvim';
 
-import getColor from '../../lib/getColor';
+import getColor from '../lib/getColor';
 
-// import log from '../../lib/log';
+// import log from './../lib/log';
 
 const [body] = document.getElementsByTagName('body');
 
@@ -510,7 +510,7 @@ const redrawCmd = {
 
   grid_line: (...props) => {
     for (let gridKey = 0, gridLength = props.length; gridKey < gridLength; gridKey += 1) {
-      const [_grid, row, col, cells] = props[gridKey]; // eslint-disable-line no-unused-vars
+      const [_grid, row, col, cells] = props[gridKey];
 
       let lineLength = 0;
       let currentHlId;
@@ -773,7 +773,7 @@ const screen = (containerId, settings) => {
     vimEnter = true;
   });
 
-  ipcRenderer.on('updateSettings', updateSettings);
+  ipcRenderer.on('updateSettings', (_, s) => updateSettings(s));
 
   return redrawCmd;
 };

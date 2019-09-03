@@ -1,6 +1,6 @@
 import debounce from 'lodash/debounce';
 
-import store from '../../lib/store';
+import store from '../lib/store';
 import getColor from '../../lib/getColor';
 
 export const getDefaultSettings = win => {

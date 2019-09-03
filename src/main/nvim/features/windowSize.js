@@ -1,13 +1,8 @@
 import { screen } from 'electron';
-import { getInitialSettings, getDefaultSettings, onChangeSettings } from '../settings';
+import { getInitialSettings, onChangeSettings } from '../settings';
 
 const initWindowSize = ({ win, args }) => {
-  const bounds = {
-    x: null,
-    y: null,
-    width: null,
-    height: null,
-  };
+  let bounds = {};
 
   const set = {
     windowwidth: w => {
@@ -45,16 +40,21 @@ const initWindowSize = ({ win, args }) => {
   };
 
   const updateWindowSize = (settings, allSettings) => {
+    bounds = {};
     const { fullscreen } = allSettings || settings;
-    ['windowwidth', 'windowheight', 'windowleft', 'windowtop'].forEach(key => {
-      set[key](settings[key] || allSettings[key]);
-    });
     if (!fullscreen) {
-      win.setBounds(bounds, false);
+      ['windowwidth', 'windowheight', 'windowleft', 'windowtop'].forEach(key => {
+        if (settings[key]) {
+          set[key](settings[key]);
+        }
+      });
+      if (Object.keys(bounds).length > 0) {
+        win.setBounds(bounds);
+      }
     }
   };
 
-  updateWindowSize(getInitialSettings(win, args), getDefaultSettings(win));
+  updateWindowSize(getInitialSettings(win, args));
   onChangeSettings(win, updateWindowSize);
 };
 
