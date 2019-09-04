@@ -101,7 +101,7 @@ const createWindow = (args = [], newCwd) => {
     win,
   });
 
-  const initRenderer = () => win.webContents.send('initRenderer', getInitialSettings(win, args));
+  const initRenderer = () => win.webContents.send('initRenderer', getInitialSettings(args));
 
   if (win.webContents.isLoading()) {
     win.webContents.on('did-finish-load', initRenderer);

@@ -3,8 +3,7 @@ import debounce from 'lodash/debounce';
 import store from '../lib/store';
 import getColor from '../../lib/getColor';
 
-export const getDefaultSettings = win => {
-  const { x: windowleft, y: windowtop, width: windowwidth, height: windowheight } = win.getBounds();
+export const getDefaultSettings = () => {
   return {
     fullscreen: 0,
     simplefullscreen: 1,
@@ -16,10 +15,6 @@ export const getDefaultSettings = win => {
     fontsize: 12,
     lineheight: 1.25,
     letterspacing: 0,
-    windowleft,
-    windowtop,
-    windowwidth,
-    windowheight,
     defaultfgcolor: 'rgb(255,255,255)',
     defaultbgcolor: 'rgb(0,0,0)',
     defaultspcolor: 'rgb(255,255,255)',
@@ -32,14 +27,14 @@ const customConfig = (args = []) => args.indexOf('-u') !== -1;
 // stored to initialSettings. And next time when new window is created we use these settings by
 // default and change it if settings from vim config are changed.
 let initialSettingsCache;
-export const getInitialSettings = (win, args = []) => {
+export const getInitialSettings = (args = []) => {
   if (customConfig(args)) {
-    return getDefaultSettings(win);
+    return getDefaultSettings();
   }
   if (!initialSettingsCache) {
     initialSettingsCache = store.get('initialSettings');
   }
-  return initialSettingsCache || getDefaultSettings(win);
+  return initialSettingsCache || getDefaultSettings();
 };
 
 const onChangeSettingsCallbacks = {};
@@ -52,8 +47,8 @@ export const onChangeSettings = (win, callback) => {
 };
 
 const initSettings = ({ win, nvim, args }) => {
-  let initialSettings = getInitialSettings(win, args);
-  const settings = getDefaultSettings(win);
+  let initialSettings = getInitialSettings(args);
+  const settings = getDefaultSettings();
 
   let newSettings = {};
 
@@ -64,6 +59,8 @@ const initSettings = ({ win, nvim, args }) => {
       }
     });
 
+    // If we have initial settings, store current settings.
+    // newSetting will be only those that different from initialSettings.
     // Don't save settings if it is custom config
     if (initialSettings && !customConfig(args)) {
       const highlight = await nvim.getHlByName('Normal', true);

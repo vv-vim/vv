@@ -6,7 +6,6 @@ import quit from './features/quit';
 import windowTitle from './features/windowTitle';
 import zoom from './features/zoom';
 import reloadChanged from './features/reloadChanged';
-import fullscreen from './features/fullScreen';
 import windowSize from './features/windowSize';
 
 import settings from './settings';
@@ -36,7 +35,6 @@ const initNvim = ({ args, cwd, win }) => {
 
   settings({ win, nvim, args });
 
-  fullscreen({ win, nvim });
   windowSize({ win, args });
 
   quit({ win, nvim });
