@@ -58,6 +58,7 @@ const skip = key =>
     Control: true,
     Alt: true,
     Meta: true,
+    CapsLock: true,
   }[key]);
 
 export const modifierPrefix = ({ metaKey, altKey, ctrlKey }) =>

@@ -58,14 +58,12 @@ const calculateScroll = event => {
   }
 };
 
-const throttledCalculateScroll = throttle(calculateScroll, 10);
-
 const handleMousewheel = event => {
   const { deltaX, deltaY } = event;
   if (scrollDeltaY * deltaY < 0) scrollDeltaY = 0;
   scrollDeltaX += deltaX;
   scrollDeltaY += deltaY;
-  throttledCalculateScroll(event);
+  calculateScroll(event);
 };
 
 const handleMousedown = event => {
@@ -91,15 +89,13 @@ const mousemove = event => {
   }
 };
 
-const handleMousemove = throttle(mousemove, 50);
-
 const initMouse = () => {
   nvim.command('set mouse=a'); // Enable mouse events
 
   document.addEventListener('mousedown', handleMousedown);
   document.addEventListener('mouseup', handleMouseup);
-  document.addEventListener('mousemove', handleMousemove);
-  document.addEventListener('wheel', handleMousewheel);
+  document.addEventListener('mousemove', throttle(mousemove, 10));
+  document.addEventListener('wheel', throttle(handleMousewheel, 10));
 };
 
 export default initMouse;
