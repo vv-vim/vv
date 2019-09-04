@@ -5,7 +5,7 @@ import { Menu } from 'electron';
 import { copyMenuItem, pasteMenuItem, selectAllMenuItem } from './nvim/features/copyPaste';
 import { zoomInMenuItem, zoomOutMenuItem, actualSizeMenuItem } from './nvim/features/zoom';
 import { closeWindowMenuItem } from './nvim/features/closeWindow';
-import { toggleFullScreenMenuItem } from './nvim/features/fullScreen';
+import { toggleFullScreenMenuItem } from './nvim/features/windowSize';
 
 let menu;
 
