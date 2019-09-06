@@ -462,6 +462,8 @@ const redrawCmd = {
   bell: () => {},
   visual_bell: () => {},
 
+  hl_group_set: () => {},
+
   flush: () => {
     redrawCursor(); // TODO: check if char under cursor changed first
   },
