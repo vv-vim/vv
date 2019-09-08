@@ -112,7 +112,7 @@ const createWindow = (args = [], newCwd) => {
   win.focus();
   windows.push(win);
 
-  if (args.includes('--inspect')) openDeveloperTools(win);
+  // if (args.includes('--inspect')) openDeveloperTools(win);
 
   setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
 
@@ -148,8 +148,8 @@ app.on('ready', () => {
     createWindow,
     openFile,
     installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
-    // closeWindow,
   });
+  app.focus();
 });
 
 app.on('before-quit', e => {
@@ -163,8 +163,8 @@ app.on('before-quit', e => {
 
 app.on('window-all-closed', handleAllClosed);
 
-app.on('activate', async () => {
-  if (windows.length === 0) {
+app.on('activate', (_e, hasVisibleWindows) => {
+  if (!hasVisibleWindows) {
     createWindow();
   }
 });

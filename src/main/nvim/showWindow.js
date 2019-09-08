@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 
 const showWindow = ({ win, nvim }) => {
-  let showWindowTimeout = null;
+  const showWindowTimeout = null;
   let isVisible = false;
 
   const doShowWindow = () => {
@@ -21,10 +21,6 @@ const showWindow = ({ win, nvim }) => {
   nvim.on('vv:vim_enter', () => {
     nvim.on('redraw', debouncedShowWindow);
   });
-
-  // If nvim has startup errors or swapfile warning it will not trigger VimEnter
-  // until user action. If that happens, show window anyway.
-  showWindowTimeout = setTimeout(doShowWindow, 2000);
 };
 
 export default showWindow;
