@@ -100,7 +100,7 @@ const eventKeyCode = async event => {
   if (event.altKey) {
     const { mode } = await nvim.getMode();
     if (['i', 'c', 't', 'ce', 'cv', 's', 'S', 'R', 'Rv'].includes(mode)) {
-      return key;
+      return key === 'Dead' ? null : key;
     }
   }
 
@@ -117,8 +117,10 @@ const eventKeyCode = async event => {
 };
 
 const handleKeydown = async event => {
-  const key = await eventKeyCode(event);
-  if (key) nvim.input(key);
+  if (!event.isComposing) {
+    const key = await eventKeyCode(event);
+    if (key) nvim.input(key);
+  }
 };
 
 const initKeyboard = () => {
