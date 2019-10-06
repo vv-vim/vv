@@ -15,6 +15,7 @@ export const getDefaultSettings = () => {
     fontsize: 12,
     lineheight: 1.25,
     letterspacing: 0,
+    reloadchanged: 0,
     defaultfgcolor: 'rgb(255,255,255)',
     defaultbgcolor: 'rgb(0,0,0)',
     defaultspcolor: 'rgb(255,255,255)',

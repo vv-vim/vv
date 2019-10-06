@@ -71,7 +71,7 @@ You can setup VV-specific options via the `:VVset` command. It works the same as
 - `fontsize`: Font size in pixels. Default: `12`.
 - `lineheight`: Line height related to font size. Pixel value is `fontsize * lineheight`. Default: `1.25`.
 - `letterspacing`: Fine-tuning letter spacing in retina pixels. Can be a negative value. For retina screens the value is physical pixels. For non-retina screens it works differently: it divides the value by 2 and rounds it. For example, `:VVset letterspacing=1` will make characters 1 pixel wider on retina displays and will do nothing on non-retina displays. Value 2 is 2 physical pixels on retina and 1 physical pixel on non-retina. Default: `0`.
-- `reloadchanged`: Show dialog when opened files are changed externally. For example, when you switch git branches. It will prompt you to keep your changes or reload the file. Default: `1`.
+- `reloadchanged`: Show dialog when opened files are changed externally. For example, when you switch git branches. It will prompt you to keep your changes or reload the file. Default: `0`.
 - `windowwidth`, `width`: Window width. Can be a number in pixels or percentage of display width.
 - `windowheight`, `height`: Window height.
 - `windowleft`, `left`: Window position from left. Can be a number in pixels or a percentage. Percent values work the same as the `background-position` rule in CSS. For example: 20% means the window’s left border will be offset 20% of your screen. 0% — the very left, 100% — the very right, 50% — center.
