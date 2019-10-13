@@ -8,7 +8,7 @@ const showWindow = ({ win, nvim }) => {
     if (showWindowTimeout) clearTimeout(showWindowTimeout);
     if (!isVisible) {
       win.show();
-      nvim.command('doautocmd <nomodeline> GUIEnter');
+      nvim.command('doautocmd GUIEnter');
       isVisible = true;
     }
   };

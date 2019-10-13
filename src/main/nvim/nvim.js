@@ -7,6 +7,7 @@ import windowTitle from './features/windowTitle';
 import zoom from './features/zoom';
 import reloadChanged from './features/reloadChanged';
 import windowSize from './features/windowSize';
+import focusAutocmd from './features/focusAutocmd';
 
 import settings from './settings';
 
@@ -41,6 +42,7 @@ const initNvim = ({ args, cwd, win }) => {
   windowTitle({ win, nvim });
   zoom({ win });
   reloadChanged({ win, nvim });
+  focusAutocmd({ win, nvim });
 
   showWindow({ win, nvim });
 };
