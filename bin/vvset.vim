@@ -18,7 +18,7 @@ let g:vv_default_settings = {
       \  'fontsize': 12,
       \  'lineheight': 1.25,
       \  'letterspacing': 0,
-      \  'reloadchanged': 1,
+      \  'reloadchanged': 0,
       \  'windowwidth': v:null,
       \  'windowheight': v:null,
       \  'windowleft': v:null,

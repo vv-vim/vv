@@ -9,15 +9,6 @@ function! VVrefresh(...)
   tabclose!
 endfunction
 
-" Checktime for all loaded buffers to trigger FileChangedShell for changed
-function! VVchecktimeAll()
-  let l:buffers = getbufinfo()
-  call filter(l:buffers, "v:val['loaded'] == 1")
-  for buf in l:buffers
-    execute "checktime" buf['bufnr']
-  endfor
-endfunction
-
 function! VVenableReloadChanged(enabled)
   if a:enabled
     augroup ReloadChanged
@@ -29,7 +20,3 @@ function! VVenableReloadChanged(enabled)
     autocmd! ReloadChanged *
   endif
 endfunction
-
-command! -nargs=* VVrefresh :call VVrefresh(<f-args>)
-command! -nargs=0 VVchecktimeAll :call VVchecktimeAll()
-command! -nargs=1 VVenableReloadChanged :call VVenableReloadChanged(<f-args>)

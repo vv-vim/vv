@@ -1,12 +1,14 @@
+// Show "Reload changed" dialog when opened files changed ouside (ex. switch git branch).
+
 import { dialog } from 'electron';
 
 const initReloadChanged = ({ nvim, win }) => {
   let changedBuffers = {};
-  let enabled = true;
+  let enabled = false;
   let checking = false;
 
   const showChangedDialog = async () => {
-    if (Object.keys(changedBuffers).length > 0) {
+    if (win.isFocused() && Object.keys(changedBuffers).length > 0) {
       const message =
         Object.keys(changedBuffers).length > 1
           ? `${
@@ -27,26 +29,29 @@ const initReloadChanged = ({ nvim, win }) => {
         buttons,
       });
       if (response === 0) {
-        nvim.command(
-          `VVrefresh ${Object.keys(changedBuffers)
-            .map(k => changedBuffers[k].bufnr)
-            .join(' ')}`,
+        nvim.callFunction(
+          'VVrefresh',
+          Object.keys(changedBuffers).map(k => changedBuffers[k].bufnr),
         );
         changedBuffers = {};
       }
     }
   };
 
-  const checktimeAll = async () => {
-    checking = true;
-    await nvim.command('VVchecktimeAll');
-    checking = false;
-    showChangedDialog();
+  const checktime = async () => {
+    if (!checking) {
+      checking = true;
+      await nvim.command('checktime');
+      checking = false;
+      showChangedDialog();
+    }
   };
 
   const enable = (newEnabled = true) => {
-    enabled = newEnabled;
-    nvim.command(`VVenableReloadChanged ${enabled ? '1' : '0'}`);
+    if (enabled !== !!newEnabled) {
+      enabled = !!newEnabled;
+      nvim.callFunction('VVenableReloadChanged', [enabled ? 1 : 0]);
+    }
   };
 
   nvim.on('vv:file_changed', args => {
@@ -55,9 +60,7 @@ const initReloadChanged = ({ nvim, win }) => {
       if (!changedBuffers[buffer.bufnr]) {
         changedBuffers[buffer.bufnr] = buffer;
       }
-      if (!checking) {
-        checktimeAll();
-      }
+      checktime();
     }
   });
 
@@ -70,12 +73,8 @@ const initReloadChanged = ({ nvim, win }) => {
   win.on('focus', () => {
     if (enabled) {
       // The page will be blank on focus without timeout.
-      setTimeout(() => checktimeAll(), 10);
+      setTimeout(() => checktime(), 10);
     }
-  });
-
-  nvim.on('vv:vim_enter', () => {
-    enable();
   });
 };
 
