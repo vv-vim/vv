@@ -21,31 +21,10 @@
     "start:renderer": "webpack-dev-server --config ./config/webpack.renderer.config.js",
     "start:devserver": "DEV_SERVER=true electron .",
     "start": "electron .",
+    "filetypes": "node scripts/filetypes.js",
     "prebuild": "yarn webpack:build",
-    "build": "electron-builder -c.extraMetadata.main=build/main.js",
+    "build": "electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/electron-builder.js",
     "postbuild": "cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
-  },
-  "build": {
-    "appId": "app.vvim.vv",
-    "mac": {
-      "category": "public.app-category.developer-tools"
-    },
-    "files": [
-      "build/**/*"
-    ],
-    "extraResources": [
-      "bin/**/*",
-      "src/main/preload.js"
-    ],
-    "directories": {
-      "buildResources": "assets"
-    },
-    "fileAssociations": [
-      {
-        "ext": "*",
-        "name": "Document"
-      }
-    ]
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.49",
@@ -61,6 +40,7 @@
     "eslint-plugin-prettier": "^3.1.0",
     "html-webpack-plugin": "^3.2.0",
     "husky": "^3.0.5",
+    "js-yaml": "^3.13.1",
     "lint-staged": ">=8",
     "prettier": "^1.16.4",
     "uglify-es": "3.3.9",
@@ -70,14 +50,14 @@
     "webpack-merge": "^4.1.2"
   },
   "dependencies": {
+    "@pixi/app": "^5.1.2",
+    "@pixi/core": "^5.1.2",
+    "@pixi/sprite": "^5.1.2",
+    "@pixi/ticker": "^5.1.1",
     "child_process": "^1.0.2",
     "electron-store": "^4.0",
     "lodash": "^4.17.15",
-    "msgpack-lite": "^0.1.26",
-    "@pixi/app": "^5.1.2",
-    "@pixi/core": "^5.1.2",
-    "@pixi/ticker": "^5.1.1",
-    "@pixi/sprite": "^5.1.2"
+    "msgpack-lite": "^0.1.26"
   },
   "husky": {
     "hooks": {
