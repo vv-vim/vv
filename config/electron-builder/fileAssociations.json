@@ -1,0 +1,3442 @@
+[
+  {
+    "name": "1C Enterprise",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bsl", "os"]
+  },
+  {
+    "name": "ABAP",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["abap"]
+  },
+  {
+    "name": "ABNF",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["abnf"]
+  },
+  {
+    "name": "AGS Script",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["asc", "ash"]
+  },
+  {
+    "name": "AMPL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ampl", "mod"]
+  },
+  {
+    "name": "ANTLR",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["g4"]
+  },
+  {
+    "name": "API Blueprint",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["apib"]
+  },
+  {
+    "name": "APL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["apl", "dyalog"]
+  },
+  {
+    "name": "ASN.1",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["asn", "asn1"]
+  },
+  {
+    "name": "ASP",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["asp", "asax", "ascx", "ashx", "asmx", "aspx", "axd"]
+  },
+  {
+    "name": "ATS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dats", "hats", "sats"]
+  },
+  {
+    "name": "ActionScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["as"]
+  },
+  {
+    "name": "Ada",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["adb", "ada", "ads"]
+  },
+  {
+    "name": "Adobe Font Metrics",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["afm"]
+  },
+  {
+    "name": "Agda",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["agda"]
+  },
+  {
+    "name": "Alloy",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["als"]
+  },
+  {
+    "name": "Altium Designer",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["OutJob", "PcbDoc", "PrjPCB", "SchDoc"]
+  },
+  {
+    "name": "AngelScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["as", "angelscript"]
+  },
+  {
+    "name": "ApacheConf",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["apacheconf", "vhost"]
+  },
+  {
+    "name": "Apex",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cls"]
+  },
+  {
+    "name": "Apollo Guidance Computer",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["agc"]
+  },
+  {
+    "name": "AppleScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["applescript", "scpt"]
+  },
+  {
+    "name": "Arc",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["arc"]
+  },
+  {
+    "name": "AsciiDoc",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["asciidoc", "adoc", "asc"]
+  },
+  {
+    "name": "AspectJ",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["aj"]
+  },
+  {
+    "name": "Assembly",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["asm", "a51", "inc", "nasm"]
+  },
+  {
+    "name": "Asymptote",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["asy"]
+  },
+  {
+    "name": "Augeas",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["aug"]
+  },
+  {
+    "name": "AutoHotkey",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ahk", "ahkl"]
+  },
+  {
+    "name": "AutoIt",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["au3"]
+  },
+  {
+    "name": "Awk",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["awk", "auk", "gawk", "mawk", "nawk"]
+  },
+  {
+    "name": "Ballerina",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bal"]
+  },
+  {
+    "name": "Batchfile",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bat", "cmd"]
+  },
+  {
+    "name": "Befunge",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["befunge"]
+  },
+  {
+    "name": "BibTeX",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bib"]
+  },
+  {
+    "name": "Bison",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bison"]
+  },
+  {
+    "name": "BitBake",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bb"]
+  },
+  {
+    "name": "Blade",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["blade", "blade.php"]
+  },
+  {
+    "name": "BlitzBasic",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bb", "decls"]
+  },
+  {
+    "name": "BlitzMax",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bmx"]
+  },
+  {
+    "name": "Bluespec",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bsv"]
+  },
+  {
+    "name": "Boo",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["boo"]
+  },
+  {
+    "name": "Brainfuck",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["b", "bf"]
+  },
+  {
+    "name": "Brightscript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["brs"]
+  },
+  {
+    "name": "C",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["c", "cats", "h", "idc"]
+  },
+  {
+    "name": "C#",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cs", "cake", "csx"]
+  },
+  {
+    "name": "C++",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "cpp",
+      "c++",
+      "cc",
+      "cp",
+      "cxx",
+      "h",
+      "h++",
+      "hh",
+      "hpp",
+      "hxx",
+      "inc",
+      "inl",
+      "ino",
+      "ipp",
+      "re",
+      "tcc",
+      "tpp"
+    ]
+  },
+  {
+    "name": "C-ObjDump",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["c-objdump"]
+  },
+  {
+    "name": "C2hs Haskell",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["chs"]
+  },
+  {
+    "name": "CLIPS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["clp"]
+  },
+  {
+    "name": "CMake",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cmake", "cmake.in"]
+  },
+  {
+    "name": "COBOL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cob", "cbl", "ccp", "cobol", "cpy"]
+  },
+  {
+    "name": "COLLADA",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dae"]
+  },
+  {
+    "name": "CSON",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cson"]
+  },
+  {
+    "name": "CSS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["css"]
+  },
+  {
+    "name": "CSV",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["csv"]
+  },
+  {
+    "name": "CWeb",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["w"]
+  },
+  {
+    "name": "Cabal Config",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cabal"]
+  },
+  {
+    "name": "Cap'n Proto",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["capnp"]
+  },
+  {
+    "name": "CartoCSS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mss"]
+  },
+  {
+    "name": "Ceylon",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ceylon"]
+  },
+  {
+    "name": "Chapel",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["chpl"]
+  },
+  {
+    "name": "Charity",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ch"]
+  },
+  {
+    "name": "ChucK",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ck"]
+  },
+  {
+    "name": "Cirru",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cirru"]
+  },
+  {
+    "name": "Clarion",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["clw"]
+  },
+  {
+    "name": "Clean",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["icl", "dcl"]
+  },
+  {
+    "name": "Click",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["click"]
+  },
+  {
+    "name": "Clojure",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["clj", "boot", "cl2", "cljc", "cljs", "cljs.hl", "cljscm", "cljx", "hic"]
+  },
+  {
+    "name": "Closure Templates",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["soy"]
+  },
+  {
+    "name": "CoNLL-U",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["conllu", "conll"]
+  },
+  {
+    "name": "CoffeeScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["coffee", "_coffee", "cake", "cjsx", "iced"]
+  },
+  {
+    "name": "ColdFusion",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cfm", "cfml"]
+  },
+  {
+    "name": "ColdFusion CFC",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cfc"]
+  },
+  {
+    "name": "Common Lisp",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lisp", "asd", "cl", "l", "lsp", "ny", "podsl", "sexp"]
+  },
+  {
+    "name": "Common Workflow Language",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cwl"]
+  },
+  {
+    "name": "Component Pascal",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cp", "cps"]
+  },
+  {
+    "name": "Cool",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cl"]
+  },
+  {
+    "name": "Coq",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["coq", "v"]
+  },
+  {
+    "name": "Cpp-ObjDump",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cppobjdump", "c++-objdump", "c++objdump", "cpp-objdump", "cxx-objdump"]
+  },
+  {
+    "name": "Creole",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["creole"]
+  },
+  {
+    "name": "Crystal",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cr"]
+  },
+  {
+    "name": "Csound",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["orc", "udo"]
+  },
+  {
+    "name": "Csound Document",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["csd"]
+  },
+  {
+    "name": "Csound Score",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sco"]
+  },
+  {
+    "name": "Cuda",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cu", "cuh"]
+  },
+  {
+    "name": "Cycript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cy"]
+  },
+  {
+    "name": "Cython",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pyx", "pxd", "pxi"]
+  },
+  {
+    "name": "D",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["d", "di"]
+  },
+  {
+    "name": "D-ObjDump",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["d-objdump"]
+  },
+  {
+    "name": "DIGITAL Command Language",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["com"]
+  },
+  {
+    "name": "DM",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dm"]
+  },
+  {
+    "name": "DNS Zone",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["zone", "arpa"]
+  },
+  {
+    "name": "DTrace",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["d"]
+  },
+  {
+    "name": "Darcs Patch",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["darcspatch", "dpatch"]
+  },
+  {
+    "name": "Dart",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dart"]
+  },
+  {
+    "name": "DataWeave",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dwl"]
+  },
+  {
+    "name": "Dhall",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dhall"]
+  },
+  {
+    "name": "Diff",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["diff", "patch"]
+  },
+  {
+    "name": "Dockerfile",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dockerfile"]
+  },
+  {
+    "name": "Dogescript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["djs"]
+  },
+  {
+    "name": "Dylan",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dylan", "dyl", "intr", "lid"]
+  },
+  {
+    "name": "E",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["E"]
+  },
+  {
+    "name": "EBNF",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ebnf"]
+  },
+  {
+    "name": "ECL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ecl", "eclxml"]
+  },
+  {
+    "name": "ECLiPSe",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ecl"]
+  },
+  {
+    "name": "EJS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ejs"]
+  },
+  {
+    "name": "EML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["eml", "mbox"]
+  },
+  {
+    "name": "EQ",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["eq"]
+  },
+  {
+    "name": "Eagle",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sch", "brd"]
+  },
+  {
+    "name": "Easybuild",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["eb"]
+  },
+  {
+    "name": "Ecere Projects",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["epj"]
+  },
+  {
+    "name": "Edje Data Collection",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["edc"]
+  },
+  {
+    "name": "Eiffel",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["e"]
+  },
+  {
+    "name": "Elixir",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ex", "exs"]
+  },
+  {
+    "name": "Elm",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["elm"]
+  },
+  {
+    "name": "Emacs Lisp",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["el", "emacs", "emacs.desktop"]
+  },
+  {
+    "name": "EmberScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["em", "emberscript"]
+  },
+  {
+    "name": "Erlang",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["erl", "app.src", "es", "escript", "hrl", "xrl", "yrl"]
+  },
+  {
+    "name": "F#",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fs", "fsi", "fsx"]
+  },
+  {
+    "name": "F*",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fst"]
+  },
+  {
+    "name": "FIGlet Font",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["flf"]
+  },
+  {
+    "name": "FLUX",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fx", "flux"]
+  },
+  {
+    "name": "Factor",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["factor"]
+  },
+  {
+    "name": "Fancy",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fy", "fancypack"]
+  },
+  {
+    "name": "Fantom",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fan"]
+  },
+  {
+    "name": "Filebench WML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["f"]
+  },
+  {
+    "name": "Filterscript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fs"]
+  },
+  {
+    "name": "Formatted",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["for", "eam.fs"]
+  },
+  {
+    "name": "Forth",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fth", "4th", "f", "for", "forth", "fr", "frt", "fs"]
+  },
+  {
+    "name": "Fortran",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["f90", "f", "f03", "f08", "f77", "f95", "for", "fpp"]
+  },
+  {
+    "name": "FreeMarker",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ftl"]
+  },
+  {
+    "name": "Frege",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fr"]
+  },
+  {
+    "name": "G-code",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["g", "cnc", "gco", "gcode"]
+  },
+  {
+    "name": "GAML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gaml"]
+  },
+  {
+    "name": "GAMS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gms"]
+  },
+  {
+    "name": "GAP",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["g", "gap", "gd", "gi", "tst"]
+  },
+  {
+    "name": "GCC Machine Description",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["md"]
+  },
+  {
+    "name": "GDB",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gdb", "gdbinit"]
+  },
+  {
+    "name": "GDScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gd"]
+  },
+  {
+    "name": "GLSL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "glsl",
+      "fp",
+      "frag",
+      "frg",
+      "fs",
+      "fsh",
+      "fshader",
+      "geo",
+      "geom",
+      "glslv",
+      "gshader",
+      "shader",
+      "tesc",
+      "tese",
+      "vert",
+      "vrx",
+      "vsh",
+      "vshader"
+    ]
+  },
+  {
+    "name": "GN",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gn", "gni"]
+  },
+  {
+    "name": "Game Maker Language",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gml"]
+  },
+  {
+    "name": "Genie",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gs"]
+  },
+  {
+    "name": "Genshi",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["kid"]
+  },
+  {
+    "name": "Gentoo Ebuild",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ebuild"]
+  },
+  {
+    "name": "Gentoo Eclass",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["eclass"]
+  },
+  {
+    "name": "Gerber Image",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "gbr",
+      "gbl",
+      "gbo",
+      "gbp",
+      "gbs",
+      "gko",
+      "gml",
+      "gpb",
+      "gpt",
+      "gtl",
+      "gto",
+      "gtp",
+      "gts"
+    ]
+  },
+  {
+    "name": "Gettext Catalog",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["po", "pot"]
+  },
+  {
+    "name": "Gherkin",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["feature"]
+  },
+  {
+    "name": "Git Config",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gitconfig"]
+  },
+  {
+    "name": "Glyph",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["glf"]
+  },
+  {
+    "name": "Glyph Bitmap Distribution Format",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bdf"]
+  },
+  {
+    "name": "Gnuplot",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gp", "gnu", "gnuplot", "plot", "plt"]
+  },
+  {
+    "name": "Go",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["go"]
+  },
+  {
+    "name": "Golo",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["golo"]
+  },
+  {
+    "name": "Gosu",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gs", "gst", "gsx", "vark"]
+  },
+  {
+    "name": "Grace",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["grace"]
+  },
+  {
+    "name": "Gradle",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gradle"]
+  },
+  {
+    "name": "Grammatical Framework",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gf"]
+  },
+  {
+    "name": "Graph Modeling Language",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gml"]
+  },
+  {
+    "name": "GraphQL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["graphql", "gql", "graphqls"]
+  },
+  {
+    "name": "Graphviz (DOT)",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["dot", "gv"]
+  },
+  {
+    "name": "Groovy",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["groovy", "grt", "gtpl", "gvy"]
+  },
+  {
+    "name": "Groovy Server Pages",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gsp"]
+  },
+  {
+    "name": "HAProxy",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cfg"]
+  },
+  {
+    "name": "HCL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hcl", "tf", "tfvars", "workflow"]
+  },
+  {
+    "name": "HLSL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hlsl", "cginc", "fx", "fxh", "hlsli"]
+  },
+  {
+    "name": "HTML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["html", "htm", "html.hl", "inc", "st", "xht", "xhtml"]
+  },
+  {
+    "name": "HTML+Django",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jinja", "jinja2", "mustache", "njk"]
+  },
+  {
+    "name": "HTML+ECR",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ecr"]
+  },
+  {
+    "name": "HTML+EEX",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["eex"]
+  },
+  {
+    "name": "HTML+ERB",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["erb", "erb.deface"]
+  },
+  {
+    "name": "HTML+PHP",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["phtml"]
+  },
+  {
+    "name": "HTML+Razor",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cshtml", "razor"]
+  },
+  {
+    "name": "HTTP",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["http"]
+  },
+  {
+    "name": "HXML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hxml"]
+  },
+  {
+    "name": "Hack",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hack", "hh", "php"]
+  },
+  {
+    "name": "Haml",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["haml", "haml.deface"]
+  },
+  {
+    "name": "Handlebars",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["handlebars", "hbs"]
+  },
+  {
+    "name": "Harbour",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hb"]
+  },
+  {
+    "name": "Haskell",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hs", "hs-boot", "hsc"]
+  },
+  {
+    "name": "Haxe",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hx", "hxsl"]
+  },
+  {
+    "name": "HiveQL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["q"]
+  },
+  {
+    "name": "HolyC",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hc"]
+  },
+  {
+    "name": "Hy",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["hy"]
+  },
+  {
+    "name": "HyPhy",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["bf"]
+  },
+  {
+    "name": "IDL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pro", "dlm"]
+  },
+  {
+    "name": "IGOR Pro",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ipf"]
+  },
+  {
+    "name": "INI",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ini", "cfg", "lektorproject", "prefs", "pro", "properties"]
+  },
+  {
+    "name": "IRC log",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["irclog", "weechatlog"]
+  },
+  {
+    "name": "Idris",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["idr", "lidr"]
+  },
+  {
+    "name": "Ignore List",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["gitignore"]
+  },
+  {
+    "name": "Inform 7",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ni", "i7x"]
+  },
+  {
+    "name": "Inno Setup",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["iss"]
+  },
+  {
+    "name": "Io",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["io"]
+  },
+  {
+    "name": "Ioke",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ik"]
+  },
+  {
+    "name": "Isabelle",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["thy"]
+  },
+  {
+    "name": "J",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ijs"]
+  },
+  {
+    "name": "JFlex",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["flex", "jflex"]
+  },
+  {
+    "name": "JSON",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "json",
+      "avsc",
+      "geojson",
+      "gltf",
+      "har",
+      "ice",
+      "JSON-tmLanguage",
+      "jsonl",
+      "mcmeta",
+      "tfstate",
+      "tfstate.backup",
+      "topojson",
+      "webapp",
+      "webmanifest",
+      "yy",
+      "yyp"
+    ]
+  },
+  {
+    "name": "JSON with Comments",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "sublime-build",
+      "sublime-commands",
+      "sublime-completions",
+      "sublime-keymap",
+      "sublime-macro",
+      "sublime-menu",
+      "sublime-mousemap",
+      "sublime-project",
+      "sublime-settings",
+      "sublime-theme",
+      "sublime-workspace",
+      "sublime_metrics",
+      "sublime_session"
+    ]
+  },
+  {
+    "name": "JSON5",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["json5"]
+  },
+  {
+    "name": "JSONLD",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jsonld"]
+  },
+  {
+    "name": "JSONiq",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jq"]
+  },
+  {
+    "name": "JSX",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jsx"]
+  },
+  {
+    "name": "Jasmin",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["j"]
+  },
+  {
+    "name": "Java",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["java"]
+  },
+  {
+    "name": "Java Properties",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["properties"]
+  },
+  {
+    "name": "Java Server Pages",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jsp"]
+  },
+  {
+    "name": "JavaScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "js",
+      "_js",
+      "bones",
+      "es",
+      "es6",
+      "frag",
+      "gs",
+      "jake",
+      "jsb",
+      "jscad",
+      "jsfl",
+      "jsm",
+      "jss",
+      "mjs",
+      "njs",
+      "pac",
+      "sjs",
+      "ssjs",
+      "xsjs",
+      "xsjslib"
+    ]
+  },
+  {
+    "name": "JavaScript+ERB",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["js.erb"]
+  },
+  {
+    "name": "Jison",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jison"]
+  },
+  {
+    "name": "Jison Lex",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jisonlex"]
+  },
+  {
+    "name": "Jolie",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ol", "iol"]
+  },
+  {
+    "name": "Jsonnet",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jsonnet", "libsonnet"]
+  },
+  {
+    "name": "Julia",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jl"]
+  },
+  {
+    "name": "Jupyter Notebook",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ipynb"]
+  },
+  {
+    "name": "KRL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["krl"]
+  },
+  {
+    "name": "KiCad Layout",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["kicad_pcb", "kicad_mod", "kicad_wks"]
+  },
+  {
+    "name": "KiCad Legacy Layout",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["brd"]
+  },
+  {
+    "name": "KiCad Schematic",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sch"]
+  },
+  {
+    "name": "Kit",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["kit"]
+  },
+  {
+    "name": "Kotlin",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["kt", "ktm", "kts"]
+  },
+  {
+    "name": "LFE",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lfe"]
+  },
+  {
+    "name": "LLVM",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ll"]
+  },
+  {
+    "name": "LOLCODE",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lol"]
+  },
+  {
+    "name": "LSL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lsl", "lslp"]
+  },
+  {
+    "name": "LTspice Symbol",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["asy"]
+  },
+  {
+    "name": "LabVIEW",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lvproj"]
+  },
+  {
+    "name": "Lasso",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lasso", "las", "lasso8", "lasso9"]
+  },
+  {
+    "name": "Latte",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["latte"]
+  },
+  {
+    "name": "Lean",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lean", "hlean"]
+  },
+  {
+    "name": "Less",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["less"]
+  },
+  {
+    "name": "Lex",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["l", "lex"]
+  },
+  {
+    "name": "LilyPond",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ly", "ily"]
+  },
+  {
+    "name": "Limbo",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["b", "m"]
+  },
+  {
+    "name": "Linker Script",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ld", "lds", "x"]
+  },
+  {
+    "name": "Linux Kernel Module",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mod"]
+  },
+  {
+    "name": "Liquid",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["liquid"]
+  },
+  {
+    "name": "Literate Agda",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lagda"]
+  },
+  {
+    "name": "Literate CoffeeScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["litcoffee"]
+  },
+  {
+    "name": "Literate Haskell",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lhs"]
+  },
+  {
+    "name": "LiveScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ls", "_ls"]
+  },
+  {
+    "name": "Logos",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xm", "x", "xi"]
+  },
+  {
+    "name": "Logtalk",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lgt", "logtalk"]
+  },
+  {
+    "name": "LookML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lookml", "model.lkml", "view.lkml"]
+  },
+  {
+    "name": "LoomScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ls"]
+  },
+  {
+    "name": "Lua",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["lua", "fcgi", "nse", "p8", "pd_lua", "rbxs", "wlua"]
+  },
+  {
+    "name": "M",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mumps", "m"]
+  },
+  {
+    "name": "M4",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["m4"]
+  },
+  {
+    "name": "M4Sugar",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["m4"]
+  },
+  {
+    "name": "MATLAB",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["matlab", "m"]
+  },
+  {
+    "name": "MAXScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ms", "mcr"]
+  },
+  {
+    "name": "MLIR",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mlir"]
+  },
+  {
+    "name": "MQL4",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mq4", "mqh"]
+  },
+  {
+    "name": "MQL5",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mq5", "mqh"]
+  },
+  {
+    "name": "MTML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mtml"]
+  },
+  {
+    "name": "MUF",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["muf", "m"]
+  },
+  {
+    "name": "Makefile",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mak", "d", "make", "mk", "mkfile"]
+  },
+  {
+    "name": "Mako",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mako", "mao"]
+  },
+  {
+    "name": "Markdown",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["md", "markdown", "mdown", "mdwn", "mdx", "mkd", "mkdn", "mkdown", "ronn", "workbook"]
+  },
+  {
+    "name": "Marko",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["marko"]
+  },
+  {
+    "name": "Mask",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mask"]
+  },
+  {
+    "name": "Mathematica",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mathematica", "cdf", "m", "ma", "mt", "nb", "nbp", "wl", "wlt"]
+  },
+  {
+    "name": "Max",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["maxpat", "maxhelp", "maxproj", "mxt", "pat"]
+  },
+  {
+    "name": "MediaWiki",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mediawiki", "wiki"]
+  },
+  {
+    "name": "Mercury",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["m", "moo"]
+  },
+  {
+    "name": "Metal",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["metal"]
+  },
+  {
+    "name": "MiniD",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["minid"]
+  },
+  {
+    "name": "Mirah",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["druby", "duby", "mirah"]
+  },
+  {
+    "name": "Modelica",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mo"]
+  },
+  {
+    "name": "Modula-2",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mod"]
+  },
+  {
+    "name": "Modula-3",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["i3", "ig", "m3", "mg"]
+  },
+  {
+    "name": "Module Management System",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mms", "mmk"]
+  },
+  {
+    "name": "Monkey",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["monkey", "monkey2"]
+  },
+  {
+    "name": "Moocode",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["moo"]
+  },
+  {
+    "name": "MoonScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["moon"]
+  },
+  {
+    "name": "Motorola 68K Assembly",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["X68"]
+  },
+  {
+    "name": "Muse",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["muse"]
+  },
+  {
+    "name": "Myghty",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["myt"]
+  },
+  {
+    "name": "NCL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ncl"]
+  },
+  {
+    "name": "NL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nl"]
+  },
+  {
+    "name": "NSIS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nsi", "nsh"]
+  },
+  {
+    "name": "Nearley",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ne", "nearley"]
+  },
+  {
+    "name": "Nemerle",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["n"]
+  },
+  {
+    "name": "NetLinx",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["axs", "axi"]
+  },
+  {
+    "name": "NetLinx+ERB",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["axs.erb", "axi.erb"]
+  },
+  {
+    "name": "NetLogo",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nlogo"]
+  },
+  {
+    "name": "NewLisp",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nl", "lisp", "lsp"]
+  },
+  {
+    "name": "Nextflow",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nf"]
+  },
+  {
+    "name": "Nginx",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nginxconf", "vhost"]
+  },
+  {
+    "name": "Nim",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nim", "nim.cfg", "nimble", "nimrod", "nims"]
+  },
+  {
+    "name": "Ninja",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ninja"]
+  },
+  {
+    "name": "Nit",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nit"]
+  },
+  {
+    "name": "Nix",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nix"]
+  },
+  {
+    "name": "Nu",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nu"]
+  },
+  {
+    "name": "NumPy",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["numpy", "numpyw", "numsc"]
+  },
+  {
+    "name": "OCaml",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ml", "eliom", "eliomi", "ml4", "mli", "mll", "mly"]
+  },
+  {
+    "name": "ObjDump",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["objdump"]
+  },
+  {
+    "name": "ObjectScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cls"]
+  },
+  {
+    "name": "Objective-C",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["m", "h"]
+  },
+  {
+    "name": "Objective-C++",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mm"]
+  },
+  {
+    "name": "Objective-J",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["j", "sj"]
+  },
+  {
+    "name": "Omgrofl",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["omgrofl"]
+  },
+  {
+    "name": "Opa",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["opa"]
+  },
+  {
+    "name": "Opal",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["opal"]
+  },
+  {
+    "name": "Open Policy Agent",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rego"]
+  },
+  {
+    "name": "OpenCL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cl", "opencl"]
+  },
+  {
+    "name": "OpenEdge ABL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["p", "cls", "w"]
+  },
+  {
+    "name": "OpenSCAD",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["scad"]
+  },
+  {
+    "name": "OpenStep Property List",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["plist"]
+  },
+  {
+    "name": "OpenType Feature File",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fea"]
+  },
+  {
+    "name": "Org",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["org"]
+  },
+  {
+    "name": "Ox",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ox", "oxh", "oxo"]
+  },
+  {
+    "name": "Oxygene",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["oxygene"]
+  },
+  {
+    "name": "Oz",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["oz"]
+  },
+  {
+    "name": "P4",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["p4"]
+  },
+  {
+    "name": "PHP",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["php", "aw", "ctp", "fcgi", "inc", "php3", "php4", "php5", "phps", "phpt"]
+  },
+  {
+    "name": "PLSQL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "pls",
+      "bdy",
+      "ddl",
+      "fnc",
+      "pck",
+      "pkb",
+      "pks",
+      "plb",
+      "plsql",
+      "prc",
+      "spc",
+      "sql",
+      "tpb",
+      "tps",
+      "trg",
+      "vw"
+    ]
+  },
+  {
+    "name": "PLpgSQL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pgsql", "sql"]
+  },
+  {
+    "name": "POV-Ray SDL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pov", "inc"]
+  },
+  {
+    "name": "Pan",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pan"]
+  },
+  {
+    "name": "Papyrus",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["psc"]
+  },
+  {
+    "name": "Parrot",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["parrot"]
+  },
+  {
+    "name": "Parrot Assembly",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pasm"]
+  },
+  {
+    "name": "Parrot Internal Representation",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pir"]
+  },
+  {
+    "name": "Pascal",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pas", "dfm", "dpr", "inc", "lpr", "pascal", "pp"]
+  },
+  {
+    "name": "Pawn",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pwn", "inc", "sma"]
+  },
+  {
+    "name": "Pep8",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pep"]
+  },
+  {
+    "name": "Perl",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pl", "al", "cgi", "fcgi", "perl", "ph", "plx", "pm", "psgi", "t"]
+  },
+  {
+    "name": "Perl 6",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["6pl", "6pm", "nqp", "p6", "p6l", "p6m", "pl", "pl6", "pm", "pm6", "t"]
+  },
+  {
+    "name": "Pic",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pic", "chem"]
+  },
+  {
+    "name": "Pickle",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pkl"]
+  },
+  {
+    "name": "PicoLisp",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["l"]
+  },
+  {
+    "name": "PigLatin",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pig"]
+  },
+  {
+    "name": "Pike",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pike", "pmod"]
+  },
+  {
+    "name": "Pod",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pod"]
+  },
+  {
+    "name": "Pod 6",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pod", "pod6"]
+  },
+  {
+    "name": "PogoScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pogo"]
+  },
+  {
+    "name": "Pony",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pony"]
+  },
+  {
+    "name": "PostCSS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pcss"]
+  },
+  {
+    "name": "PostScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ps", "eps", "pfa"]
+  },
+  {
+    "name": "PowerBuilder",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pbt", "sra", "sru", "srw"]
+  },
+  {
+    "name": "PowerShell",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ps1", "psd1", "psm1"]
+  },
+  {
+    "name": "Prisma",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["prisma"]
+  },
+  {
+    "name": "Processing",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pde"]
+  },
+  {
+    "name": "Prolog",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pl", "pro", "prolog", "yap"]
+  },
+  {
+    "name": "Propeller Spin",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["spin"]
+  },
+  {
+    "name": "Protocol Buffer",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["proto"]
+  },
+  {
+    "name": "Public Key",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["asc", "pub"]
+  },
+  {
+    "name": "Pug",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["jade", "pug"]
+  },
+  {
+    "name": "Puppet",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pp"]
+  },
+  {
+    "name": "Pure Data",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pd"]
+  },
+  {
+    "name": "PureBasic",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pb", "pbi"]
+  },
+  {
+    "name": "PureScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["purs"]
+  },
+  {
+    "name": "Python",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "py",
+      "bzl",
+      "cgi",
+      "fcgi",
+      "gyp",
+      "gypi",
+      "lmi",
+      "py3",
+      "pyde",
+      "pyi",
+      "pyp",
+      "pyt",
+      "pyw",
+      "rpy",
+      "spec",
+      "tac",
+      "wsgi",
+      "xpy"
+    ]
+  },
+  {
+    "name": "Python traceback",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pytb"]
+  },
+  {
+    "name": "QML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["qml", "qbs"]
+  },
+  {
+    "name": "QMake",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["pro", "pri"]
+  },
+  {
+    "name": "R",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["r", "rd", "rsx"]
+  },
+  {
+    "name": "RAML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["raml"]
+  },
+  {
+    "name": "RDoc",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rdoc"]
+  },
+  {
+    "name": "REALbasic",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rbbas", "rbfrm", "rbmnu", "rbres", "rbtbar", "rbuistate"]
+  },
+  {
+    "name": "REXX",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rexx", "pprx", "rex"]
+  },
+  {
+    "name": "RHTML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rhtml"]
+  },
+  {
+    "name": "RMarkdown",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rmd"]
+  },
+  {
+    "name": "RPC",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["x"]
+  },
+  {
+    "name": "RPM Spec",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["spec"]
+  },
+  {
+    "name": "RUNOFF",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rnh", "rno"]
+  },
+  {
+    "name": "Racket",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rkt", "rktd", "rktl", "scrbl"]
+  },
+  {
+    "name": "Ragel",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rl"]
+  },
+  {
+    "name": "Rascal",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rsc"]
+  },
+  {
+    "name": "Raw token data",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["raw"]
+  },
+  {
+    "name": "Reason",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["re", "rei"]
+  },
+  {
+    "name": "Rebol",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["reb", "r", "r2", "r3", "rebol"]
+  },
+  {
+    "name": "Red",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["red", "reds"]
+  },
+  {
+    "name": "Redcode",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cw"]
+  },
+  {
+    "name": "Regular Expression",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["regexp", "regex"]
+  },
+  {
+    "name": "Ren'Py",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rpy"]
+  },
+  {
+    "name": "RenderScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rs", "rsh"]
+  },
+  {
+    "name": "Rich Text Format",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rtf"]
+  },
+  {
+    "name": "Ring",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ring"]
+  },
+  {
+    "name": "Riot",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["riot"]
+  },
+  {
+    "name": "RobotFramework",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["robot"]
+  },
+  {
+    "name": "Roff",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "roff",
+      "1",
+      "1in",
+      "1m",
+      "1x",
+      "2",
+      "3",
+      "3in",
+      "3m",
+      "3p",
+      "3pm",
+      "3qt",
+      "3x",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "l",
+      "man",
+      "mdoc",
+      "me",
+      "ms",
+      "n",
+      "nr",
+      "rno",
+      "tmac"
+    ]
+  },
+  {
+    "name": "Roff Manpage",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "1",
+      "1in",
+      "1m",
+      "1x",
+      "2",
+      "3",
+      "3in",
+      "3m",
+      "3p",
+      "3pm",
+      "3qt",
+      "3x",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "man",
+      "mdoc"
+    ]
+  },
+  {
+    "name": "Rouge",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rg"]
+  },
+  {
+    "name": "Ruby",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "rb",
+      "builder",
+      "eye",
+      "fcgi",
+      "gemspec",
+      "god",
+      "jbuilder",
+      "mspec",
+      "pluginspec",
+      "podspec",
+      "rabl",
+      "rake",
+      "rbuild",
+      "rbw",
+      "rbx",
+      "ru",
+      "ruby",
+      "spec",
+      "thor",
+      "watchr"
+    ]
+  },
+  {
+    "name": "Rust",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rs", "rs.in"]
+  },
+  {
+    "name": "SAS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sas"]
+  },
+  {
+    "name": "SCSS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["scss"]
+  },
+  {
+    "name": "SMT",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["smt2", "smt"]
+  },
+  {
+    "name": "SPARQL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sparql", "rq"]
+  },
+  {
+    "name": "SQF",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sqf", "hqf"]
+  },
+  {
+    "name": "SQL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sql", "cql", "ddl", "inc", "mysql", "prc", "tab", "udf", "viw"]
+  },
+  {
+    "name": "SQLPL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sql", "db2"]
+  },
+  {
+    "name": "SRecode Template",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["srt"]
+  },
+  {
+    "name": "STON",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ston"]
+  },
+  {
+    "name": "SVG",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["svg"]
+  },
+  {
+    "name": "Sage",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sage", "sagews"]
+  },
+  {
+    "name": "SaltStack",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sls"]
+  },
+  {
+    "name": "Sass",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sass"]
+  },
+  {
+    "name": "Scala",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["scala", "kojo", "sbt", "sc"]
+  },
+  {
+    "name": "Scaml",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["scaml"]
+  },
+  {
+    "name": "Scheme",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["scm", "sch", "sld", "sls", "sps", "ss"]
+  },
+  {
+    "name": "Scilab",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sci", "sce", "tst"]
+  },
+  {
+    "name": "Self",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["self"]
+  },
+  {
+    "name": "ShaderLab",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["shader"]
+  },
+  {
+    "name": "Shell",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sh", "bash", "bats", "cgi", "command", "fcgi", "ksh", "sh.in", "tmux", "tool", "zsh"]
+  },
+  {
+    "name": "ShellSession",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sh-session"]
+  },
+  {
+    "name": "Shen",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["shen"]
+  },
+  {
+    "name": "Slash",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sl"]
+  },
+  {
+    "name": "Slice",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ice"]
+  },
+  {
+    "name": "Slim",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["slim"]
+  },
+  {
+    "name": "SmPL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["cocci"]
+  },
+  {
+    "name": "Smali",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["smali"]
+  },
+  {
+    "name": "Smalltalk",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["st", "cs"]
+  },
+  {
+    "name": "Smarty",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["tpl"]
+  },
+  {
+    "name": "SourcePawn",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sp", "inc"]
+  },
+  {
+    "name": "Spline Font Database",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sfd"]
+  },
+  {
+    "name": "Squirrel",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nut"]
+  },
+  {
+    "name": "Stan",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["stan"]
+  },
+  {
+    "name": "Standard ML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ML", "fun", "sig", "sml"]
+  },
+  {
+    "name": "Stata",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["do", "ado", "doh", "ihlp", "mata", "matah", "sthlp"]
+  },
+  {
+    "name": "Stylus",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["styl"]
+  },
+  {
+    "name": "SubRip Text",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["srt"]
+  },
+  {
+    "name": "SugarSS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sss"]
+  },
+  {
+    "name": "SuperCollider",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sc", "scd"]
+  },
+  {
+    "name": "Svelte",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["svelte"]
+  },
+  {
+    "name": "Swift",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["swift"]
+  },
+  {
+    "name": "SystemVerilog",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sv", "svh", "vh"]
+  },
+  {
+    "name": "TI Program",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["8xp", "8xk", "8xk.txt", "8xp.txt"]
+  },
+  {
+    "name": "TLA",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["tla"]
+  },
+  {
+    "name": "TOML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["toml"]
+  },
+  {
+    "name": "TSQL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sql"]
+  },
+  {
+    "name": "TSX",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["tsx"]
+  },
+  {
+    "name": "TXL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["txl"]
+  },
+  {
+    "name": "Tcl",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["tcl", "adp", "tm"]
+  },
+  {
+    "name": "Tcsh",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["tcsh", "csh"]
+  },
+  {
+    "name": "TeX",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "tex",
+      "aux",
+      "bbx",
+      "cbx",
+      "cls",
+      "dtx",
+      "ins",
+      "lbx",
+      "ltx",
+      "mkii",
+      "mkiv",
+      "mkvi",
+      "sty",
+      "toc"
+    ]
+  },
+  {
+    "name": "Tea",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["tea"]
+  },
+  {
+    "name": "Terra",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["t"]
+  },
+  {
+    "name": "Texinfo",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["texinfo", "texi", "txi"]
+  },
+  {
+    "name": "Text",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["txt", "fr", "nb", "ncl", "no"]
+  },
+  {
+    "name": "Textile",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["textile"]
+  },
+  {
+    "name": "Thrift",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["thrift"]
+  },
+  {
+    "name": "Turing",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["t", "tu"]
+  },
+  {
+    "name": "Turtle",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ttl"]
+  },
+  {
+    "name": "Twig",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["twig"]
+  },
+  {
+    "name": "Type Language",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["tl"]
+  },
+  {
+    "name": "TypeScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ts"]
+  },
+  {
+    "name": "Unified Parallel C",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["upc"]
+  },
+  {
+    "name": "Unity3D Asset",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["anim", "asset", "mat", "meta", "prefab", "unity"]
+  },
+  {
+    "name": "Unix Assembly",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["s", "ms"]
+  },
+  {
+    "name": "Uno",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["uno"]
+  },
+  {
+    "name": "UnrealScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["uc"]
+  },
+  {
+    "name": "UrWeb",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ur", "urs"]
+  },
+  {
+    "name": "V",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["v"]
+  },
+  {
+    "name": "VCL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["vcl"]
+  },
+  {
+    "name": "VHDL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["vhdl", "vhd", "vhf", "vhi", "vho", "vhs", "vht", "vhw"]
+  },
+  {
+    "name": "Vala",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["vala", "vapi"]
+  },
+  {
+    "name": "Verilog",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["v", "veo"]
+  },
+  {
+    "name": "Vim Snippet",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["snip", "snippet", "snippets"]
+  },
+  {
+    "name": "Vim script",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["vim", "vba", "vmb"]
+  },
+  {
+    "name": "Visual Basic",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["vb", "bas", "cls", "frm", "frx", "vba", "vbhtml", "vbs"]
+  },
+  {
+    "name": "Volt",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["volt"]
+  },
+  {
+    "name": "Vue",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["vue"]
+  },
+  {
+    "name": "Wavefront Material",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mtl"]
+  },
+  {
+    "name": "Wavefront Object",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["obj"]
+  },
+  {
+    "name": "Web Ontology Language",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["owl"]
+  },
+  {
+    "name": "WebAssembly",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["wast", "wat"]
+  },
+  {
+    "name": "WebIDL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["webidl"]
+  },
+  {
+    "name": "WebVTT",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["vtt"]
+  },
+  {
+    "name": "Windows Registry Entries",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["reg"]
+  },
+  {
+    "name": "Wollok",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["wlk"]
+  },
+  {
+    "name": "World of Warcraft Addon Data",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["toc"]
+  },
+  {
+    "name": "X BitMap",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xbm"]
+  },
+  {
+    "name": "X PixMap",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xpm", "pm"]
+  },
+  {
+    "name": "X10",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["x10"]
+  },
+  {
+    "name": "XC",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xc"]
+  },
+  {
+    "name": "XML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "xml",
+      "adml",
+      "admx",
+      "ant",
+      "axml",
+      "builds",
+      "ccproj",
+      "ccxml",
+      "clixml",
+      "cproject",
+      "cscfg",
+      "csdef",
+      "csl",
+      "csproj",
+      "ct",
+      "depproj",
+      "dita",
+      "ditamap",
+      "ditaval",
+      "dll.config",
+      "dotsettings",
+      "filters",
+      "fsproj",
+      "fxml",
+      "glade",
+      "gml",
+      "gmx",
+      "grxml",
+      "iml",
+      "ivy",
+      "jelly",
+      "jsproj",
+      "kml",
+      "launch",
+      "mdpolicy",
+      "mjml",
+      "mm",
+      "mod",
+      "mxml",
+      "natvis",
+      "ncl",
+      "ndproj",
+      "nproj",
+      "nuspec",
+      "odd",
+      "osm",
+      "pkgproj",
+      "pluginspec",
+      "proj",
+      "props",
+      "ps1xml",
+      "psc1",
+      "pt",
+      "rdf",
+      "resx",
+      "rss",
+      "sch",
+      "scxml",
+      "sfproj",
+      "shproj",
+      "srdf",
+      "storyboard",
+      "sublime-snippet",
+      "targets",
+      "tml",
+      "ts",
+      "tsx",
+      "ui",
+      "urdf",
+      "ux",
+      "vbproj",
+      "vcxproj",
+      "vsixmanifest",
+      "vssettings",
+      "vstemplate",
+      "vxml",
+      "wixproj",
+      "workflow",
+      "wsdl",
+      "wsf",
+      "wxi",
+      "wxl",
+      "wxs",
+      "x3d",
+      "xacro",
+      "xaml",
+      "xib",
+      "xlf",
+      "xliff",
+      "xmi",
+      "xml.dist",
+      "xproj",
+      "xsd",
+      "xspec",
+      "xul",
+      "zcml"
+    ]
+  },
+  {
+    "name": "XML Property List",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["plist", "stTheme", "tmCommand", "tmLanguage", "tmPreferences", "tmSnippet", "tmTheme"]
+  },
+  {
+    "name": "XPages",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xsp-config", "xsp.metadata"]
+  },
+  {
+    "name": "XProc",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xpl", "xproc"]
+  },
+  {
+    "name": "XQuery",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xquery", "xq", "xql", "xqm", "xqy"]
+  },
+  {
+    "name": "XS",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xs"]
+  },
+  {
+    "name": "XSLT",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xslt", "xsl"]
+  },
+  {
+    "name": "Xojo",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xojo_code", "xojo_menu", "xojo_report", "xojo_script", "xojo_toolbar", "xojo_window"]
+  },
+  {
+    "name": "Xtend",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["xtend"]
+  },
+  {
+    "name": "YAML",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": [
+      "yml",
+      "mir",
+      "reek",
+      "rviz",
+      "sublime-syntax",
+      "syntax",
+      "yaml",
+      "yaml-tmlanguage",
+      "yml.mysql"
+    ]
+  },
+  {
+    "name": "YANG",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["yang"]
+  },
+  {
+    "name": "YARA",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["yar", "yara"]
+  },
+  {
+    "name": "YASnippet",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["yasnippet"]
+  },
+  {
+    "name": "Yacc",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["y", "yacc", "yy"]
+  },
+  {
+    "name": "ZAP",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["zap", "xzap"]
+  },
+  {
+    "name": "ZIL",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["zil", "mud"]
+  },
+  {
+    "name": "Zeek",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["zeek", "bro"]
+  },
+  {
+    "name": "ZenScript",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["zs"]
+  },
+  {
+    "name": "Zephir",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["zep"]
+  },
+  {
+    "name": "Zig",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["zig"]
+  },
+  {
+    "name": "Zimpl",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["zimpl", "zmpl", "zpl"]
+  },
+  {
+    "name": "desktop",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["desktop", "desktop.in"]
+  },
+  {
+    "name": "eC",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ec", "eh"]
+  },
+  {
+    "name": "edn",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["edn"]
+  },
+  {
+    "name": "fish",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["fish"]
+  },
+  {
+    "name": "mIRC Script",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mrc"]
+  },
+  {
+    "name": "mcfunction",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mcfunction"]
+  },
+  {
+    "name": "mupad",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["mu"]
+  },
+  {
+    "name": "nanorc",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nanorc"]
+  },
+  {
+    "name": "nesC",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["nc"]
+  },
+  {
+    "name": "ooc",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["ooc"]
+  },
+  {
+    "name": "q",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["q"]
+  },
+  {
+    "name": "reStructuredText",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["rst", "rest", "rest.txt", "rst.txt"]
+  },
+  {
+    "name": "sed",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["sed"]
+  },
+  {
+    "name": "wdl",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["wdl"]
+  },
+  {
+    "name": "wisp",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["wisp"]
+  },
+  {
+    "name": "xBase",
+    "role": "Editor",
+    "icon": "generic.icns",
+    "ext": ["prg", "ch", "prw"]
+  }
+]
