@@ -5,11 +5,11 @@ import shellEnv from './shellEnv';
 
 let version;
 
-// Get nvim version. For version 0.3.2 it will return [0, 3, 2, num: 3002].
-// If it fail for some reason, it will return null.
-// Result is cached in `version` variable to avoid extra calls.
+/**
+ * Get Neovim version string.
+ * */
 const nvimVersion = () => {
-  if (version) return version;
+  if (version !== undefined) return version;
 
   const env = shellEnv();
   try {
@@ -18,10 +18,9 @@ const nvimVersion = () => {
       env,
     });
     if (execResult) {
-      const match = execResult.match(/NVIM v(\d+)\.(\d+).(\d+)/);
+      const match = execResult.match(/NVIM v(\d+)\.(\d+).(\d+)(.*)/);
       if (match) {
-        version = [match[1], match[2], match[3]].map(m => parseInt(m, 10));
-        version.num = version.reduce((r, v) => r * 1000 + v, 0);
+        version = `${match[1]}.${match[2]}.${match[3]}${match[4]}`;
       }
     }
   } catch (e) {

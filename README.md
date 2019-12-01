@@ -30,7 +30,7 @@ It will also install Neovim (if it is not installed) and command line launcher `
 
 Or you can download the most recent release from the [Releases](https://github.com/vv-vim/vv/releases/latest) page.
 
-You need Neovim to run VV. You can install it via Homebrew: `$ brew install neovim`. Or you can find Neovim installation instructions here: [https://github.com/neovim/neovim/wiki/Installing-Neovim](https://github.com/neovim/neovim/wiki/Installing-Neovim). Neovim version 0.3.4 and higher is required.
+You need Neovim to run VV. You can install it via Homebrew: `$ brew install neovim`. Or you can find Neovim installation instructions here: [https://github.com/neovim/neovim/wiki/Installing-Neovim](https://github.com/neovim/neovim/wiki/Installing-Neovim). Neovim version 0.4.0 and higher is required.
 
 ### Build manually
 

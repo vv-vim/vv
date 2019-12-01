@@ -2,7 +2,7 @@
   "name": "VV",
   "description": "Neovim GUI Client",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
-  "version": "1.7.3",
+  "version": "2.0.0",
   "private": true,
   "keywords": [
     "vim",
@@ -57,7 +57,8 @@
     "child_process": "^1.0.2",
     "electron-store": "^4.0",
     "lodash": "^4.17.15",
-    "msgpack-lite": "^0.1.26"
+    "msgpack-lite": "^0.1.26",
+    "semver": "^6.3.0"
   },
   "husky": {
     "hooks": {

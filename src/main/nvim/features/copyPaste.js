@@ -3,18 +3,9 @@ import { clipboard } from 'electron';
 import { getNvimByWindow } from '../nvimByWindow';
 
 export const pasteMenuItem = async (_item, win) => {
-  const clipboardText = clipboard.readText().replace(/</g, '<lt>');
   const nvim = getNvimByWindow(win);
-  const mode = await nvim.getShortMode();
-  if (mode === 'i') {
-    await nvim.command('set paste');
-    await nvim.input(clipboardText);
-    await nvim.command('set nopaste');
-  } else if (['n', 'v', 'V', 's', 'S'].includes(mode)) {
-    nvim.input('"*p');
-  } else {
-    nvim.input(clipboardText);
-  }
+  const clipboardText = clipboard.readText();
+  nvim.paste(clipboardText, true, -1);
 };
 
 export const copyMenuItem = async (_item, win) => {
