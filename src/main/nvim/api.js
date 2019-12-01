@@ -81,6 +81,7 @@ const api = ({ args, cwd }) => {
     uiAttach: commandFactory('ui_attach'),
     subscribe: commandFactory('subscribe'),
     getHlByName: commandFactory('get_hl_by_name'),
+    paste: commandFactory('paste'),
   };
 
   // Fetch current mode from nvim, leaves only first letter to match groups of modes.

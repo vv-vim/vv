@@ -1,12 +1,18 @@
 import { app, dialog, shell } from 'electron';
+import semver from 'semver';
 import nvimVersion from './lib/nvimVersion';
+
+const REQUIRED_VERSION = '0.4.0';
 
 const checkNeovim = () => {
   const version = nvimVersion();
   if (!version) {
     const result = dialog.showMessageBox({
       message: 'Neovim is not installed',
-      detail: `VV requires Neovim. You can find Neovim installation instructions here:
+      detail: `VV requires Neovim. You can install it via Homebrew:
+brew install neovim
+
+Or you can find Neovim installation instructions here:
 https://github.com/neovim/neovim/wiki/Installing-Neovim
   `,
       defaultId: 0,
@@ -16,12 +22,16 @@ https://github.com/neovim/neovim/wiki/Installing-Neovim
       shell.openExternal('https://github.com/neovim/neovim/wiki/Installing-Neovim');
     }
     app.exit();
-  } else if (version.num < 3004) {
-    const v = `${version[0]}.${version[1]}.${version[2]}`;
+  } else if (semver.lt(version, REQUIRED_VERSION)) {
     const result = dialog.showMessageBox({
       message: 'Neovim is outdated',
-      detail: `VV requires Neovim version 0.3.4 and later. You have ${v}.
-You can run \`brew upgrade neovim\` if you used Homebrew to install it. Otherwise please check installation instructions here:
+      detail: `VV requires Neovim version ${REQUIRED_VERSION} and later.
+You have ${version}.
+
+If you installed Neovim via Homebrew, please run:
+brew upgrade neovim
+
+Otherwise please check installation instructions here:
 https://github.com/neovim/neovim/wiki/Installing-Neovim
   `,
       defaultId: 0,
