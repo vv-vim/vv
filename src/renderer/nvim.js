@@ -47,6 +47,7 @@ const nvim = {
   callFunction: commandFactory('call_function'),
   command: commandFactory('command'),
   input: commandFactory('input'),
+  inputMouse: commandFactory('input_mouse'),
   getMode: commandFactory('get_mode'),
   uiTryResize: commandFactory('ui_try_resize'),
   uiAttach: commandFactory('ui_attach'),

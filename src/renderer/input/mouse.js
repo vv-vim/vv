@@ -4,9 +4,26 @@ import { modifierPrefix, shiftPrefix } from './keyboard';
 import { screenCoords } from '../screen';
 import nvim from '../nvim';
 
+const GRID = 0;
+
 const SCROLL_STEP_X = 6;
 const SCROLL_STEP_Y = 3;
-const MOUSE_BUTTON = ['Left', 'Middle', 'Right'];
+const MOUSE_BUTTON = {
+  0: 'left',
+  1: 'middle',
+  2: 'right',
+  WHEEL: 'wheel',
+};
+
+const ACTION = {
+  UP: 'up',
+  DOWN: 'down',
+  LEFT: 'left',
+  RIGHT: 'right',
+  PRESS: 'press',
+  DRAG: 'drag',
+  RELEASE: 'release',
+};
 
 let scrollDeltaX = 0;
 let scrollDeltaY = 0;
@@ -23,21 +40,15 @@ const mouseCoordsChanged = event => {
   return false;
 };
 
-const buttonName = (event, type) =>
-  [
-    '<',
-    shiftPrefix(event),
-    modifierPrefix(event),
-    event.buttons ? MOUSE_BUTTON[event.button] : '',
-    type,
-    '>',
-  ].join('');
+const buttonName = event =>
+  event.type === 'wheel' ? MOUSE_BUTTON.WHEEL : MOUSE_BUTTON[event.button];
 
-const mousePosition = event => `<${screenCoords(event.clientX, event.clientY).join(',')}>`;
-
-const mouseInput = (event, type) => {
+const mouseInput = (event, action) => {
   mouseCoordsChanged(event);
-  nvim.input(`${buttonName(event, type)}${mousePosition(event)}`);
+  const [col, row] = screenCoords(event.clientX, event.clientY);
+  const button = buttonName(event);
+  const modifier = modifierPrefix(event);
+  nvim.inputMouse(button, action, modifier, GRID, row, col);
 };
 
 const calculateScroll = event => {
@@ -48,12 +59,12 @@ const calculateScroll = event => {
   if (scrollY === 0 && scrollX === 0) return;
 
   if (scrollY !== 0) {
-    mouseInput(event, `ScrollWheel${scrollDeltaY > 0 ? 'Down' : 'Up'}`);
+    mouseInput(event, scrollDeltaY > 0 ? ACTION.DOWN : ACTION.UP);
     scrollDeltaY = 0;
   }
 
   if (scrollX !== 0) {
-    mouseInput(event, `ScrollWheel${scrollDeltaX > 0 ? 'Right' : 'Left'}`);
+    mouseInput(event, scrollDeltaX > 0 ? ACTION.RIGHT : ACTION.LEFT);
     scrollDeltaX = 0;
   }
 };
@@ -70,22 +81,21 @@ const handleMousedown = event => {
   event.preventDefault();
   event.stopPropagation();
   mouseButtonDown = true;
-  mouseInput(event, 'Mouse');
+  mouseInput(event, ACTION.PRESS);
 };
 
 const handleMouseup = event => {
-  if (mouseButtonDown) {
-    event.preventDefault();
-    event.stopPropagation();
-    mouseButtonDown = false;
-  }
+  event.preventDefault();
+  event.stopPropagation();
+  mouseButtonDown = false;
+  mouseInput(event, ACTION.RELEASE);
 };
 
-const mousemove = event => {
+const handleMousemove = event => {
   if (mouseButtonDown) {
     event.preventDefault();
     event.stopPropagation();
-    if (mouseCoordsChanged(event)) mouseInput(event, 'Drag');
+    if (mouseCoordsChanged(event)) mouseInput(event, ACTION.DRAG);
   }
 };
 
@@ -94,7 +104,7 @@ const initMouse = () => {
 
   document.addEventListener('mousedown', handleMousedown);
   document.addEventListener('mouseup', handleMouseup);
-  document.addEventListener('mousemove', throttle(mousemove, 10));
+  document.addEventListener('mousemove', throttle(handleMousemove, 20));
   document.addEventListener('wheel', throttle(handleMousewheel, 10));
 };
 
