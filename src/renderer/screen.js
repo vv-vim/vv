@@ -54,6 +54,10 @@ let showUndercurl = true;
 let charsCache = {};
 let texturesCache = {};
 
+// Removing sprites is very expensive. Move sprites to clear to orphanSprites array
+// and reuse them later if we will need to create a new sprite.
+const orphanSprites = [];
+
 let chars = {};
 
 const highlightTable = {};
@@ -223,8 +227,13 @@ const printChar = (i, j, char, hlId) => {
   if (!chars[i][j]) chars[i][j] = {};
 
   if (!chars[i][j].sprite) {
-    chars[i][j].sprite = new PIXI.Sprite();
-    stage.addChild(chars[i][j].sprite);
+    if (orphanSprites.length > 0) {
+      chars[i][j].sprite = orphanSprites.pop();
+      chars[i][j].sprite.visible = true;
+    } else {
+      chars[i][j].sprite = new PIXI.Sprite();
+      stage.addChild(chars[i][j].sprite);
+    }
     chars[i][j].sprite.x = (j - 1) * charWidth;
     chars[i][j].sprite.y = i * charHeight;
   }
@@ -587,7 +596,7 @@ const redrawCmd = {
           chars[i][j].sprite.y = i * charHeight;
           chars[i + scrollCount][j] = {};
         } else {
-          chars[i][j] = null;
+          chars[i][j] = {};
         }
       }
     };
@@ -595,8 +604,9 @@ const redrawCmd = {
     const cleanJ = i => {
       for (let j = left; j <= right - 1; j += 1) {
         if (chars[i] && chars[i][j]) {
-          stage.removeChild(chars[i][j].sprite);
-          chars[i][j] = null;
+          chars[i][j].sprite.visible = false;
+          orphanSprites.push(chars[i][j].sprite);
+          chars[i][j] = {};
         }
       }
     };
@@ -687,6 +697,9 @@ const setScale = () => {
   screenContainer.style.height = `${scale * 100}%`;
 };
 
+/**
+ * Return grid [col, row] coordinates by pixel coordinates.
+ * */
 export const screenCoords = (width, height) => {
   return [Math.floor((width * scale) / charWidth), Math.floor((height * scale) / charHeight)];
 };
