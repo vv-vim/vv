@@ -6,18 +6,16 @@ import initScreen from './screen';
 
 import initKeyboard from './input/keyboard';
 import initMouse from './input/mouse';
-import initInsertSymbols from './input/insertSymbols';
-import hideCursor from './features/hideCursor';
+import hideMouseCursor from './features/hideMouseCursor';
 
 import { ipcRenderer } from './preloaded/electron';
 
-const initRenderer = async (_event, settings) => {
+const initRenderer = (_event, settings) => {
   initNvim();
   initScreen('screen', settings);
   initKeyboard();
   initMouse();
-  initInsertSymbols();
-  hideCursor();
+  hideMouseCursor();
 };
 
 ipcRenderer.on('initRenderer', initRenderer);
