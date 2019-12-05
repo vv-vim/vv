@@ -11,3 +11,5 @@
 .DS_Store
 
 /tmp
+
+.env
