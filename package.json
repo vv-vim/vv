@@ -22,17 +22,20 @@
     "start:devserver": "DEV_SERVER=true electron .",
     "start": "electron .",
     "filetypes": "node scripts/filetypes.js",
-    "prebuild": "yarn webpack:build",
-    "build": "electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/electron-builder.js",
-    "postbuild": "cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
+    "build": "yarn webpack:build; electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/build.js",
+    "build:publish": "yarn webpack:build; electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/publish.js",
+    "postbuild": "rm -r /Applications/VV.app; cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.49",
     "@babel/preset-env": "^7.0.0-beta.49",
     "babel-core": "7.0.0-bridge.0",
     "babel-loader": "^7.1.4",
+    "chalk": "^3.0.0",
+    "dotenv": "^8.2.0",
     "electron": "^5.0",
     "electron-builder": "^21.1",
+    "electron-notarize": "^0.2.1",
     "eslint": "^6.2",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-config-prettier": "^6.1.0",
