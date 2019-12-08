@@ -7,7 +7,7 @@ import installCli from './installCli';
 import checkNeovim from './checkNeovim';
 
 import { setShouldQuit } from './nvim/features/quit';
-import { getInitialSettings } from './nvim/settings';
+import { getSettings } from './nvim/settings';
 
 import isDev from '../lib/isDev';
 
@@ -30,7 +30,8 @@ const openDeveloperTools = win => {
 };
 
 const handleAllClosed = () => {
-  if (process.platform !== 'darwin') {
+  const { quitoncloselastwindow } = getSettings();
+  if (quitoncloselastwindow || process.platform !== 'darwin') {
     app.quit();
   }
 };
@@ -101,7 +102,7 @@ const createWindow = (args = [], newCwd) => {
     win,
   });
 
-  const initRenderer = () => win.webContents.send('initRenderer', getInitialSettings(args));
+  const initRenderer = () => win.webContents.send('initRenderer', getSettings(args));
 
   if (win.webContents.isLoading()) {
     win.webContents.on('did-finish-load', initRenderer);

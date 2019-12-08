@@ -76,6 +76,7 @@ You can setup VV-specific options via the `:VVset` command. It works the same as
 - `windowheight`, `height`: Window height.
 - `windowleft`, `left`: Window position from left. Can be a number in pixels or a percentage. Percent values work the same as the `background-position` rule in CSS. For example: 20% means the window’s left border will be offset 20% of your screen. 0% — the very left, 100% — the very right, 50% — center.
 - `windowtop`, `top`: Window position top.
+- `quitoncloselastwindow`: Quit app on close last window. Default: `0`.
 
 You can use these settings in your `init.vim` or change them any time. You can check if VV is loaded by checking the `g:vv` variable:
 

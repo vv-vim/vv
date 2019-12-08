@@ -3,39 +3,38 @@ import debounce from 'lodash/debounce';
 import store from '../lib/store';
 import getColor from '../../lib/getColor';
 
-export const getDefaultSettings = () => {
-  return {
-    fullscreen: 0,
-    simplefullscreen: 1,
-    bold: 1,
-    italic: 1,
-    underline: 1,
-    undercurl: 1,
-    fontfamily: 'monospace',
-    fontsize: 12,
-    lineheight: 1.25,
-    letterspacing: 0,
-    reloadchanged: 0,
-    defaultfgcolor: 'rgb(255,255,255)',
-    defaultbgcolor: 'rgb(0,0,0)',
-    defaultspcolor: 'rgb(255,255,255)',
-  };
-};
+const getDefaultSettings = () => ({
+  fullscreen: 0,
+  simplefullscreen: 1,
+  bold: 1,
+  italic: 1,
+  underline: 1,
+  undercurl: 1,
+  fontfamily: 'monospace',
+  fontsize: 12,
+  lineheight: 1.25,
+  letterspacing: 0,
+  reloadchanged: 0,
+  defaultfgcolor: 'rgb(255,255,255)',
+  defaultbgcolor: 'rgb(0,0,0)',
+  defaultspcolor: 'rgb(255,255,255)',
+  quitoncloselastwindow: 0,
+});
 
-const customConfig = (args = []) => args.indexOf('-u') !== -1;
+const hasCustomConfig = (args = []) => args.indexOf('-u') !== -1;
 
-// Store initial settings to make window open faster. When window is shown current settings are
-// stored to initialSettings. And next time when new window is created we use these settings by
-// default and change it if settings from vim config are changed.
-let initialSettingsCache;
-export const getInitialSettings = (args = []) => {
-  if (customConfig(args)) {
+/**
+ * Get saved settings if we have them, default settings otherwise.
+ * If you run app with -u flag, return default settings.
+ * */
+export const getSettings = (args = []) => {
+  if (hasCustomConfig(args)) {
     return getDefaultSettings();
   }
-  if (!initialSettingsCache) {
-    initialSettingsCache = store.get('initialSettings');
-  }
-  return initialSettingsCache || getDefaultSettings();
+  return {
+    ...getDefaultSettings(),
+    ...store.get('lastSettings'),
+  };
 };
 
 const onChangeSettingsCallbacks = {};
@@ -48,22 +47,21 @@ export const onChangeSettings = (win, callback) => {
 };
 
 const initSettings = ({ win, nvim, args }) => {
-  let initialSettings = getInitialSettings(args);
-  const settings = getDefaultSettings();
+  let initialSettings = getSettings(args);
+  let settings = getDefaultSettings();
 
   let newSettings = {};
 
   const applyAllSettings = async () => {
-    Object.keys(newSettings).forEach(key => {
-      if (settings[key] !== newSettings[key]) {
-        settings[key] = newSettings[key];
-      }
-    });
+    settings = {
+      ...settings,
+      ...newSettings,
+    };
 
-    // If we have initial settings, store current settings.
-    // newSetting will be only those that different from initialSettings.
-    // Don't save settings if it is custom config
-    if (initialSettings && !customConfig(args)) {
+    // If we have initial settings newSetting will be only those that different from initialSettings. We
+    // aleady applied initialSettings when we created a window.
+    // Also store default colors to settings to avoid blinks on init.
+    if (initialSettings && !hasCustomConfig(args)) {
       const highlight = await nvim.getHlByName('Normal', true);
       settings.defaultbgcolor = getColor(highlight.background, initialSettings.defaultbgcolor);
       settings.defaultfgcolor = getColor(highlight.foreground, initialSettings.defaultfgcolor);
@@ -78,10 +76,9 @@ const initSettings = ({ win, nvim, args }) => {
         }
         return result;
       }, {});
-      store.set('initialSettings', settings);
-      initialSettingsCache = settings;
       initialSettings = null;
     }
+    store.set('lastSettings', settings);
 
     win.webContents.send('updateSettings', newSettings, settings);
     if (onChangeSettingsCallbacks[win.webContents.id]) {
