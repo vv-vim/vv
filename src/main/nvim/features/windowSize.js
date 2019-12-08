@@ -1,5 +1,5 @@
 import { screen } from 'electron';
-import { getInitialSettings, onChangeSettings } from '../settings';
+import { getSettings, onChangeSettings } from '../settings';
 import { getNvimByWindow } from '../nvimByWindow';
 
 export const toggleFullScreenMenuItem = (_item, win) => {
@@ -110,7 +110,7 @@ const initWindowSize = ({ win, args }) => {
     }
   };
 
-  updateWindowSize(getInitialSettings(args), getInitialSettings(args));
+  updateWindowSize(getSettings(args), getSettings(args));
   isInitial = true;
 
   onChangeSettings(win, updateWindowSize);

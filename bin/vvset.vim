@@ -22,7 +22,8 @@ let g:vv_default_settings = {
       \  'windowwidth': v:null,
       \  'windowheight': v:null,
       \  'windowleft': v:null,
-      \  'windowtop': v:null
+      \  'windowtop': v:null,
+      \  'quitoncloselastwindow': 0
       \}
 
 let g:vv_settings = deepcopy(g:vv_default_settings)

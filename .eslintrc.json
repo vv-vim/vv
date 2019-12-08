@@ -4,10 +4,13 @@
     "browser": true
   },
   "rules": {
-    "no-unused-vars": ["warn", {
-      "args": "all",
-      "argsIgnorePattern": "^_"
-    }],
+    "no-unused-vars": [
+      "warn",
+      {
+        "args": "all",
+        "argsIgnorePattern": "^_"
+      }
+    ],
     "import/no-extraneous-dependencies": "off",
     "prefer-destructuring": "off",
     "no-mixed-operators": [
