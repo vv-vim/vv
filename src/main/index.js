@@ -112,7 +112,7 @@ const createWindow = (args = [], newCwd) => {
   win.focus();
   windows.push(win);
 
-  // if (args.includes('--inspect')) openDeveloperTools(win);
+  if (args.includes('--inspect')) openDeveloperTools(win);
 
   setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
 

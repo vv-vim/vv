@@ -9,9 +9,7 @@ const nvimChangeZoom = (win, level) => {
 };
 
 const disableActualSizeItem = win => {
-  if (app.getApplicationMenu()) {
-    app.getApplicationMenu().getMenuItemById('actualSize').enabled = win.zoomLevel !== 0;
-  }
+  app.applicationMenu.getMenuItemById('actualSize').enabled = win.zoomLevel !== 0;
 };
 
 export const zoomInMenuItem = (_item, win) => {
