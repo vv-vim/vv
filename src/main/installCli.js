@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import which from './lib/which';
 
 const showInstallCliDialog = () =>
-  dialog.showMessageBox({
+  dialog.showMessageBoxSync({
     message: 'Command line launcher',
     detail: `With command line launcher you can run VV from terminal:
 $ vv [filename]

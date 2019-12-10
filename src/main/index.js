@@ -130,12 +130,12 @@ const openFileOrDir = fileName => {
 };
 
 const openFile = () => {
-  dialog.showOpenDialog(
-    {
-      properties: ['openFile', 'openDirectory', 'createDirectory', 'multiSelections'],
-    },
-    (fileNames = []) => fileNames.forEach(openFileOrDir),
-  );
+  const fileNames = dialog.showOpenDialogSync({
+    properties: ['openFile', 'openDirectory', 'createDirectory', 'multiSelections'],
+  });
+  if (fileNames) {
+    fileNames.forEach(openFileOrDir);
+  }
 };
 
 app.on('will-finish-launching', () => {

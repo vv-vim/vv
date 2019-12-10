@@ -19,7 +19,7 @@ const initReloadChanged = ({ nvim, win }) => {
       const buttons =
         Object.keys(changedBuffers).length > 1 ? ['Reload All', 'Keep All'] : ['Reload', 'Keep'];
 
-      const response = await dialog.showMessageBox(win, {
+      const { response } = await dialog.showMessageBox(win, {
         message,
         detail: `${Object.keys(changedBuffers)
           .map(k => changedBuffers[k].name)

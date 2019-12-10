@@ -17,7 +17,7 @@ const showCloseDialog = async ({ nvim, win }) => {
     nvim.command('qa');
   } else {
     win.focus();
-    const response = dialog.showMessageBox(win, {
+    const { response } = await dialog.showMessageBox(win, {
       message: `You have ${unsavedBuffers.length} unsaved buffers. Do you want to save them?`,
       detail: `${unsavedBuffers.map(b => b.name).join('\n')}\n`,
       cancelId: 2,

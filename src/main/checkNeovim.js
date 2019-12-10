@@ -7,7 +7,7 @@ const REQUIRED_VERSION = '0.4.0';
 const checkNeovim = () => {
   const version = nvimVersion();
   if (!version) {
-    const result = dialog.showMessageBox({
+    const result = dialog.showMessageBoxSync({
       message: 'Neovim is not installed',
       detail: `VV requires Neovim. You can install it via Homebrew:
 brew install neovim
@@ -23,7 +23,7 @@ https://github.com/neovim/neovim/wiki/Installing-Neovim
     }
     app.exit();
   } else if (semver.lt(version, REQUIRED_VERSION)) {
-    const result = dialog.showMessageBox({
+    const result = dialog.showMessageBoxSync({
       message: 'Neovim is outdated',
       detail: `VV requires Neovim version ${REQUIRED_VERSION} and later.
 You have ${version}.
