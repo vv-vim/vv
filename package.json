@@ -22,7 +22,7 @@
     "start:devserver": "DEV_SERVER=true electron .",
     "start": "electron .",
     "filetypes": "node scripts/filetypes.js",
-    "build": "yarn webpack:build; electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/build.js",
+    "build": "yarn webpack:build; electron-builder -c.mac.identity=null -c.extraMetadata.main=build/main.js --config config/electron-builder/build.js",
     "build:publish": "yarn webpack:build; electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/publish.js",
     "postbuild": "rm -r /Applications/VV.app; cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
   },
