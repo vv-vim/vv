@@ -23,8 +23,9 @@
     "start": "electron .",
     "filetypes": "node scripts/filetypes.js",
     "build": "yarn webpack:build; electron-builder -c.mac.identity=null -c.extraMetadata.main=build/main.js --config config/electron-builder/build.js",
-    "build:publish": "yarn webpack:build; electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/publish.js",
-    "postbuild": "rm -r /Applications/VV.app; cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv"
+    "postbuild": "rm -r /Applications/VV.app; cp -r dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv",
+    "release": "yarn webpack:build; electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/release.js",
+    "postrelease": "open https://github.com/vv-vim/vv/releases"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.49",
