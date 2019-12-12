@@ -19,6 +19,7 @@ const getDefaultSettings = () => ({
   defaultbgcolor: 'rgb(0,0,0)',
   defaultspcolor: 'rgb(255,255,255)',
   quitoncloselastwindow: 0,
+  autoupdateinterval: 1440, // One day, 60*24 minutes
 });
 
 const hasCustomConfig = (args = []) => args.indexOf('-u') !== -1;

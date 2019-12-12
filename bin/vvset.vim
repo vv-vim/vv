@@ -23,7 +23,8 @@ let g:vv_default_settings = {
       \  'windowheight': v:null,
       \  'windowleft': v:null,
       \  'windowtop': v:null,
-      \  'quitoncloselastwindow': 0
+      \  'quitoncloselastwindow': 0,
+      \  'autoupdateinterval': 1440
       \}
 
 let g:vv_settings = deepcopy(g:vv_default_settings)
