@@ -74,9 +74,10 @@ You can setup VV-specific options via the `:VVset` command. It works the same as
 - `reloadchanged`: Show dialog when opened files are changed externally. For example, when you switch git branches. It will prompt you to keep your changes or reload the file. Default: `0`.
 - `windowwidth`, `width`: Window width. Can be a number in pixels or percentage of display width.
 - `windowheight`, `height`: Window height.
-- `windowleft`, `left`: Window position from left. Can be a number in pixels or a percentage. Percent values work the same as the `background-position` rule in CSS. For example: 20% means the window’s left border will be offset 20% of your screen. 0% — the very left, 100% — the very right, 50% — center.
+- `windowleft`, `left`: Window position from left. Can be a number in pixels or a percentage. Percent values work the same as the `background-position` rule in CSS. For example: `25%` means that the vertical line on the window that is 25% from the left will be placed at the line that is 25% from the display's left. 0% — the very left, 100% — the very right, 50% — center.
 - `windowtop`, `top`: Window position top.
 - `quitoncloselastwindow`: Quit app on close last window. Default: `0`.
+- `autoupdateinterval`: Autoupdate interval in minutes. `0` — disable autoupdate. Default: `1440`, one day.
 
 You can use these settings in your `init.vim` or change them any time. You can check if VV is loaded by checking the `g:vv` variable:
 

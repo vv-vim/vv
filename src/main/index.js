@@ -9,6 +9,8 @@ import checkNeovim from './checkNeovim';
 import { setShouldQuit } from './nvim/features/quit';
 import { getSettings } from './nvim/settings';
 
+import initAutoUpdate from './autoUpdate';
+
 import isDev from '../lib/isDev';
 
 import initNvim from './nvim/nvim';
@@ -89,6 +91,7 @@ const getEmptyWindow = () => {
 const createWindow = (args = [], newCwd) => {
   const cwd = newCwd || process.cwd();
   const win = getEmptyWindow();
+  const initSettings = getSettings(args);
 
   if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
     const [x, y] = currentWindow.getPosition();
@@ -102,7 +105,7 @@ const createWindow = (args = [], newCwd) => {
     win,
   });
 
-  const initRenderer = () => win.webContents.send('initRenderer', getSettings(args));
+  const initRenderer = () => win.webContents.send('initRenderer', initSettings);
 
   if (win.webContents.isLoading()) {
     win.webContents.on('did-finish-load', initRenderer);
@@ -116,6 +119,8 @@ const createWindow = (args = [], newCwd) => {
   if (args.includes('--inspect')) openDeveloperTools(win);
 
   setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
+
+  initAutoUpdate({ win, args });
 
   return win;
 };
