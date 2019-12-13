@@ -590,7 +590,11 @@ const redrawCmd = {
     const scrollJ = i => {
       for (let j = left; j <= right - 1; j += 1) {
         if (!chars[i]) chars[i] = {};
-        if (chars[i + scrollCount] && chars[i + scrollCount][j]) {
+        if (
+          chars[i + scrollCount] &&
+          chars[i + scrollCount][j] &&
+          chars[i + scrollCount][j].sprite
+        ) {
           chars[i][j] = chars[i + scrollCount][j];
           chars[i][j].sprite.x = (j - 1) * charWidth;
           chars[i][j].sprite.y = i * charHeight;
@@ -603,7 +607,7 @@ const redrawCmd = {
 
     const cleanJ = i => {
       for (let j = left; j <= right - 1; j += 1) {
-        if (chars[i] && chars[i][j]) {
+        if (chars[i] && chars[i][j] && chars[i][j].sprite) {
           chars[i][j].sprite.visible = false;
           orphanSprites.push(chars[i][j].sprite);
           chars[i][j] = {};
@@ -721,7 +725,10 @@ const uiAttach = () => {
   rows = newRows;
 
   nvim.uiAttach(cols, rows, { ext_linegrid: true });
-  window.addEventListener('resize', debounce(() => resize(), 50));
+  window.addEventListener(
+    'resize',
+    debounce(() => resize(), 50),
+  );
 };
 
 const updateSettings = (settings, isInitial = false) => {
