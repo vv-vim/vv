@@ -171,7 +171,7 @@ const initKeyboard = () => {
   // is tricky. `preventDefault` does not work for compositionstart, so we need to blur/focus input
   // element for this.
   nvim.on('redraw', args => {
-    for (let i = 0; i < args.length; i += 1) {
+    for (let i = 0, length = args.length; i < length; i += 1) {
       const [cmd, ...params] = args[i];
       if (cmd === 'mode_change') {
         // https://github.com/neovim/neovim/blob/master/src/nvim/cursor_shape.c#L18

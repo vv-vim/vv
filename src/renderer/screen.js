@@ -13,8 +13,6 @@ import getColor from '../lib/getColor';
 
 const [body] = document.getElementsByTagName('body');
 
-let vimEnter = false;
-
 let screenContainer;
 
 let cursorEl;
@@ -86,8 +84,6 @@ const initCursor = () => {
   cursor = [0, 0];
 };
 
-const debouncedTickerStop = debounce(() => ticker.stop(), 200);
-
 const initScreen = () => {
   screenEl = document.createElement('div');
 
@@ -105,6 +101,7 @@ const initScreen = () => {
   screenContainer.appendChild(screenEl);
 
   ({ stage, ticker, renderer } = pixi);
+  ticker.stop();
 
   stage.interactiveChildren = false;
 
@@ -439,11 +436,11 @@ const redrawCmd = {
   set_icon: () => {},
 
   mode_info_set: props => {
-    modeInfoSet = props[1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
+    modeInfoSet = props[0][1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
     redrawCursor();
   },
 
-  option_set: (...options) => {
+  option_set: options => {
     options.forEach(([option, value]) => {
       if (optionSet[option]) {
         optionSet[option](value);
@@ -453,7 +450,7 @@ const redrawCmd = {
     });
   },
 
-  mode_change: (...modes) => {
+  mode_change: modes => {
     [mode] = modes[modes.length - 1];
     redrawCursor();
   },
@@ -479,8 +476,8 @@ const redrawCmd = {
 
   // New api
   grid_resize: props => {
-    cols = props[1];
-    rows = props[2];
+    cols = props[0][1];
+    rows = props[0][2];
     // Add extra column on the right to fill it with adjacent color to have a nice right border
     screenEl.style.width = `${(cols + 1) * charWidth}px`;
     screenEl.style.height = `${rows * charHeight}px`;
@@ -495,10 +492,9 @@ const redrawCmd = {
     renderer.resize(canvasEl.width, canvasEl.height);
   },
 
-  default_colors_set: (...p) => {
-    if (!vimEnter) return;
-    const props = p[p.length - 1];
-    const [foreground, background, special] = props;
+  default_colors_set: props => {
+    const [foreground, background, special] = props[props.length - 1];
+
     setDefaultHl({
       bgColor: getColor(background, defaultBgColor),
       fgColor: getColor(foreground, defaultFgColor),
@@ -510,7 +506,7 @@ const redrawCmd = {
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
 
-  hl_attr_define: (...props) => {
+  hl_attr_define: props => {
     props.forEach(([id, value]) => {
       highlightTable[id] = {
         value,
@@ -519,7 +515,7 @@ const redrawCmd = {
     recalculateHighlightTable();
   },
 
-  grid_line: (...props) => {
+  grid_line: props => {
     for (let gridKey = 0, gridLength = props.length; gridKey < gridLength; gridKey += 1) {
       const [_grid, row, col, cells] = props[gridKey];
 
@@ -550,7 +546,7 @@ const redrawCmd = {
 
   grid_destroy: () => {},
 
-  grid_cursor_goto: ([_grid, ...newCursor]) => {
+  grid_cursor_goto: ([[_, ...newCursor]]) => {
     if (newCursor[0] !== cursor[0] && newCursor[0] === rows - 1) {
       debouncedRepositionCursor(newCursor);
     } else {
@@ -558,7 +554,7 @@ const redrawCmd = {
     }
   },
 
-  grid_scroll: ([_grid, top, bottom, left, right, scrollCount]) => {
+  grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]) => {
     // Scroll background
     const x = left * charWidth; // region left
     let y; // region top
@@ -681,12 +677,14 @@ const handleSet = {
   },
 };
 
+const debouncedTickerStop = debounce(() => ticker.stop(), 100);
+
 const redraw = args => {
   ticker.start();
   for (let i = 0; i < args.length; i += 1) {
     const [cmd, ...props] = args[i];
     if (redrawCmd[cmd]) {
-      redrawCmd[cmd](...props);
+      redrawCmd[cmd](props);
     } else {
       console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
     }
@@ -790,10 +788,6 @@ const screen = (containerId, settings) => {
 
   measureCharSize();
   uiAttach(true);
-
-  nvim.on('vv:vim_enter', () => {
-    vimEnter = true;
-  });
 
   ipcRenderer.on('updateSettings', (_, s) => updateSettings(s));
 

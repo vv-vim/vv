@@ -92,6 +92,8 @@ if exists('g:vv')
 endif
 ```
 
+VV also sets `set termguicolors` on startup.
+
 ## Development
 
 First, you need start a webpack watch process in a separate terminal:
