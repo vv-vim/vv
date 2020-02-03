@@ -3,6 +3,8 @@ let g:vv = 1
 source <sfile>:h/vvset.vim
 source <sfile>:h/reloadChanged.vim
 
+set termguicolors
+
 autocmd VimEnter * call rpcnotify(0, "vv:vim_enter")
 
 " Send unsaved buffers to client

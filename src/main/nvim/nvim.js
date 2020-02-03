@@ -11,15 +11,12 @@ import focusAutocmd from './features/focusAutocmd';
 
 import settings from './settings';
 
-import showWindow from './showWindow';
-
 import nvimApi from './api';
 
 ipcMain.on('nvim-send', ({ sender: { id } }, payload) => {
   const nvim = getNvimByWindow(id);
   if (nvim) nvim.send(...payload);
 });
-
 const initNvim = ({ args, cwd, win }) => {
   const nvim = nvimApi({
     args,
@@ -44,7 +41,9 @@ const initNvim = ({ args, cwd, win }) => {
   reloadChanged({ win, nvim });
   focusAutocmd({ win, nvim });
 
-  showWindow({ win, nvim });
+  nvim.on('vv:vim_enter', () => {
+    win.show();
+  });
 };
 
 export default initNvim;
