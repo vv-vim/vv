@@ -1,6 +1,6 @@
 import throttle from 'lodash/throttle';
 
-import { modifierPrefix, shiftPrefix } from './keyboard';
+import { modifierPrefix } from './keyboard';
 import { screenCoords } from '../screen';
 import nvim from '../nvim';
 
@@ -104,7 +104,7 @@ const initMouse = () => {
 
   document.addEventListener('mousedown', handleMousedown);
   document.addEventListener('mouseup', handleMouseup);
-  document.addEventListener('mousemove', throttle(handleMousemove, 20));
+  document.addEventListener('mousemove', throttle(handleMousemove, 50));
   document.addEventListener('wheel', throttle(handleMousewheel, 10));
 };
 
