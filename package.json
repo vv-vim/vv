@@ -58,6 +58,7 @@
     "@pixi/core": "^5.2.1",
     "@pixi/sprite": "^5.2.1",
     "@pixi/ticker": "^5.2.1",
+    "@pixi/utils": "^5.2.1",
     "child_process": "^1.0.2",
     "electron-store": "^5.1.0",
     "electron-updater": "^4.2.0",

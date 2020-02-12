@@ -770,7 +770,7 @@
   dependencies:
     "@pixi/settings" "5.2.1"
 
-"@pixi/utils@5.2.1":
+"@pixi/utils@5.2.1", "@pixi/utils@^5.2.1":
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/@pixi/utils/-/utils-5.2.1.tgz#d2445a976b315a58860a7f19d754143af3659f09"
   integrity sha512-JKa/IDKK3cbwrJbhU4q3hdN5tPTsuiWco+WDSlEWq6vblrwJkhI+0dRQkooo2fL+Tso7k+hWQ+4k95YapTX5Og==
