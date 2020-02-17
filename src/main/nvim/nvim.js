@@ -9,7 +9,7 @@ import reloadChanged from './features/reloadChanged';
 import windowSize from './features/windowSize';
 import focusAutocmd from './features/focusAutocmd';
 
-import settings from './settings';
+import initSettings from './settings';
 
 import nvimApi from './api';
 
@@ -31,7 +31,7 @@ const initNvim = ({ args, cwd, win }) => {
     deleteNvimByWindow(win);
   });
 
-  settings({ win, nvim, args });
+  initSettings({ win, nvim, args });
 
   windowSize({ win, args });
 

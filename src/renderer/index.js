@@ -12,7 +12,7 @@ import { ipcRenderer } from './preloaded/electron';
 
 const initRenderer = (_event, settings) => {
   initNvim();
-  initScreen('screen', settings);
+  initScreen(settings);
   initKeyboard();
   initMouse();
   hideMouseCursor();

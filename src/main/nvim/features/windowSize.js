@@ -88,7 +88,9 @@ const initWindowSize = ({ win, args }) => {
 
   const updateWindowSize = (newSettings, allSettings) => {
     let settings = newSettings;
-    bounds = win.getBounds();
+    if (!fullScreen) {
+      bounds = win.getBounds();
+    }
     if (isInitial && allSettings.fullscreen === 0) {
       settings = allSettings;
       bounds = initialBounds;
@@ -108,7 +110,7 @@ const initWindowSize = ({ win, args }) => {
     }
   };
 
-  updateWindowSize(getSettings(args), getSettings(args));
+  updateWindowSize(getSettings(), getSettings());
   isInitial = true;
 
   onChangeSettings(win, updateWindowSize);

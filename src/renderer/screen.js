@@ -34,9 +34,9 @@ let fontSize = 12;
 let lineHeight = 1.25;
 let letterSpacing = 0;
 
-let defaultFgColor = 'rgb(255,255,255)';
-let defaultBgColor = 'rgb(0,0,0)';
-let defaultSpColor = 'rgb(255,255,255)';
+const defaultFgColor = 'rgb(255,255,255)';
+const defaultBgColor = 'rgb(0,0,0)';
+const defaultSpColor = 'rgb(255,255,255)';
 
 let cols;
 let rows;
@@ -85,6 +85,11 @@ const initCursor = () => {
 };
 
 const initScreen = () => {
+  screenContainer = document.getElementById('screen');
+
+  screenContainer.style.position = 'absolute';
+  screenContainer.style.transformOrigin = '0 0';
+
   screenEl = document.createElement('div');
 
   screenEl.style.contain = 'strict';
@@ -403,7 +408,10 @@ const recalculateHighlightTable = () => {
         };
       }
     });
+
     // PIXI.utils.destroyTextureCache();
+    context.fillStyle = highlightTable[0].calculated.bgColor;
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
     for (let i = 0; i <= rows; i += 1) {
       if (chars[i]) {
@@ -470,9 +478,7 @@ const redrawCmd = {
     screenEl.style.height = `${rows * charHeight}px`;
     canvasEl.width = (cols + 1) * charWidth;
     canvasEl.height = rows * charHeight;
-    context.fillStyle = highlightTable[0]
-      ? highlightTable[0].calculated.background
-      : defaultBgColor;
+    context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
     renderer.clear();
@@ -488,8 +494,6 @@ const redrawCmd = {
       spColor: getColor(special, defaultSpColor),
     });
     recalculateHighlightTable();
-    context.fillStyle = highlightTable[0].calculated.bgColor;
-    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   },
 
   hl_attr_define: props => {
@@ -651,21 +655,9 @@ const handleSet = {
   undercurl: value => {
     showUndercurl = value;
   },
-
-  defaultbgcolor: value => {
-    defaultBgColor = value;
-  },
-
-  defaultfgcolor: value => {
-    defaultFgColor = value;
-  },
-
-  defaultspcolor: value => {
-    defaultSpColor = value;
-  },
 };
 
-const debouncedTickerStop = debounce(() => ticker.stop(), 100);
+const debouncedTickerStop = debounce(() => ticker.stop(), 200);
 
 const redraw = args => {
   ticker.start();
@@ -685,6 +677,15 @@ const setScale = () => {
   screenContainer.style.transform = `scale(${1 / scale})`;
   screenContainer.style.width = `${scale * 100}%`;
   screenContainer.style.height = `${scale * 100}%`;
+
+  // Detect when you drag between retina/non-retina displays
+  window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
+    canvasEl.style.opacity = 0;
+    setScale();
+    measureCharSize();
+    await nvim.uiTryResize(cols, rows);
+    canvasEl.style.opacity = 1;
+  });
 };
 
 /**
@@ -718,7 +719,7 @@ const uiAttach = () => {
 };
 
 const updateSettings = (settings, isInitial = false) => {
-  let requireRedraw = false;
+  let requireRedraw = isInitial;
   const requireRedrawProps = [
     'fontfamily',
     'fontsize',
@@ -737,49 +738,25 @@ const updateSettings = (settings, isInitial = false) => {
     }
   });
 
-  // setDefaultHl({
-  //   bgColor: defaultBgColor,
-  //   fgColor: defaultFgColor,
-  //   spColor: defaultSpColor,
-  // });
-
-  if (!isInitial && requireRedraw) {
+  if (requireRedraw) {
     measureCharSize();
-    resize(true);
+    if (!isInitial) {
+      resize(true);
+    }
   }
 };
 
-const screen = (containerId, settings) => {
-  updateSettings(settings, true);
+initScreen();
+initCursor();
+setScale();
 
-  screenContainer = document.getElementById(containerId);
-  if (!screenContainer) return false;
-
-  screenContainer.style.position = 'absolute';
-  screenContainer.style.transformOrigin = '0 0';
-
-  setScale();
-
-  initScreen();
-  initCursor();
-
+const screen = settings => {
   nvim.on('redraw', redraw);
 
-  // Detect when you drag between retina/non-retina displays
-  window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
-    canvasEl.style.opacity = 0;
-    setScale();
-    measureCharSize();
-    await nvim.uiTryResize(cols, rows);
-    canvasEl.style.opacity = 1;
-  });
-
-  measureCharSize();
-  uiAttach(true);
-
   ipcRenderer.on('updateSettings', (_, s) => updateSettings(s));
+  updateSettings(settings, true);
 
-  return redrawCmd;
+  uiAttach();
 };
 
 export default screen;

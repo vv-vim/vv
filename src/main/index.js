@@ -71,11 +71,6 @@ const createEmptyWindow = () => {
     process.env.DEV_SERVER
       ? 'http://localhost:3000'
       : `file://${path.join(__dirname, './index.html')}`,
-
-    {
-      userAgent:
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36',
-    },
   );
 
   return win;
@@ -91,7 +86,6 @@ const getEmptyWindow = () => {
 const createWindow = (args = [], newCwd) => {
   const cwd = newCwd || process.cwd();
   const win = getEmptyWindow();
-  const initSettings = getSettings(args);
 
   if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
     const [x, y] = currentWindow.getPosition();
@@ -105,7 +99,7 @@ const createWindow = (args = [], newCwd) => {
     win,
   });
 
-  const initRenderer = () => win.webContents.send('initRenderer', initSettings);
+  const initRenderer = () => win.webContents.send('initRenderer', getSettings());
 
   if (win.webContents.isLoading()) {
     win.webContents.on('did-finish-load', initRenderer);
