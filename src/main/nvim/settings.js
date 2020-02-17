@@ -15,21 +15,18 @@ const getDefaultSettings = () => ({
   lineheight: 1.25,
   letterspacing: 0,
   reloadchanged: 0,
-  defaultfgcolor: 'rgb(255,255,255)',
-  defaultbgcolor: 'rgb(0,0,0)',
-  defaultspcolor: 'rgb(255,255,255)',
   quitoncloselastwindow: 0,
   autoupdateinterval: 1440, // One day, 60*24 minutes
 });
 
-const hasCustomConfig = (args = []) => args.indexOf('-u') !== -1;
+let hasCustomConfig = false;
 
 /**
  * Get saved settings if we have them, default settings otherwise.
  * If you run app with -u flag, return default settings.
  * */
-export const getSettings = (args = []) => {
-  if (hasCustomConfig(args)) {
+export const getSettings = () => {
+  if (hasCustomConfig) {
     return getDefaultSettings();
   }
   return {
@@ -48,7 +45,8 @@ export const onChangeSettings = (win, callback) => {
 };
 
 const initSettings = ({ win, nvim, args }) => {
-  let initialSettings = getSettings(args);
+  hasCustomConfig = args.indexOf('-u') !== -1;
+  let initialSettings = getSettings();
   let settings = getDefaultSettings();
 
   let newSettings = {};
@@ -62,12 +60,7 @@ const initSettings = ({ win, nvim, args }) => {
     // If we have initial settings newSetting will be only those that different from initialSettings. We
     // aleady applied initialSettings when we created a window.
     // Also store default colors to settings to avoid blinks on init.
-    if (initialSettings && !hasCustomConfig(args)) {
-      const highlight = await nvim.getHlByName('Normal', true);
-      settings.defaultbgcolor = getColor(highlight.background, initialSettings.defaultbgcolor);
-      settings.defaultfgcolor = getColor(highlight.foreground, initialSettings.defaultfgcolor);
-      settings.defaultspcolor = getColor(highlight.foreground, initialSettings.defaultfgcolor);
-
+    if (initialSettings && !hasCustomConfig) {
       newSettings = Object.keys(settings).reduce((result, key) => {
         if (initialSettings[key] !== settings[key]) {
           return {
