@@ -1,5 +1,7 @@
 import debounce from 'lodash/debounce';
+import throttle from 'lodash/throttle';
 import isFinite from 'lodash/isFinite';
+import isEqual from 'lodash/isEqual';
 
 import * as PIXI from './lib/pixi';
 
@@ -49,16 +51,28 @@ let showItalic = true;
 let showUnderline = true;
 let showUndercurl = true;
 
-let charBitmapCanvas;
-let charBitmapContext;
+let charCanvas;
+let charCtx;
 
 // Removing sprites is very expensive. Move sprites to clear to spritesPool array
 // and reuse them later if we will need to create a new sprite.
 const spritesPool = [];
 
-let chars = {};
+const chars = {};
 
-const highlightTable = {};
+const highlightTable = {
+  '0': {
+    calculated: {
+      bgColor: defaultBgColor,
+      fgColor: defaultFgColor,
+      spColor: defaultSpColor,
+      hiItalic: false,
+      hiBold: false,
+      hiUnderline: false,
+      hiUndercurl: false,
+    },
+  },
+};
 
 // WebGL
 let stage;
@@ -159,9 +173,9 @@ const measureCharSize = () => {
     cursorEl.style.width = `${charWidth}px`;
     cursorEl.style.height = `${charHeight}px`;
 
-    if (charBitmapCanvas) {
-      charBitmapCanvas.width = charWidth * 3;
-      charBitmapCanvas.height = charHeight;
+    if (charCanvas) {
+      charCanvas.width = charWidth * 3;
+      charCanvas.height = charHeight;
     }
 
     // PIXI.utils.destroyTextureCache();
@@ -175,17 +189,17 @@ const font = p =>
   );
 
 const getCharBitmap = (char, props) => {
-  if (!charBitmapCanvas) {
-    charBitmapCanvas = new OffscreenCanvas(charWidth * 3, charHeight);
-    charBitmapContext = charBitmapCanvas.getContext('2d', { alpha: true });
+  if (!charCanvas) {
+    charCanvas = new OffscreenCanvas(charWidth * 3, charHeight);
+    charCtx = charCanvas.getContext('2d', { alpha: true });
   }
 
-  charBitmapContext.fillStyle = props.fgColor;
-  charBitmapContext.font = font(props);
-  charBitmapContext.textAlign = 'left';
-  charBitmapContext.textBaseline = 'middle';
+  charCtx.fillStyle = props.fgColor;
+  charCtx.font = font(props);
+  charCtx.textAlign = 'left';
+  charCtx.textBaseline = 'middle';
   if (char) {
-    charBitmapContext.fillText(
+    charCtx.fillText(
       char,
       Math.round(scaledLetterSpacing() / 2) + charWidth,
       Math.round(charHeight / 2),
@@ -193,28 +207,28 @@ const getCharBitmap = (char, props) => {
   }
 
   if (props.hiUnderline) {
-    charBitmapContext.strokeStyle = props.fgColor;
-    charBitmapContext.lineWidth = scale;
-    charBitmapContext.beginPath();
-    charBitmapContext.moveTo(charWidth, charHeight - scale);
-    charBitmapContext.lineTo(charWidth * 2, charHeight - scale);
-    charBitmapContext.stroke();
+    charCtx.strokeStyle = props.fgColor;
+    charCtx.lineWidth = scale;
+    charCtx.beginPath();
+    charCtx.moveTo(charWidth, charHeight - scale);
+    charCtx.lineTo(charWidth * 2, charHeight - scale);
+    charCtx.stroke();
   }
 
   if (props.hiUndercurl) {
-    charBitmapContext.strokeStyle = props.spColor;
-    charBitmapContext.lineWidth = scaledFontSize() * 0.08;
+    charCtx.strokeStyle = props.spColor;
+    charCtx.lineWidth = scaledFontSize() * 0.08;
     const x = charWidth;
     const y = charHeight - (scaledFontSize() * 0.08) / 2;
     const h = charHeight * 0.2; // Height of the wave
-    charBitmapContext.beginPath();
-    charBitmapContext.moveTo(x, y);
-    charBitmapContext.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
-    charBitmapContext.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
-    charBitmapContext.stroke();
+    charCtx.beginPath();
+    charCtx.moveTo(x, y);
+    charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
+    charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
+    charCtx.stroke();
   }
 
-  return charBitmapCanvas.transferToImageBitmap();
+  return charCanvas.transferToImageBitmap();
 };
 
 const textureCacheKey = (char, hlId) => {
@@ -241,7 +255,6 @@ const printChar = (i, j, char, hlId) => {
   if (!chars[i][j].sprite) {
     if (spritesPool.length > 0) {
       chars[i][j].sprite = spritesPool.pop();
-      chars[i][j].sprite.visible = true;
     } else {
       chars[i][j].sprite = new PIXI.Sprite();
       stage.addChild(chars[i][j].sprite);
@@ -253,8 +266,8 @@ const printChar = (i, j, char, hlId) => {
   // Print char to WebGL
   chars[i][j].char = char;
   chars[i][j].hlId = hlId;
-  chars[i][j].needsRedraw = false;
   chars[i][j].sprite.texture = getCharTexture(char, hlId);
+  chars[i][j].sprite.visible = true;
 
   // Draw background in canvas
   context.fillStyle = highlightTable[hlId].calculated.bgColor;
@@ -359,6 +372,57 @@ const optionSet = {
   },
 };
 
+const reprintAllChars = debounce(() => {
+  context.fillStyle = highlightTable[0].calculated.bgColor;
+  context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+  body.style.background = highlightTable[0].calculated.bgColor;
+  remote.getCurrentWindow().setBackgroundColor(highlightTable[0].calculated.bgColor);
+
+  // PIXI.utils.destroyTextureCache();
+  for (let i = 0; i <= rows; i += 1) {
+    if (chars[i]) {
+      for (let j = 0; j <= cols; j += 1) {
+        if (chars[i][j] && chars[i][j].char && isFinite(chars[i][j].hlId)) {
+          printChar(i, j, chars[i][j].char, chars[i][j].hlId);
+        }
+      }
+    }
+  }
+}, 10);
+
+const recalculateHighlightTable = () => {
+  Object.keys(highlightTable).forEach(id => {
+    if (id > 0) {
+      const {
+        foreground,
+        background,
+        special,
+        reverse,
+        standout,
+        italic,
+        bold,
+        underline,
+        undercurl,
+      } = highlightTable[id].value;
+      const r = reverse || standout;
+      const fg = getColor(foreground, highlightTable[0].calculated.fgColor);
+      const bg = getColor(background, highlightTable[0].calculated.bgColor);
+      const sp = getColor(special, highlightTable[0].calculated.spColor);
+
+      highlightTable[id].calculated = {
+        fgColor: r ? bg : fg,
+        bgColor: r ? fg : bg,
+        spColor: sp,
+        hiItalic: showItalic && italic,
+        hiBold: showBold && bold,
+        hiUnderline: showUnderline && underline,
+        hiUndercurl: showUndercurl && undercurl,
+      };
+    }
+  });
+  reprintAllChars();
+};
+
 const setDefaultHl = ({ bgColor, fgColor, spColor }) => {
   const calculated = {
     bgColor,
@@ -369,59 +433,9 @@ const setDefaultHl = ({ bgColor, fgColor, spColor }) => {
     hiUnderline: false,
     hiUndercurl: false,
   };
-  highlightTable[0] = {
-    calculated,
-  };
-  body.style.background = calculated.bgColor;
-  const win = remote.getCurrentWindow();
-  win.setBackgroundColor(calculated.bgColor);
-};
-
-const recalculateHighlightTable = () => {
-  if (highlightTable[0]) {
-    Object.keys(highlightTable).forEach(id => {
-      if (id > 0) {
-        const {
-          foreground,
-          background,
-          special,
-          reverse,
-          standout,
-          italic,
-          bold,
-          underline,
-          undercurl,
-        } = highlightTable[id].value;
-        const r = reverse || standout;
-        const fg = getColor(foreground, highlightTable[0].calculated.fgColor);
-        const bg = getColor(background, highlightTable[0].calculated.bgColor);
-        const sp = getColor(special, highlightTable[0].calculated.spColor);
-
-        highlightTable[id].calculated = {
-          fgColor: r ? bg : fg,
-          bgColor: r ? fg : bg,
-          spColor: sp,
-          hiItalic: showItalic && italic,
-          hiBold: showBold && bold,
-          hiUnderline: showUnderline && underline,
-          hiUndercurl: showUndercurl && undercurl,
-        };
-      }
-    });
-
-    // PIXI.utils.destroyTextureCache();
-    context.fillStyle = highlightTable[0].calculated.bgColor;
-    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
-
-    for (let i = 0; i <= rows; i += 1) {
-      if (chars[i]) {
-        for (let j = 0; j <= cols; j += 1) {
-          if (chars[i][j] && chars[i][j].char && isFinite(chars[i][j].hlId)) {
-            printChar(i, j, chars[i][j].char, chars[i][j].hlId);
-          }
-        }
-      }
-    }
+  if (!highlightTable[0] || !isEqual(highlightTable[0].calculated, calculated)) {
+    highlightTable[0] = { calculated };
+    recalculateHighlightTable();
   }
 };
 
@@ -481,7 +495,6 @@ const redrawCmd = {
     context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
-    renderer.clear();
     renderer.resize(canvasEl.width, canvasEl.height);
   },
 
@@ -493,7 +506,6 @@ const redrawCmd = {
       fgColor: getColor(foreground, defaultFgColor),
       spColor: getColor(special, defaultSpColor),
     });
-    recalculateHighlightTable();
   },
 
   hl_attr_define: props => {
@@ -532,8 +544,19 @@ const redrawCmd = {
     cursor = [0, 0];
     context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
-    chars = {};
-    stage.removeChildren();
+
+    stage.children.forEach(c => {
+      c.visible = false; // eslint-disable-line no-param-reassign
+    });
+    for (let i = 0; i <= rows; i += 1) {
+      if (chars[i]) {
+        for (let j = 0; j <= cols; j += 1) {
+          if (chars[i][j]) {
+            chars[i][j].char = null;
+          }
+        }
+      }
+    }
   },
 
   grid_destroy: () => {},
@@ -714,7 +737,7 @@ const uiAttach = () => {
   nvim.uiAttach(cols, rows, { ext_linegrid: true });
   window.addEventListener(
     'resize',
-    debounce(() => resize(), 50),
+    throttle(() => resize(), 30),
   );
 };
 
