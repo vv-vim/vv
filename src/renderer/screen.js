@@ -288,15 +288,6 @@ const redrawCursor = () => {
   if (!m) return;
   clearCursor();
 
-  let cursorChar = {
-    char: ' ',
-    bold: false,
-    italic: false,
-  };
-  if (chars[cursor[0]] && chars[cursor[0]][cursor[1]]) {
-    cursorChar = chars[cursor[0]][cursor[1]];
-  }
-
   const highlightAttrs = { ...highlightTable[m.attr_id].calculated };
   if (m.attr_id === 0) {
     highlightAttrs.bgColor = highlightTable[0].calculated.fgColor;
@@ -305,7 +296,7 @@ const redrawCursor = () => {
   }
 
   if (m.cursor_shape === 'block' && m.name.indexOf('cmdline') === -1) {
-    const { char } = cursorChar;
+    const char = chars[cursor[0]][cursor[1]].char || ' ';
     cursorEl.style.background = highlightAttrs.bgColor;
     cursorContext.drawImage(getCharBitmap(char, highlightAttrs), -charWidth, 0);
   } else if (m.cursor_shape === 'vertical') {
@@ -380,11 +371,11 @@ const reprintAllChars = debounce(() => {
 
   // PIXI.utils.destroyTextureCache();
   for (let i = 0; i <= rows; i += 1) {
-    if (chars[i]) {
-      for (let j = 0; j <= cols; j += 1) {
-        if (chars[i][j] && chars[i][j].char && isFinite(chars[i][j].hlId)) {
-          printChar(i, j, chars[i][j].char, chars[i][j].hlId);
-        }
+    if (!chars[i]) chars[i] = {};
+    for (let j = 0; j <= cols; j += 1) {
+      if (!chars[i][j]) chars[i][j] = {};
+      if (chars[i][j].char && isFinite(chars[i][j].hlId)) {
+        printChar(i, j, chars[i][j].char, chars[i][j].hlId);
       }
     }
   }
@@ -549,12 +540,10 @@ const redrawCmd = {
       c.visible = false; // eslint-disable-line no-param-reassign
     });
     for (let i = 0; i <= rows; i += 1) {
-      if (chars[i]) {
-        for (let j = 0; j <= cols; j += 1) {
-          if (chars[i][j]) {
-            chars[i][j].char = null;
-          }
-        }
+      if (!chars[i]) chars[i] = {};
+      for (let j = 0; j <= cols; j += 1) {
+        if (!chars[i][j]) chars[i][j] = {};
+        chars[i][j].char = null;
       }
     }
   },
@@ -598,49 +587,41 @@ const redrawCmd = {
     context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
 
     // Scroll chars
-    const scrollJ = i => {
+    const scrollLine = i => {
       for (let j = left; j <= right - 1; j += 1) {
-        if (!chars[i]) chars[i] = {};
-        if (
-          chars[i + scrollCount] &&
-          chars[i + scrollCount][j] &&
-          chars[i + scrollCount][j].sprite
-        ) {
-          chars[i][j] = chars[i + scrollCount][j];
-          chars[i][j].sprite.x = (j - 1) * charWidth;
-          chars[i][j].sprite.y = i * charHeight;
-          chars[i + scrollCount][j] = {};
-        } else {
-          chars[i][j] = {};
-        }
-      }
-    };
+        const sourceI = i + scrollCount;
 
-    const cleanJ = i => {
-      for (let j = left; j <= right - 1; j += 1) {
-        if (chars[i] && chars[i][j] && chars[i][j].sprite) {
-          chars[i][j].sprite.visible = false;
-          spritesPool.push(chars[i][j].sprite);
-          chars[i][j] = {};
+        if (!chars[i]) chars[i] = {};
+        if (!chars[i][j]) chars[i][j] = {};
+
+        if (!chars[sourceI]) chars[sourceI] = {};
+        if (!chars[sourceI][j]) chars[sourceI][j] = {};
+
+        // Swap char to scroll to destination
+        [chars[i][j], chars[sourceI][j]] = [chars[sourceI][j], chars[i][j]];
+
+        // Update scrolled char sprite position
+        if (chars[i][j].sprite) {
+          chars[i][j].sprite.y = i * charHeight;
+        }
+
+        // Clear and reposition old char
+        if (chars[sourceI][j].sprite) {
+          chars[sourceI][j].sprite.visible = false;
+          chars[sourceI][j].sprite.y = sourceI * charHeight;
         }
       }
     };
 
     if (scrollCount > 0) {
       // scroll down
-      for (let i = top; i <= top + scrollCount - 1; i += 1) {
-        cleanJ(i);
-      }
       for (let i = top; i <= bottom - scrollCount - 1; i += 1) {
-        scrollJ(i);
+        scrollLine(i);
       }
     } else {
       // scroll up
-      for (let i = bottom + scrollCount; i <= bottom - 1; i += 1) {
-        cleanJ(i);
-      }
       for (let i = bottom - 1; i >= top - scrollCount; i -= 1) {
-        scrollJ(i);
+        scrollLine(i);
       }
     }
   },
