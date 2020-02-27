@@ -9,7 +9,7 @@ export const toggleFullScreenMenuItem = (_item, win) => {
   }
 };
 
-const initWindowSize = ({ win, args }) => {
+const initWindowSize = ({ win }) => {
   const initialBounds = win.getBounds();
   let bounds = win.getBounds();
   let simpleFullScreen = false;
@@ -82,7 +82,7 @@ const initWindowSize = ({ win, args }) => {
           win.webContents.focus();
         }, 1);
       }
-      win.setFullScreenable(!simpleFullScreen);
+      win.fullScreenable = !simpleFullScreen; // eslint-disable-line no-param-reassign
     },
   };
 
