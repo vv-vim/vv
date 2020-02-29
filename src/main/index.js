@@ -137,18 +137,27 @@ const openFile = () => {
   }
 };
 
+let fileToOpen;
 app.on('will-finish-launching', () => {
-  app.on('open-file', (_e, file) => openFileOrDir(file));
+  app.on('open-file', (_e, file) => {
+    fileToOpen = file;
+  });
 });
 
 app.on('ready', () => {
   checkNeovim();
-  createWindow(cliArgs());
+  if (fileToOpen) {
+    openFileOrDir(fileToOpen);
+    fileToOpen = null;
+  } else {
+    createWindow(cliArgs());
+  }
   menu({
     createWindow,
     openFile,
     installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
   });
+  app.on('open-file', (_e, file) => openFileOrDir(file));
   app.focus();
 });
 
