@@ -259,14 +259,14 @@ const printChar = (i, j, char, hlId) => {
       chars[i][j].sprite = new PIXI.Sprite();
       stage.addChild(chars[i][j].sprite);
     }
-    chars[i][j].sprite.position.x = (j - 1) * charWidth;
-    chars[i][j].sprite.position.y = i * charHeight;
   }
 
   // Print char to WebGL
   chars[i][j].char = char;
   chars[i][j].hlId = hlId;
   chars[i][j].sprite.texture = getCharTexture(char, hlId);
+  chars[i][j].sprite.position.x = (j - 1) * charWidth;
+  chars[i][j].sprite.position.y = i * charHeight;
   chars[i][j].sprite.visible = true;
 
   // Draw background in canvas
