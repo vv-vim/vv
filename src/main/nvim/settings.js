@@ -1,7 +1,6 @@
 import debounce from 'lodash/debounce';
 
 import store from '../lib/store';
-import getColor from '../../lib/getColor';
 
 const getDefaultSettings = () => ({
   fullscreen: 0,

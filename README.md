@@ -108,11 +108,7 @@ Then you can run the app:
 yarn start
 ```
 
-This app is in active development. This project was started as personal experiements with Neovim API, so the code is quite chaotic. There are no tests, no static typing etc; so, any PRs or feedback are highly welcome.
-
-## Testing
-
-TBD
+You can run tests with `yarn test` and ESLint with `yarn lint` commands.
 
 ## Name
 
