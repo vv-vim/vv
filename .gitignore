@@ -12,4 +12,7 @@
 
 /tmp
 
+# Test coverage report
+/coverage
+
 .env
