@@ -24,6 +24,19 @@ jobs:
       with:
         node-version: "${{ steps.nvm.outputs.NVMRC }}"
 
+    - name: Get Yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(yarn cache dir)"
+
+    - name: Cache Yarn
+      uses: actions/cache@v1
+      id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: yarn-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          yarn-${{ runner.os }}-
+
     - name: Install Dependencies
       run: yarn
 
@@ -32,8 +45,10 @@ jobs:
       if: always()
 
     - name: Run Tests
-      run: yarn test
+      run: yarn test --reporters="default" --reporters="jest-github-actions-reporter"
       if: always()
-      env:
-        CI: true
+
+    - name: Run TypeScript check
+      run: yarn tsc
+      if: always()
 
