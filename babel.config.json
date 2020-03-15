@@ -1,11 +1,13 @@
 {
   "presets": [
     [
-      "@babel/preset-env", {
+      "@babel/preset-env",
+      {
         "targets": {
           "electron": "2.0.18"
         }
       }
-    ]
+    ],
+    "@babel/preset-typescript"
   ]
 }
