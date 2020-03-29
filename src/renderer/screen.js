@@ -54,10 +54,6 @@ let showUndercurl = true;
 let charCanvas;
 let charCtx;
 
-// Removing sprites is very expensive. Move sprites to clear to spritesPool array
-// and reuse them later if we will need to create a new sprite.
-const spritesPool = [];
-
 const chars = {};
 
 const highlightTable = {
@@ -253,20 +249,15 @@ const printChar = (i, j, char, hlId) => {
   if (!chars[i][j]) chars[i][j] = {};
 
   if (!chars[i][j].sprite) {
-    if (spritesPool.length > 0) {
-      chars[i][j].sprite = spritesPool.pop();
-    } else {
-      chars[i][j].sprite = new PIXI.Sprite();
-      stage.addChild(chars[i][j].sprite);
-    }
+    chars[i][j].sprite = new PIXI.Sprite();
+    stage.addChild(chars[i][j].sprite);
   }
 
   // Print char to WebGL
   chars[i][j].char = char;
   chars[i][j].hlId = hlId;
   chars[i][j].sprite.texture = getCharTexture(char, hlId);
-  chars[i][j].sprite.position.x = (j - 1) * charWidth;
-  chars[i][j].sprite.position.y = i * charHeight;
+  chars[i][j].sprite.position.set((j - 1) * charWidth, i * charHeight);
   chars[i][j].sprite.visible = true;
 
   // Draw background in canvas
@@ -587,7 +578,11 @@ const redrawCmd = {
     context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
 
     // Scroll chars
-    const scrollLine = i => {
+    for (
+      let i = scrollCount > 0 ? top : bottom - 1;
+      scrollCount > 0 ? i <= bottom - scrollCount - 1 : i >= top - scrollCount;
+      i += scrollCount > 0 ? 1 : -1
+    ) {
       for (let j = left; j <= right - 1; j += 1) {
         const sourceI = i + scrollCount;
 
@@ -610,18 +605,6 @@ const redrawCmd = {
           chars[sourceI][j].sprite.visible = false;
           chars[sourceI][j].sprite.y = sourceI * charHeight;
         }
-      }
-    };
-
-    if (scrollCount > 0) {
-      // scroll down
-      for (let i = top; i <= bottom - scrollCount - 1; i += 1) {
-        scrollLine(i);
-      }
-    } else {
-      // scroll up
-      for (let i = bottom - 1; i >= top - scrollCount; i -= 1) {
-        scrollLine(i);
       }
     }
   },
