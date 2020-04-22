@@ -3,7 +3,7 @@ import throttle from 'lodash/throttle';
 import isFinite from 'lodash/isFinite';
 import isEqual from 'lodash/isEqual';
 
-import * as PIXI from './lib/pixi';
+// import * as PIXI from './lib/pixi';
 
 import { remote, ipcRenderer } from './preloaded/electron';
 
@@ -71,9 +71,9 @@ const highlightTable = {
 };
 
 // WebGL
-let stage;
-let ticker;
-let renderer;
+// let stage;
+// let ticker;
+// let renderer;
 
 export const getCursorElement = () => cursorEl;
 
@@ -106,19 +106,19 @@ const initScreen = () => {
   screenEl.style.overflow = 'hidden';
 
   // Init WebGL for text
-  const pixi = new PIXI.Application({
-    transparent: true,
-    autostart: false,
-  });
+  // const pixi = new PIXI.Application({
+  //   transparent: true,
+  //   autostart: false,
+  // });
 
-  screenEl.appendChild(pixi.view);
+  // screenEl.appendChild(pixi.view);
 
   screenContainer.appendChild(screenEl);
 
-  ({ stage, ticker, renderer } = pixi);
-  ticker.stop();
+  // ({ stage, ticker, renderer } = pixi);
+  // ticker.stop();
 
-  stage.interactiveChildren = false;
+  // stage.interactiveChildren = false;
 
   // Init screen for background
   canvasEl = document.createElement('canvas');
@@ -184,90 +184,95 @@ const font = p =>
     ' ',
   );
 
-const getCharBitmap = (char, props) => {
-  if (!charCanvas) {
-    charCanvas = new OffscreenCanvas(charWidth * 3, charHeight);
-    charCtx = charCanvas.getContext('2d', { alpha: true });
-  }
-
-  charCtx.fillStyle = props.fgColor;
-  charCtx.font = font(props);
-  charCtx.textAlign = 'left';
-  charCtx.textBaseline = 'middle';
-  if (char) {
-    charCtx.fillText(
-      char,
-      Math.round(scaledLetterSpacing() / 2) + charWidth,
-      Math.round(charHeight / 2),
-    );
-  }
-
-  if (props.hiUnderline) {
-    charCtx.strokeStyle = props.fgColor;
-    charCtx.lineWidth = scale;
-    charCtx.beginPath();
-    charCtx.moveTo(charWidth, charHeight - scale);
-    charCtx.lineTo(charWidth * 2, charHeight - scale);
-    charCtx.stroke();
-  }
-
-  if (props.hiUndercurl) {
-    charCtx.strokeStyle = props.spColor;
-    charCtx.lineWidth = scaledFontSize() * 0.08;
-    const x = charWidth;
-    const y = charHeight - (scaledFontSize() * 0.08) / 2;
-    const h = charHeight * 0.2; // Height of the wave
-    charCtx.beginPath();
-    charCtx.moveTo(x, y);
-    charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
-    charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
-    charCtx.stroke();
-  }
-
-  return charCanvas.transferToImageBitmap();
-};
-
-const textureCacheKey = (char, hlId) => {
-  const { fgColor, spColor, hiItalic, hiBold, hiUnderline, hiUndercurl } = highlightTable[
-    hlId
-  ].calculated;
+const textureCacheKey = (char, props) => {
+  const { fgColor, spColor, hiItalic, hiBold, hiUnderline, hiUndercurl } = props;
   return `${char}1${fontFamily}2${fontSize}3${fgColor}4${spColor}5${hiItalic}6${hiBold}7${hiUnderline}8${hiUndercurl}`;
 };
 
-const getCharTexture = (char, hlId) => {
-  const key = textureCacheKey(char, hlId);
+const charsCache = {};
 
-  if (!PIXI.utils.TextureCache[key]) {
-    const props = highlightTable[hlId].calculated;
-    PIXI.Texture.addToCache(PIXI.Texture.from(getCharBitmap(char, props)), key);
+const getCharBitmap = (char, props) => {
+  const key = textureCacheKey(char, props);
+  if (!charsCache[key]) {
+    if (!charCanvas) {
+      charCanvas = new OffscreenCanvas(charWidth * 3, charHeight);
+      charCtx = charCanvas.getContext('2d', { alpha: true });
+    }
+
+    charCtx.fillStyle = props.fgColor;
+    charCtx.font = font(props);
+    charCtx.textAlign = 'left';
+    charCtx.textBaseline = 'middle';
+    if (char) {
+      charCtx.fillText(
+        char,
+        Math.round(scaledLetterSpacing() / 2) + charWidth,
+        Math.round(charHeight / 2),
+      );
+    }
+
+    if (props.hiUnderline) {
+      charCtx.strokeStyle = props.fgColor;
+      charCtx.lineWidth = scale;
+      charCtx.beginPath();
+      charCtx.moveTo(charWidth, charHeight - scale);
+      charCtx.lineTo(charWidth * 2, charHeight - scale);
+      charCtx.stroke();
+    }
+
+    if (props.hiUndercurl) {
+      charCtx.strokeStyle = props.spColor;
+      charCtx.lineWidth = scaledFontSize() * 0.08;
+      const x = charWidth;
+      const y = charHeight - (scaledFontSize() * 0.08) / 2;
+      const h = charHeight * 0.2; // Height of the wave
+      charCtx.beginPath();
+      charCtx.moveTo(x, y);
+      charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
+      charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
+      charCtx.stroke();
+    }
+
+    charsCache[key] = charCanvas.transferToImageBitmap();
   }
-  return PIXI.Texture.from(key);
+  return charsCache[key];
+};
+
+// const getCharTexture = (char, hlId) => {
+//   const key = textureCacheKey(char, hlId);
+//
+//   if (!PIXI.utils.TextureCache[key]) {
+//     const props = highlightTable[hlId].calculated;
+//     PIXI.Texture.addToCache(PIXI.Texture.from(getCharBitmap(char, props)), key);
+//   }
+//   return PIXI.Texture.from(key);
+// };
+
+const drawBackground = (i, j) => {
+  context.fillStyle = highlightTable[chars[i][j].hlId].calculated.bgColor;
+  context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
+  // If this is the last col, fill the next char on extra col with it's bg
+  if (j === cols - 1) {
+    context.fillRect((j + 1) * charWidth, i * charHeight, charWidth, charHeight);
+  }
+};
+
+const drawChar = (i, j) => {
+  context.drawImage(chars[i][j].bitmap, (j - 1) * charWidth, i * charHeight);
 };
 
 const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
   if (!chars[i][j]) chars[i][j] = {};
 
-  if (!chars[i][j].sprite) {
-    chars[i][j].sprite = new PIXI.Sprite();
-    stage.addChild(chars[i][j].sprite);
-  }
-
-  // Print char to WebGL
   chars[i][j].char = char;
   chars[i][j].hlId = hlId;
-  chars[i][j].sprite.texture = getCharTexture(char, hlId);
-  chars[i][j].sprite.position.set((j - 1) * charWidth, i * charHeight);
-  chars[i][j].sprite.visible = true;
+  chars[i][j].bitmap = getCharBitmap(char, highlightTable[hlId].calculated);
 
-  // Draw background in canvas
-  context.fillStyle = highlightTable[hlId].calculated.bgColor;
-  context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
+  chars[i][j].dirty = true;
 
-  // If this is the last col, fill the next char on extra col with it's bg
-  if (j === cols - 1) {
-    context.fillRect((j + 1) * charWidth, i * charHeight, charWidth, charHeight);
-  }
+  drawBackground(i, j);
+  drawChar(i, j);
 };
 
 const clearCursor = () => {
@@ -477,7 +482,7 @@ const redrawCmd = {
     context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
-    renderer.resize(canvasEl.width, canvasEl.height);
+    // renderer.resize(canvasEl.width, canvasEl.height);
   },
 
   default_colors_set: props => {
@@ -527,9 +532,9 @@ const redrawCmd = {
     context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
-    stage.children.forEach(c => {
-      c.visible = false; // eslint-disable-line no-param-reassign
-    });
+    // stage.children.forEach(c => {
+    //   c.visible = false; // eslint-disable-line no-param-reassign
+    // });
     for (let i = 0; i <= rows; i += 1) {
       if (!chars[i]) chars[i] = {};
       for (let j = 0; j <= cols; j += 1) {
@@ -596,15 +601,15 @@ const redrawCmd = {
         [chars[i][j], chars[sourceI][j]] = [chars[sourceI][j], chars[i][j]];
 
         // Update scrolled char sprite position
-        if (chars[i][j].sprite) {
-          chars[i][j].sprite.y = i * charHeight;
-        }
+        // if (chars[i][j].sprite) {
+        //   chars[i][j].sprite.y = i * charHeight;
+        // }
 
         // Clear and reposition old char
-        if (chars[sourceI][j].sprite) {
-          chars[sourceI][j].sprite.visible = false;
-          chars[sourceI][j].sprite.y = sourceI * charHeight;
-        }
+        // if (chars[sourceI][j].sprite) {
+        //   chars[sourceI][j].sprite.visible = false;
+        //   chars[sourceI][j].sprite.y = sourceI * charHeight;
+        // }
       }
     }
   },
@@ -644,10 +649,10 @@ const handleSet = {
   },
 };
 
-const debouncedTickerStop = debounce(() => ticker.stop(), 200);
+// const debouncedTickerStop = debounce(() => ticker.stop(), 200);
 
 const redraw = args => {
-  ticker.start();
+  // ticker.start();
   for (let i = 0; i < args.length; i += 1) {
     const [cmd, ...props] = args[i];
     if (redrawCmd[cmd]) {
@@ -656,7 +661,7 @@ const redraw = args => {
       console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
     }
   }
-  debouncedTickerStop();
+  // debouncedTickerStop();
 };
 
 const setScale = () => {
