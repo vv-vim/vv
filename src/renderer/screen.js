@@ -23,6 +23,10 @@ let cursorContext;
 let cursor;
 let cursorAnimation;
 
+const textureCanvas = [];
+const textureContext = [];
+let textureChars;
+
 let screenEl;
 let canvasEl;
 let context;
@@ -67,6 +71,11 @@ const highlightTable = {
       hiUnderline: false,
       hiUndercurl: false,
     },
+    value: {
+      foreground: 0xffffff,
+      background: 0x000000,
+      special: 0xffffff,
+    },
   },
 };
 
@@ -74,6 +83,7 @@ const highlightTable = {
 let stage;
 let ticker;
 let renderer;
+let maxTextures = 16;
 
 export const getCursorElement = () => cursorEl;
 
@@ -109,6 +119,8 @@ const initScreen = () => {
   const pixi = new PIXI.Application({
     transparent: true,
     autostart: false,
+    width: window.screen.width * window.devicePixelRatio,
+    height: window.screen.height * window.devicePixelRatio,
   });
 
   screenEl.appendChild(pixi.view);
@@ -116,7 +128,10 @@ const initScreen = () => {
   screenContainer.appendChild(screenEl);
 
   ({ stage, ticker, renderer } = pixi);
+  maxTextures = renderer.gl.getParameter(renderer.gl.MAX_TEXTURE_IMAGE_UNITS);
   ticker.stop();
+  ticker.autostart = true;
+  // renderer.resize(4 * 4096, 2160);
 
   stage.interactiveChildren = false;
 
@@ -131,6 +146,25 @@ const initScreen = () => {
   context = canvasEl.getContext('2d', { alpha: false });
 
   screenEl.appendChild(canvasEl);
+
+  screenEl.style.width = `${window.screen.width * window.devicePixelRatio}px`;
+  screenEl.style.height = `${window.screen.height * window.devicePixelRatio}px`;
+  canvasEl.width = window.screen.width * window.devicePixelRatio;
+  canvasEl.height = window.screen.height * window.devicePixelRatio;
+
+  for (let i = 0; i < maxTextures; i += 1) {
+    textureCanvas[i] = new OffscreenCanvas(10000, 1000);
+    // textureCanvas = document.createElement('canvas');
+    // textureCanvas.width = 10000;
+    // textureCanvas.height = 10000;
+    // textureCanvas.style.position = 'absolute';
+    // textureCanvas.style.top = 0;
+    // textureCanvas.style.left = 0;
+    // textureCanvas.style.zIndex = 100;
+    // screenEl.appendChild(textureCanvas);
+    textureContext[i] = textureCanvas[i].getContext('2d', { alpha: true });
+  }
+  textureChars = {};
 };
 
 const RETINA_SCALE = 2;
@@ -190,6 +224,7 @@ const getCharBitmap = (char, props) => {
     charCtx = charCanvas.getContext('2d', { alpha: true });
   }
 
+  // charCtx.fillStyle = 'rgba(255, 255, 255, 0.95)'; //props.fgColor;
   charCtx.fillStyle = props.fgColor;
   charCtx.font = font(props);
   charCtx.textAlign = 'left';
@@ -231,15 +266,42 @@ const textureCacheKey = (char, hlId) => {
   const { fgColor, spColor, hiItalic, hiBold, hiUnderline, hiUndercurl } = highlightTable[
     hlId
   ].calculated;
-  return `${char}1${fontFamily}2${fontSize}3${fgColor}4${spColor}5${hiItalic}6${hiBold}7${hiUnderline}8${hiUndercurl}`;
+  return `${char}1${fontFamily}2${fontSize}3${fgColor}5${hiItalic}6${hiBold}`;
+  // return `${char}1${fontFamily}2${fontSize}3${fgColor}4${spColor}5${hiItalic}6${hiBold}7${hiUnderline}8${hiUndercurl}`;
 };
 
+const baseTextures = [];
+
 const getCharTexture = (char, hlId) => {
+  const textureIndex = Object.keys(textureChars).length % maxTextures;
   const key = textureCacheKey(char, hlId);
 
   if (!PIXI.utils.TextureCache[key]) {
-    const props = highlightTable[hlId].calculated;
-    PIXI.Texture.addToCache(PIXI.Texture.from(getCharBitmap(char, props)), key);
+    const x =
+      Math.floor(Math.floor(Object.keys(textureChars).length / maxTextures) / 50) * charWidth * 3;
+    const y = (Math.floor(Object.keys(textureChars).length / maxTextures) % 50) * charHeight;
+    // console.log('hey', Object.keys(textureChars).length, x, y);
+    textureContext[textureIndex].drawImage(
+      getCharBitmap(char, highlightTable[hlId].calculated),
+      x,
+      y,
+    );
+    if (!baseTextures[textureIndex]) {
+      baseTextures[textureIndex] = new PIXI.BaseTexture(textureCanvas[textureIndex]);
+      // const s = new PIXI.Sprite(new PIXI.Texture(baseTexture));
+      // s.position.set(50, 50);
+      // stage.addChild(s);
+    }
+    baseTextures[textureIndex].update();
+
+    const texture = new PIXI.Texture(
+      baseTextures[textureIndex],
+      new PIXI.Rectangle(x, y, charWidth * 3, charHeight),
+    );
+
+    textureChars[key] = 1;
+
+    PIXI.Texture.addToCache(texture, key);
   }
   return PIXI.Texture.from(key);
 };
@@ -248,21 +310,39 @@ const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
   if (!chars[i][j]) chars[i][j] = {};
 
-  if (!chars[i][j].sprite) {
-    chars[i][j].sprite = new PIXI.Sprite();
-    stage.addChild(chars[i][j].sprite);
-  }
-
-  // Print char to WebGL
   chars[i][j].char = char;
   chars[i][j].hlId = hlId;
-  chars[i][j].sprite.texture = getCharTexture(char, hlId);
-  chars[i][j].sprite.position.set((j - 1) * charWidth, i * charHeight);
-  chars[i][j].sprite.visible = true;
+
+  if (char === ' ') {
+    if (chars[i][j].sprite) {
+      chars[i][j].sprite.visible = false;
+    }
+  } else {
+    // Print char to WebGL
+    if (!chars[i][j].sprite) {
+      chars[i][j].sprite = new PIXI.Sprite(getCharTexture(char, hlId));
+      stage.addChild(chars[i][j].sprite);
+    } else {
+      chars[i][j].sprite.texture = getCharTexture(char, hlId);
+    }
+    // chars[i][j].sprite.tint = highlightTable[hlId].value.reverse
+    //   ? highlightTable[hlId].value.background || highlightTable[0].value.background
+    //   : highlightTable[hlId].value.foreground || highlightTable[0].value.foreground;
+    chars[i][j].sprite.position.set((j - 1) * charWidth, i * charHeight);
+    chars[i][j].sprite.visible = true;
+  }
 
   // Draw background in canvas
   context.fillStyle = highlightTable[hlId].calculated.bgColor;
   context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
+  const props = highlightTable[hlId].calculated;
+  if (props.hiUnderline || props.hiUndercurl) {
+    context.drawImage(
+      getCharBitmap(null, highlightTable[hlId].calculated),
+      (j - 1) * charWidth,
+      i * charHeight,
+    );
+  }
 
   // If this is the last col, fill the next char on extra col with it's bg
   if (j === cols - 1) {
@@ -360,6 +440,12 @@ const reprintAllChars = debounce(() => {
   body.style.background = highlightTable[0].calculated.bgColor;
   remote.getCurrentWindow().setBackgroundColor(highlightTable[0].calculated.bgColor);
 
+  for (let i = 0; i < maxTextures; i += 1) {
+    textureContext[i].clearRect(0, 0, 10000, 1000);
+    textureChars = {};
+    PIXI.utils.clearTextureCache();
+  }
+
   // PIXI.utils.destroyTextureCache();
   for (let i = 0; i <= rows; i += 1) {
     if (!chars[i]) chars[i] = {};
@@ -403,22 +489,6 @@ const recalculateHighlightTable = () => {
     }
   });
   reprintAllChars();
-};
-
-const setDefaultHl = ({ bgColor, fgColor, spColor }) => {
-  const calculated = {
-    bgColor,
-    fgColor,
-    spColor,
-    hiItalic: false,
-    hiBold: false,
-    hiUnderline: false,
-    hiUndercurl: false,
-  };
-  if (!highlightTable[0] || !isEqual(highlightTable[0].calculated, calculated)) {
-    highlightTable[0] = { calculated };
-    recalculateHighlightTable();
-  }
 };
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
@@ -470,24 +540,38 @@ const redrawCmd = {
     cols = props[0][1];
     rows = props[0][2];
     // Add extra column on the right to fill it with adjacent color to have a nice right border
-    screenEl.style.width = `${(cols + 1) * charWidth}px`;
-    screenEl.style.height = `${rows * charHeight}px`;
-    canvasEl.width = (cols + 1) * charWidth;
-    canvasEl.height = rows * charHeight;
+    // screenEl.style.width = `${(cols + 1) * charWidth}px`;
+    // screenEl.style.height = `${rows * charHeight}px`;
+    // canvasEl.width = (cols + 1) * charWidth;
+    // canvasEl.height = rows * charHeight;
     context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
     context.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
-    renderer.resize(canvasEl.width, canvasEl.height);
+    // stage.children.forEach(c => {
+    //   c.visible = false; // eslint-disable-line no-param-reassign
+    // });
+    // renderer.resize(canvasEl.width, canvasEl.height);
   },
 
   default_colors_set: props => {
-    const [foreground, background, special] = props[props.length - 1];
+    const [foreground = 0xffffff, background = 0x000000, special = 0xffffff] = props[
+      props.length - 1
+    ];
 
-    setDefaultHl({
+    const calculated = {
       bgColor: getColor(background, defaultBgColor),
       fgColor: getColor(foreground, defaultFgColor),
       spColor: getColor(special, defaultSpColor),
-    });
+      hiItalic: false,
+      hiBold: false,
+      hiUnderline: false,
+      hiUndercurl: false,
+    };
+
+    if (!highlightTable[0] || !isEqual(highlightTable[0].calculated, calculated)) {
+      highlightTable[0] = { calculated, value: { foreground, background, special } };
+      recalculateHighlightTable();
+    }
   },
 
   hl_attr_define: props => {
@@ -644,7 +728,7 @@ const handleSet = {
   },
 };
 
-const debouncedTickerStop = debounce(() => ticker.stop(), 200);
+const debouncedTickerStop = debounce(() => ticker.stop(), 300);
 
 const redraw = args => {
   ticker.start();
@@ -701,7 +785,7 @@ const uiAttach = () => {
   nvim.uiAttach(cols, rows, { ext_linegrid: true });
   window.addEventListener(
     'resize',
-    throttle(() => resize(), 30),
+    throttle(() => resize(), 10),
   );
 };
 
@@ -727,6 +811,11 @@ const updateSettings = (settings, isInitial = false) => {
 
   if (requireRedraw) {
     measureCharSize();
+    for (let i = 0; i < maxTextures; i += 1) {
+      textureContext[i].clearRect(0, 0, 10000, 1000);
+      textureChars = {};
+      PIXI.utils.clearTextureCache();
+    }
     if (!isInitial) {
       resize(true);
     }

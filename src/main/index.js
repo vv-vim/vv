@@ -44,7 +44,7 @@ const createEmptyWindow = () => {
   const options = {
     width: 800,
     height: 600,
-    show: false,
+    show: true,
     fullscreenable: false,
     webPreferences: {
       preload: path.join(app.getAppPath(), isDev('./', '../'), 'src/main/preload.js'),
@@ -112,7 +112,7 @@ const createWindow = (args = [], newCwd) => {
 
   if (args.includes('--inspect')) openDeveloperTools(win);
 
-  setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
+  // setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
 
   initAutoUpdate({ win, args });
 
