@@ -54,6 +54,8 @@ let showUndercurl = true;
 let charCanvas;
 let charCtx;
 
+const currentWindow = remote.getCurrentWindow();
+
 const chars = {};
 
 const highlightTable = {
@@ -75,7 +77,15 @@ let stage;
 let ticker;
 let renderer;
 
+let needRerender = false;
+const TARGET_FPS = 60;
+
 export const getCursorElement = () => cursorEl;
+
+const windowPixelSize = () => ({
+  width: window.screen.width * window.devicePixelRatio,
+  height: window.screen.height * window.devicePixelRatio,
+});
 
 const initCursor = () => {
   cursorEl = document.createElement('div');
@@ -109,6 +119,7 @@ const initScreen = () => {
   const pixi = new PIXI.Application({
     transparent: true,
     autostart: false,
+    ...windowPixelSize(),
   });
 
   screenEl.appendChild(pixi.view);
@@ -117,7 +128,6 @@ const initScreen = () => {
 
   ({ stage, ticker, renderer } = pixi);
   ticker.stop();
-
   stage.interactiveChildren = false;
 
   // Init screen for background
@@ -129,6 +139,11 @@ const initScreen = () => {
   canvasEl.style.zIndex = -1;
 
   context = canvasEl.getContext('2d', { alpha: false });
+
+  screenEl.style.width = `${windowPixelSize().width}px`;
+  screenEl.style.height = `${windowPixelSize().width}px`;
+  canvasEl.width = windowPixelSize().width;
+  canvasEl.height = windowPixelSize().height;
 
   screenEl.appendChild(canvasEl);
 };
@@ -174,7 +189,7 @@ const measureCharSize = () => {
       charCanvas.height = charHeight;
     }
 
-    // PIXI.utils.destroyTextureCache();
+    PIXI.utils.clearTextureCache();
   }
   screenEl.removeChild(char);
 };
@@ -227,15 +242,8 @@ const getCharBitmap = (char, props) => {
   return charCanvas.transferToImageBitmap();
 };
 
-const textureCacheKey = (char, hlId) => {
-  const { fgColor, spColor, hiItalic, hiBold, hiUnderline, hiUndercurl } = highlightTable[
-    hlId
-  ].calculated;
-  return `${char}1${fontFamily}2${fontSize}3${fgColor}4${spColor}5${hiItalic}6${hiBold}7${hiUnderline}8${hiUndercurl}`;
-};
-
 const getCharTexture = (char, hlId) => {
-  const key = textureCacheKey(char, hlId);
+  const key = `${char}:${hlId}`;
 
   if (!PIXI.utils.TextureCache[key]) {
     const props = highlightTable[hlId].calculated;
@@ -358,7 +366,7 @@ const reprintAllChars = debounce(() => {
   context.fillStyle = highlightTable[0].calculated.bgColor;
   context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   body.style.background = highlightTable[0].calculated.bgColor;
-  remote.getCurrentWindow().setBackgroundColor(highlightTable[0].calculated.bgColor);
+  currentWindow.setBackgroundColor(highlightTable[0].calculated.bgColor);
 
   // PIXI.utils.destroyTextureCache();
   for (let i = 0; i <= rows; i += 1) {
@@ -370,6 +378,7 @@ const reprintAllChars = debounce(() => {
       }
     }
   }
+  needRerender = true;
 }, 10);
 
 const recalculateHighlightTable = () => {
@@ -461,23 +470,30 @@ const redrawCmd = {
 
   hl_group_set: () => {},
 
-  flush: () => {
-    redrawCursor(); // TODO: check if char under cursor changed first
-  },
+  flush: throttle(() => {
+    if (needRerender) {
+      needRerender = false;
+      renderer.render(stage);
+    }
+  }, 1000 / TARGET_FPS),
 
   // New api
   grid_resize: props => {
     cols = props[0][1];
     rows = props[0][2];
-    // Add extra column on the right to fill it with adjacent color to have a nice right border
-    screenEl.style.width = `${(cols + 1) * charWidth}px`;
-    screenEl.style.height = `${rows * charHeight}px`;
-    canvasEl.width = (cols + 1) * charWidth;
-    canvasEl.height = rows * charHeight;
-    context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
-    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
 
-    renderer.resize(canvasEl.width, canvasEl.height);
+    if (cols * charWidth > canvasEl.width || rows * charHeight > canvasEl.height) {
+      // Add extra column on the right to fill it with adjacent color to have a nice right border
+      screenEl.style.width = `${(cols + 1) * charWidth}px`;
+      screenEl.style.height = `${rows * charHeight}px`;
+      canvasEl.width = (cols + 1) * charWidth;
+      canvasEl.height = rows * charHeight;
+      context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
+      context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+
+      renderer.resize(canvasEl.width, canvasEl.height);
+      needRerender = true;
+    }
   },
 
   default_colors_set: props => {
@@ -514,12 +530,13 @@ const redrawCmd = {
           currentHlId = hlId;
         }
         for (let j = 0; j < length; j += 1) {
-          const offset = col + lineLength + j;
-          printChar(row, offset, char, currentHlId);
+          printChar(row, col + lineLength + j, char, currentHlId);
         }
         lineLength += length;
       }
     }
+    needRerender = true;
+    redrawCursor();
   },
 
   grid_clear: () => {
@@ -537,6 +554,7 @@ const redrawCmd = {
         chars[i][j].char = null;
       }
     }
+    needRerender = true;
   },
 
   grid_destroy: () => {},
@@ -607,6 +625,7 @@ const redrawCmd = {
         }
       }
     }
+    needRerender = true;
   },
 };
 
@@ -644,10 +663,7 @@ const handleSet = {
   },
 };
 
-const debouncedTickerStop = debounce(() => ticker.stop(), 200);
-
 const redraw = args => {
-  ticker.start();
   for (let i = 0; i < args.length; i += 1) {
     const [cmd, ...props] = args[i];
     if (redrawCmd[cmd]) {
@@ -656,7 +672,6 @@ const redraw = args => {
       console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
     }
   }
-  debouncedTickerStop();
 };
 
 const setScale = () => {
@@ -683,8 +698,7 @@ export const screenCoords = (width, height) => {
 };
 
 const resize = (forceRedraw = false) => {
-  const { getContentSize } = remote.getCurrentWindow();
-  const [newCols, newRows] = screenCoords(...getContentSize());
+  const [newCols, newRows] = screenCoords(window.innerWidth, window.innerHeight);
   if (newCols !== cols || newRows !== rows || forceRedraw) {
     cols = newCols;
     rows = newRows;
@@ -693,15 +707,11 @@ const resize = (forceRedraw = false) => {
 };
 
 const uiAttach = () => {
-  const { getContentSize } = remote.getCurrentWindow();
-  const [newCols, newRows] = screenCoords(...getContentSize());
-  cols = newCols;
-  rows = newRows;
-
+  [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
   nvim.uiAttach(cols, rows, { ext_linegrid: true });
   window.addEventListener(
     'resize',
-    throttle(() => resize(), 30),
+    throttle(() => resize(), 1000 / TARGET_FPS),
   );
 };
 
@@ -727,6 +737,7 @@ const updateSettings = (settings, isInitial = false) => {
 
   if (requireRedraw) {
     measureCharSize();
+    PIXI.utils.clearTextureCache();
     if (!isInitial) {
       resize(true);
     }
