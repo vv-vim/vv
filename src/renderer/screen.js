@@ -368,7 +368,7 @@ const reprintAllChars = debounce(() => {
   body.style.background = highlightTable[0].calculated.bgColor;
   currentWindow.setBackgroundColor(highlightTable[0].calculated.bgColor);
 
-  // PIXI.utils.destroyTextureCache();
+  PIXI.utils.clearTextureCache();
   for (let i = 0; i <= rows; i += 1) {
     if (!chars[i]) chars[i] = {};
     for (let j = 0; j <= cols; j += 1) {
