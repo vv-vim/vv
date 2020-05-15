@@ -20,12 +20,10 @@ let screenContainer;
 let cursorEl;
 let cursorCanvasEl;
 let cursorContext;
-let cursor;
+let cursorPosition;
 let cursorAnimation;
 
 let screenEl;
-let canvasEl;
-let context;
 
 let scale;
 let charWidth;
@@ -51,8 +49,8 @@ let showItalic = true;
 let showUnderline = true;
 let showUndercurl = true;
 
-let charCanvas;
-let charCtx;
+const charCanvas = new OffscreenCanvas(1, 1);
+const charCtx = charCanvas.getContext('2d', { alpha: true });
 
 const currentWindow = remote.getCurrentWindow();
 
@@ -74,8 +72,9 @@ const highlightTable = {
 
 // WebGL
 let stage;
-let ticker;
 let renderer;
+let charsContainer;
+let bgContainer;
 
 let needRerender = false;
 const TARGET_FPS = 60;
@@ -101,7 +100,7 @@ const initCursor = () => {
   cursorEl.appendChild(cursorCanvasEl);
   screenEl.appendChild(cursorEl);
 
-  cursor = [0, 0];
+  cursorPosition = [0, 0];
 };
 
 const initScreen = () => {
@@ -126,26 +125,17 @@ const initScreen = () => {
 
   screenContainer.appendChild(screenEl);
 
-  ({ stage, ticker, renderer } = pixi);
-  ticker.stop();
+  ({ stage, renderer } = pixi);
+  pixi.ticker.stop();
   stage.interactiveChildren = false;
+  charsContainer = new PIXI.Container();
+  bgContainer = new PIXI.Container();
+  stage.addChild(bgContainer);
+  stage.addChild(charsContainer);
 
   // Init screen for background
-  canvasEl = document.createElement('canvas');
-
-  canvasEl.style.position = 'absolute';
-  canvasEl.style.top = 0;
-  canvasEl.style.left = 0;
-  canvasEl.style.zIndex = -1;
-
-  context = canvasEl.getContext('2d', { alpha: false });
-
   screenEl.style.width = `${windowPixelSize().width}px`;
   screenEl.style.height = `${windowPixelSize().width}px`;
-  canvasEl.width = windowPixelSize().width;
-  canvasEl.height = windowPixelSize().height;
-
-  screenEl.appendChild(canvasEl);
 };
 
 const RETINA_SCALE = 2;
@@ -200,11 +190,6 @@ const font = p =>
   );
 
 const getCharBitmap = (char, props) => {
-  if (!charCanvas) {
-    charCanvas = new OffscreenCanvas(charWidth * 3, charHeight);
-    charCtx = charCanvas.getContext('2d', { alpha: true });
-  }
-
   charCtx.fillStyle = props.fgColor;
   charCtx.font = font(props);
   charCtx.textAlign = 'left';
@@ -244,7 +229,6 @@ const getCharBitmap = (char, props) => {
 
 const getCharTexture = (char, hlId) => {
   const key = `${char}:${hlId}`;
-
   if (!PIXI.utils.TextureCache[key]) {
     const props = highlightTable[hlId].calculated;
     PIXI.Texture.addToCache(PIXI.Texture.from(getCharBitmap(char, props)), key);
@@ -255,26 +239,33 @@ const getCharTexture = (char, hlId) => {
 const printChar = (i, j, char, hlId) => {
   if (!chars[i]) chars[i] = {};
   if (!chars[i][j]) chars[i][j] = {};
-
   if (!chars[i][j].sprite) {
     chars[i][j].sprite = new PIXI.Sprite();
-    stage.addChild(chars[i][j].sprite);
+    chars[i][j].bg = new PIXI.Graphics();
+    charsContainer.addChild(chars[i][j].sprite);
+    bgContainer.addChild(chars[i][j].bg);
   }
 
-  // Print char to WebGL
+  // Print char
   chars[i][j].char = char;
   chars[i][j].hlId = hlId;
   chars[i][j].sprite.texture = getCharTexture(char, hlId);
   chars[i][j].sprite.position.set((j - 1) * charWidth, i * charHeight);
   chars[i][j].sprite.visible = true;
 
-  // Draw background in canvas
-  context.fillStyle = highlightTable[hlId].calculated.bgColor;
-  context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
-
-  // If this is the last col, fill the next char on extra col with it's bg
-  if (j === cols - 1) {
-    context.fillRect((j + 1) * charWidth, i * charHeight, charWidth, charHeight);
+  // Draw bg
+  chars[i][j].bg.position.set(j * charWidth, i * charHeight);
+  if (hlId !== 0 && highlightTable[hlId].calculated.bgNum) {
+    chars[i][j].bg.clear();
+    chars[i][j].bg.beginFill(highlightTable[hlId].calculated.bgNum);
+    if (j === cols - 1) {
+      chars[i][j].bg.drawRect(0, 0, charWidth * 2, charHeight);
+    } else {
+      chars[i][j].bg.drawRect(0, 0, charWidth, charHeight);
+    }
+    chars[i][j].bg.visible = true;
+  } else {
+    chars[i][j].bg.visible = false;
   }
 };
 
@@ -295,7 +286,7 @@ const redrawCursor = () => {
   }
 
   if (m.cursor_shape === 'block' && m.name.indexOf('cmdline') === -1) {
-    const char = chars[cursor[0]][cursor[1]].char || ' ';
+    const char = chars[cursorPosition[0]][cursorPosition[1]].char || ' ';
     cursorEl.style.background = highlightAttrs.bgColor;
     cursorContext.drawImage(getCharBitmap(char, highlightAttrs), -charWidth, 0);
   } else if (m.cursor_shape === 'vertical') {
@@ -341,9 +332,9 @@ let debouncedRepositionCursor;
 
 export const repositionCursor = newCursor => {
   if (debouncedRepositionCursor) debouncedRepositionCursor.cancel();
-  if (newCursor) cursor = newCursor;
-  const left = cursor[1] * charWidth;
-  const top = cursor[0] * charHeight;
+  if (newCursor) cursorPosition = newCursor;
+  const left = cursorPosition[1] * charWidth;
+  const top = cursorPosition[0] * charHeight;
   cursorEl.style.transform = `translate(${left}px, ${top}px)`;
   redrawCursor();
 };
@@ -363,8 +354,6 @@ const optionSet = {
 };
 
 const reprintAllChars = debounce(() => {
-  context.fillStyle = highlightTable[0].calculated.bgColor;
-  context.fillRect(0, 0, canvasEl.width, canvasEl.height);
   body.style.background = highlightTable[0].calculated.bgColor;
   currentWindow.setBackgroundColor(highlightTable[0].calculated.bgColor);
 
@@ -404,6 +393,7 @@ const recalculateHighlightTable = () => {
         fgColor: r ? bg : fg,
         bgColor: r ? fg : bg,
         spColor: sp,
+        bgNum: r ? foreground : background,
         hiItalic: showItalic && italic,
         hiBold: showBold && bold,
         hiUnderline: showUnderline && underline,
@@ -482,16 +472,15 @@ const redrawCmd = {
     cols = props[0][1];
     rows = props[0][2];
 
-    if (cols * charWidth > canvasEl.width || rows * charHeight > canvasEl.height) {
+    if (cols * charWidth > renderer.width || rows * charHeight > renderer.height) {
       // Add extra column on the right to fill it with adjacent color to have a nice right border
-      screenEl.style.width = `${(cols + 1) * charWidth}px`;
-      screenEl.style.height = `${rows * charHeight}px`;
-      canvasEl.width = (cols + 1) * charWidth;
-      canvasEl.height = rows * charHeight;
-      context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
-      context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+      const width = (cols + 1) * charWidth;
+      const height = rows * charHeight;
 
-      renderer.resize(canvasEl.width, canvasEl.height);
+      screenEl.style.width = `${width}px`;
+      screenEl.style.height = `${height}px`;
+
+      renderer.resize(width, height);
       needRerender = true;
     }
   },
@@ -540,11 +529,11 @@ const redrawCmd = {
   },
 
   grid_clear: () => {
-    cursor = [0, 0];
-    context.fillStyle = highlightTable[0] ? highlightTable[0].calculated.bgColor : defaultBgColor;
-    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
-
-    stage.children.forEach(c => {
+    cursorPosition = [0, 0];
+    charsContainer.children.forEach(c => {
+      c.visible = false; // eslint-disable-line no-param-reassign
+    });
+    bgContainer.children.forEach(c => {
       c.visible = false; // eslint-disable-line no-param-reassign
     });
     for (let i = 0; i <= rows; i += 1) {
@@ -560,7 +549,7 @@ const redrawCmd = {
   grid_destroy: () => {},
 
   grid_cursor_goto: ([[_, ...newCursor]]) => {
-    if (newCursor[0] !== cursor[0] && newCursor[0] === rows - 1) {
+    if (newCursor[0] !== cursorPosition[0] && newCursor[0] === rows - 1) {
       debouncedRepositionCursor(newCursor);
     } else {
       repositionCursor(newCursor);
@@ -568,34 +557,6 @@ const redrawCmd = {
   },
 
   grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]) => {
-    // Scroll background
-    const x = left * charWidth; // region left
-    let y; // region top
-    let w = (right - left) * charWidth; // clipped part width
-    const h = (bottom - top - Math.abs(scrollCount)) * charHeight; // clipped part height
-    const X = x; // destination left
-    let Y; // destination top
-
-    if (right === cols) {
-      // Add extra char if it is far right rect
-      w += charWidth;
-    }
-
-    if (scrollCount > 0) {
-      // scroll down
-      y = (top + scrollCount) * charHeight;
-      Y = top * charHeight;
-    } else {
-      // scroll up
-      y = top * charHeight;
-      Y = (top - scrollCount) * charHeight;
-    }
-
-    // Copy scrolled lines
-    // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
-    context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
-
-    // Scroll chars
     for (
       let i = scrollCount > 0 ? top : bottom - 1;
       scrollCount > 0 ? i <= bottom - scrollCount - 1 : i >= top - scrollCount;
@@ -616,12 +577,15 @@ const redrawCmd = {
         // Update scrolled char sprite position
         if (chars[i][j].sprite) {
           chars[i][j].sprite.y = i * charHeight;
+          chars[i][j].bg.y = i * charHeight;
         }
 
         // Clear and reposition old char
         if (chars[sourceI][j].sprite) {
           chars[sourceI][j].sprite.visible = false;
+          chars[sourceI][j].bg.visible = false;
           chars[sourceI][j].sprite.y = sourceI * charHeight;
+          chars[sourceI][j].bg.y = sourceI * charHeight;
         }
       }
     }
@@ -682,11 +646,9 @@ const setScale = () => {
 
   // Detect when you drag between retina/non-retina displays
   window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
-    canvasEl.style.opacity = 0;
     setScale();
     measureCharSize();
     await nvim.uiTryResize(cols, rows);
-    canvasEl.style.opacity = 1;
   });
 };
 

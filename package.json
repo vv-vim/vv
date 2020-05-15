@@ -70,6 +70,8 @@
   "dependencies": {
     "@pixi/app": "^5.2.1",
     "@pixi/core": "^5.2.1",
+    "@pixi/display": "^5.2.4",
+    "@pixi/graphics": "^5.2.4",
     "@pixi/sprite": "^5.2.1",
     "@pixi/ticker": "^5.2.1",
     "@pixi/utils": "^5.2.1",
