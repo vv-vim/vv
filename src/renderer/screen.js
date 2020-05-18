@@ -18,10 +18,13 @@ const [body] = document.getElementsByTagName('body');
 let screenContainer;
 
 let cursorEl;
-let cursorCanvasEl;
-let cursorContext;
-let cursorPosition;
-let cursorAnimation;
+let cursorPosition = [0, 0];
+let cursorChar;
+
+let startCursorBlinkOnTimeout;
+let startCursorBlinkOffTimeout;
+let blinkOnCursorBlinkInterval;
+let blinkOffCursorBlinkInterval;
 
 let screenEl;
 
@@ -59,8 +62,22 @@ const chars = {};
 const highlightTable = {
   '0': {
     calculated: {
+      bgColorNum: 0x000000,
       bgColor: defaultBgColor,
       fgColor: defaultFgColor,
+      spColor: defaultSpColor,
+      hiItalic: false,
+      hiBold: false,
+      hiUnderline: false,
+      hiUndercurl: false,
+    },
+  },
+  // Inverted default color for cursor
+  '-1': {
+    calculated: {
+      bgColorNum: 0xffffff,
+      bgColor: defaultFgColor,
+      fgColor: defaultBgColor,
       spColor: defaultSpColor,
       hiItalic: false,
       hiBold: false,
@@ -75,6 +92,9 @@ let stage;
 let renderer;
 let charsContainer;
 let bgContainer;
+let cursorContainer;
+let cursorSprite;
+let cursorBg;
 
 let needRerender = false;
 const TARGET_FPS = 60;
@@ -92,15 +112,7 @@ const initCursor = () => {
   cursorEl.style.zIndex = 100;
   cursorEl.style.top = 0;
   cursorEl.style.left = 0;
-
-  cursorCanvasEl = document.createElement('canvas');
-
-  cursorContext = cursorCanvasEl.getContext('2d', { alpha: true });
-
-  cursorEl.appendChild(cursorCanvasEl);
   screenEl.appendChild(cursorEl);
-
-  cursorPosition = [0, 0];
 };
 
 const initScreen = () => {
@@ -128,10 +140,18 @@ const initScreen = () => {
   ({ stage, renderer } = pixi);
   pixi.ticker.stop();
   stage.interactiveChildren = false;
+
   charsContainer = new PIXI.Container();
   bgContainer = new PIXI.Container();
+  cursorContainer = new PIXI.Container();
+  cursorSprite = new PIXI.Sprite();
+  cursorBg = new PIXI.Graphics();
+
   stage.addChild(bgContainer);
   stage.addChild(charsContainer);
+  stage.addChild(cursorContainer);
+  cursorContainer.addChild(cursorBg);
+  cursorContainer.addChild(cursorSprite);
 
   // Init screen for background
   screenEl.style.width = `${windowPixelSize().width}px`;
@@ -169,8 +189,7 @@ const measureCharSize = () => {
   charWidth = char.offsetWidth + scaledLetterSpacing();
   charHeight = char.offsetHeight;
   if (oldCharWidth !== charWidth || oldCharHeight !== charHeight) {
-    cursorCanvasEl.width = charWidth;
-    cursorCanvasEl.height = charHeight;
+    cursorSprite.x = -charWidth;
     cursorEl.style.width = `${charWidth}px`;
     cursorEl.style.height = `${charHeight}px`;
 
@@ -269,63 +288,75 @@ const printChar = (i, j, char, hlId) => {
   }
 };
 
+const cursorBlinkOn = () => {
+  cursorContainer.visible = true;
+  renderer.render(stage);
+};
+
+const cursorBlinkOff = () => {
+  cursorContainer.visible = false;
+  renderer.render(stage);
+};
+
+const cursorBlink = ({ blinkon, blinkoff, blinkwait } = {}) => {
+  cursorContainer.visible = true;
+
+  if (startCursorBlinkOnTimeout) clearTimeout(startCursorBlinkOnTimeout);
+  if (startCursorBlinkOffTimeout) clearTimeout(startCursorBlinkOffTimeout);
+  if (blinkOnCursorBlinkInterval) clearInterval(blinkOnCursorBlinkInterval);
+  if (blinkOffCursorBlinkInterval) clearInterval(blinkOffCursorBlinkInterval);
+
+  startCursorBlinkOnTimeout = null;
+  startCursorBlinkOffTimeout = null;
+  blinkOnCursorBlinkInterval = null;
+  blinkOffCursorBlinkInterval = null;
+
+  if (blinkoff && blinkon) {
+    startCursorBlinkOffTimeout = setTimeout(() => {
+      cursorBlinkOff();
+      blinkOffCursorBlinkInterval = setInterval(cursorBlinkOff, blinkoff + blinkon);
+
+      startCursorBlinkOnTimeout = setTimeout(() => {
+        cursorBlinkOn();
+        blinkOnCursorBlinkInterval = setInterval(cursorBlinkOn, blinkoff + blinkon);
+      }, blinkoff);
+    }, blinkwait);
+  }
+};
+
 const clearCursor = () => {
-  cursorContext.clearRect(0, 0, charWidth, charHeight);
+  cursorBg.clear();
+  cursorSprite.visible = false;
 };
 
 const redrawCursor = () => {
   const m = modeInfoSet && modeInfoSet[mode];
+  cursorBlink(m);
+
   if (!m) return;
+  // TODO: check if cursor changed (char, hlId, etc)
   clearCursor();
 
-  const highlightAttrs = { ...highlightTable[m.attr_id].calculated };
-  if (m.attr_id === 0) {
-    highlightAttrs.bgColor = highlightTable[0].calculated.fgColor;
-    highlightAttrs.fgColor = highlightTable[0].calculated.bgColor;
-    highlightAttrs.spColor = highlightTable[0].calculated.bgColor;
-  }
+  const hlId = m.attr_id === 0 ? -1 : m.attr_id;
+  cursorBg.beginFill(highlightTable[hlId].calculated.bgNum);
 
-  if (m.cursor_shape === 'block' && m.name.indexOf('cmdline') === -1) {
-    const char = chars[cursorPosition[0]][cursorPosition[1]].char || ' ';
-    cursorEl.style.background = highlightAttrs.bgColor;
-    cursorContext.drawImage(getCharBitmap(char, highlightAttrs), -charWidth, 0);
+  if (m.cursor_shape === 'block') {
+    cursorChar = chars[cursorPosition[0]][cursorPosition[1]].char || ' ';
+    cursorSprite.texture = getCharTexture(cursorChar, hlId);
+    cursorBg.drawRect(0, 0, charWidth, charHeight);
+    cursorSprite.visible = true;
   } else if (m.cursor_shape === 'vertical') {
-    cursorEl.style.background = 'none';
     const curWidth = m.cell_percentage
       ? Math.max(scale, Math.round((charWidth / 100) * m.cell_percentage))
       : scale;
-    cursorContext.fillStyle = highlightAttrs.bgColor;
-    cursorContext.fillRect(0, 0, curWidth, charHeight);
+    cursorBg.drawRect(0, 0, curWidth, charHeight);
   } else if (m.cursor_shape === 'horizontal') {
-    cursorEl.style.background = 'none';
     const curHeight = m.cell_percentage
       ? Math.max(scale, Math.round((charHeight / 100) * m.cell_percentage))
       : scale;
-    cursorContext.fillStyle = highlightAttrs.bgColor;
-    cursorContext.fillRect(0, charHeight - curHeight, charWidth, curHeight);
+    cursorBg.drawRect(0, charHeight - curHeight, charWidth, curHeight);
   }
-
-  // Cursor blink
-  if (cursorAnimation) {
-    cursorAnimation.cancel();
-  }
-  if (m.blinkoff && m.blinkon) {
-    const offset = m.blinkon / (m.blinkon + m.blinkoff);
-    cursorAnimation = cursorEl.animate(
-      [
-        { opacity: 1, offset: 0 },
-        { opacity: 1, offset },
-        { opacity: 0, offset },
-        { opacity: 0, offset: 1 },
-        { opacity: 1, offset: 1 },
-      ],
-      {
-        duration: m.blinkoff + m.blinkon,
-        iterations: 'Infinity',
-        delay: m.blinkwait || 0,
-      },
-    );
-  }
+  needRerender = true;
 };
 
 let debouncedRepositionCursor;
@@ -335,6 +366,7 @@ export const repositionCursor = newCursor => {
   if (newCursor) cursorPosition = newCursor;
   const left = cursorPosition[1] * charWidth;
   const top = cursorPosition[0] * charHeight;
+  cursorContainer.position.set(left, top);
   cursorEl.style.transform = `translate(${left}px, ${top}px)`;
   redrawCursor();
 };
@@ -402,22 +434,6 @@ const recalculateHighlightTable = () => {
     }
   });
   reprintAllChars();
-};
-
-const setDefaultHl = ({ bgColor, fgColor, spColor }) => {
-  const calculated = {
-    bgColor,
-    fgColor,
-    spColor,
-    hiItalic: false,
-    hiBold: false,
-    hiUnderline: false,
-    hiUndercurl: false,
-  };
-  if (!highlightTable[0] || !isEqual(highlightTable[0].calculated, calculated)) {
-    highlightTable[0] = { calculated };
-    recalculateHighlightTable();
-  }
 };
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
@@ -488,11 +504,27 @@ const redrawCmd = {
   default_colors_set: props => {
     const [foreground, background, special] = props[props.length - 1];
 
-    setDefaultHl({
+    const calculated = {
       bgColor: getColor(background, defaultBgColor),
       fgColor: getColor(foreground, defaultFgColor),
       spColor: getColor(special, defaultSpColor),
-    });
+      hiItalic: false,
+      hiBold: false,
+      hiUnderline: false,
+      hiUndercurl: false,
+    };
+    if (!highlightTable[0] || !isEqual(highlightTable[0].calculated, calculated)) {
+      highlightTable[0] = { calculated };
+      highlightTable[-1] = {
+        calculated: {
+          ...calculated,
+          bgNum: foreground,
+          bgColor: getColor(foreground, defaultFgColor),
+          fgColor: getColor(background, defaultBgColor),
+        },
+      };
+      recalculateHighlightTable();
+    }
   },
 
   hl_attr_define: props => {
@@ -525,7 +557,13 @@ const redrawCmd = {
       }
     }
     needRerender = true;
-    redrawCursor();
+    if (
+      chars[cursorPosition[0]] &&
+      chars[cursorPosition[0]][cursorPosition[1]] &&
+      cursorChar !== chars[cursorPosition[0]][cursorPosition[1]].char
+    ) {
+      redrawCursor();
+    }
   },
 
   grid_clear: () => {
@@ -549,11 +587,7 @@ const redrawCmd = {
   grid_destroy: () => {},
 
   grid_cursor_goto: ([[_, ...newCursor]]) => {
-    if (newCursor[0] !== cursorPosition[0] && newCursor[0] === rows - 1) {
-      debouncedRepositionCursor(newCursor);
-    } else {
-      repositionCursor(newCursor);
-    }
+    repositionCursor(newCursor);
   },
 
   grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]) => {
@@ -654,7 +688,7 @@ const setScale = () => {
 
 /**
  * Return grid [col, row] coordinates by pixel coordinates.
- * */
+ */
 export const screenCoords = (width, height) => {
   return [Math.floor((width * scale) / charWidth), Math.floor((height * scale) / charHeight)];
 };
