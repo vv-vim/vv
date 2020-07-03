@@ -1,8 +1,14 @@
 import debounce from 'lodash/debounce';
+import { BrowserWindow } from 'electron';
+import { Nvim } from './api';
 
-import store from '../lib/store';
+import store, { Settings } from '../lib/store';
 
-const getDefaultSettings = () => ({
+export { Settings } from '../lib/store';
+
+export type SettingsCallback = (newSettings: Partial<Settings>, allSettings: Settings) => void;
+
+const getDefaultSettings = (): Settings => ({
   fullscreen: 0,
   simplefullscreen: 1,
   bold: 1,
@@ -10,12 +16,12 @@ const getDefaultSettings = () => ({
   underline: 1,
   undercurl: 1,
   fontfamily: 'monospace',
-  fontsize: 12,
-  lineheight: 1.25,
-  letterspacing: 0,
+  fontsize: '12',
+  lineheight: '1.25',
+  letterspacing: '0',
   reloadchanged: 0,
   quitoncloselastwindow: 0,
-  autoupdateinterval: 1440, // One day, 60*24 minutes
+  autoupdateinterval: '1440', // One day, 60*24 minutes
 });
 
 let hasCustomConfig = false;
@@ -24,7 +30,7 @@ let hasCustomConfig = false;
  * Get saved settings if we have them, default settings otherwise.
  * If you run app with -u flag, return default settings.
  * */
-export const getSettings = () => {
+export const getSettings = (): Settings => {
   if (hasCustomConfig) {
     return getDefaultSettings();
   }
@@ -34,21 +40,21 @@ export const getSettings = () => {
   };
 };
 
-const onChangeSettingsCallbacks = {};
+const onChangeSettingsCallbacks: Record<string, SettingsCallback[]> = {};
 
-export const onChangeSettings = (win, callback) => {
+export const onChangeSettings = (win: BrowserWindow, callback: SettingsCallback) => {
   if (!onChangeSettingsCallbacks[win.webContents.id]) {
     onChangeSettingsCallbacks[win.webContents.id] = [];
   }
   onChangeSettingsCallbacks[win.webContents.id].push(callback);
 };
 
-const initSettings = ({ win, nvim, args }) => {
+const initSettings = ({ win, nvim, args }: { win: BrowserWindow; nvim: Nvim; args: string[] }) => {
   hasCustomConfig = args.indexOf('-u') !== -1;
-  let initialSettings = getSettings();
+  let initialSettings: Settings | null = getSettings();
   let settings = getDefaultSettings();
 
-  let newSettings = {};
+  let newSettings: Partial<Settings> = {};
 
   const applyAllSettings = async () => {
     settings = {
@@ -60,10 +66,12 @@ const initSettings = ({ win, nvim, args }) => {
     // aleady applied initialSettings when we created a window.
     // Also store default colors to settings to avoid blinks on init.
     if (initialSettings && !hasCustomConfig) {
-      newSettings = Object.keys(settings).reduce((result, key) => {
+      newSettings = Object.keys(settings).reduce<Partial<Settings>>((result, key) => {
+        // @ts-ignore TODO FIXME
         if (initialSettings[key] !== settings[key]) {
           return {
             ...result,
+            // @ts-ignore TODO FIXME
             [key]: settings[key],
           };
         }
@@ -83,7 +91,8 @@ const initSettings = ({ win, nvim, args }) => {
 
   const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
 
-  const applySetting = ([option, props]) => {
+  const applySetting = ([option, props]: [keyof Settings, any]) => {
+    console.log('hey', option, props, typeof props);
     if (props !== null) {
       newSettings[option] = props;
       debouncedApplyAllSettings();

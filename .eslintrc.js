@@ -34,7 +34,12 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
       ],
       rules: {
+        'no-unused-vars': 'off',
+        '@typescript-eslint/ban-ts-ignore': 'warn',
+        '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/explicit-function-return-type': 'off',
+        'import/prefer-default-export': 'off',
+        'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
         'import/extensions': [
           'error',
           'ignorePackages',
@@ -68,6 +73,7 @@ module.exports = {
         allowSamePrecedence: true,
       },
     ],
+    'import/prefer-default-export': 'off',
     'import/no-extraneous-dependencies': 'off',
     'import/extensions': [
       'error',

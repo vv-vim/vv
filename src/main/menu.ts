@@ -1,4 +1,4 @@
-import { Menu } from 'electron';
+import { Menu, MenuItemConstructorOptions } from 'electron';
 
 // import { handleCloseWindow } from './nvim/features/closeWindow';
 
@@ -7,10 +7,18 @@ import { zoomInMenuItem, zoomOutMenuItem, actualSizeMenuItem } from './nvim/feat
 import { closeWindowMenuItem } from './nvim/features/closeWindow';
 import { toggleFullScreenMenuItem } from './nvim/features/windowSize';
 
-let menu;
+let menu: Menu;
 
-const createMenu = ({ createWindow, openFile, installCli }) => {
-  const menuTemplate = [
+const createMenu = ({
+  createWindow,
+  openFile,
+  installCli,
+}: {
+  createWindow: () => void;
+  openFile: MenuItemConstructorOptions['click'];
+  installCli: MenuItemConstructorOptions['click'];
+}) => {
+  const menuTemplate: MenuItemConstructorOptions[] = [
     {
       label: 'VV',
       submenu: [
@@ -23,7 +31,7 @@ const createMenu = ({ createWindow, openFile, installCli }) => {
         { role: 'services', submenu: [] },
         { type: 'separator' },
         { role: 'hide' },
-        { role: 'hideothers' },
+        { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
         { role: 'quit' },
@@ -43,10 +51,10 @@ const createMenu = ({ createWindow, openFile, installCli }) => {
           click: openFile,
         },
         {
-          role: 'recentdocuments',
+          role: 'recentDocuments',
           submenu: [
             {
-              role: 'clearrecentdocuments',
+              role: 'clearRecentDocuments',
             },
           ],
         },

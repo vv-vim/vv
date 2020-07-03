@@ -16,7 +16,7 @@ to /usr/local/bin.
     buttons: ['Install', 'Cancel'],
   });
 
-const showCliInstalledDialog = (message, path) =>
+const showCliInstalledDialog = (message: string, path: string) =>
   dialog.showMessageBox({
     message,
     detail: `Command line launcher installed at ${path}. You can run VV from terminal by typing:
@@ -26,7 +26,7 @@ $ vv [filename]
     buttons: ['Ok'],
   });
 
-const showErrorDialog = error => {
+const showErrorDialog = (error: Error) => {
   dialog.showMessageBox({
     message: 'Error',
     detail: error.message,
@@ -35,7 +35,7 @@ const showErrorDialog = error => {
   });
 };
 
-const installCli = binPath => () => {
+const installCli = (binPath: string) => () => {
   let path = which('vv');
   if (path && path.indexOf('VV.app/Contents/MacOS/vv') === -1) {
     path = path.replace('\n', '');
@@ -44,7 +44,7 @@ const installCli = binPath => () => {
     const response = showInstallCliDialog();
     if (response === 0) {
       try {
-        path = execSync(`ln -sf ${binPath} /usr/local/bin/`);
+        execSync(`ln -sf ${binPath} /usr/local/bin/`);
       } catch (error) {
         showErrorDialog(error);
         return;

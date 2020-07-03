@@ -2,7 +2,7 @@ const merge = require('webpack-merge');
 const common = require('./webpack.common.config');
 
 const config = merge(common, {
-  entry: './src/main/index.js',
+  entry: './src/main/index.ts',
   output: {
     filename: 'main.js',
   },

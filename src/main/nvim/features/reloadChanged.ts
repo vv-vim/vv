@@ -1,9 +1,16 @@
-// Show "Reload changed" dialog when opened files changed ouside (ex. switch git branch).
+/**
+ * Show "Reload changed" dialog when opened files changed ouside (ex. switch git branch).
+ */
+import { dialog, BrowserWindow } from 'electron';
+import { Nvim } from '../api';
 
-import { dialog } from 'electron';
+const initReloadChanged = ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }) => {
+  type Buffer = {
+    bufnr: string;
+    name: string;
+  };
 
-const initReloadChanged = ({ nvim, win }) => {
-  let changedBuffers = {};
+  let changedBuffers: Record<string, Buffer> = {};
   let enabled = false;
   let checking = false;
 
@@ -54,7 +61,7 @@ const initReloadChanged = ({ nvim, win }) => {
     }
   };
 
-  nvim.on('vv:file_changed', args => {
+  nvim.on('vv:file_changed', (args: Buffer[]) => {
     if (enabled) {
       const [buffer] = args;
       if (!changedBuffers[buffer.bufnr]) {
@@ -64,7 +71,7 @@ const initReloadChanged = ({ nvim, win }) => {
     }
   });
 
-  nvim.on('vv:set', ([option, isEnabled]) => {
+  nvim.on('vv:set', ([option, isEnabled]: [string, boolean]) => {
     if (option === 'reloadchanged') {
       enable(isEnabled);
     }

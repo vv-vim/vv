@@ -1,13 +1,13 @@
-import { dialog } from 'electron';
+import { dialog, BrowserWindow } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import html2plaintext from 'html2plaintext';
 
-import { getSettings, onChangeSettings } from './nvim/settings';
+import { getSettings, onChangeSettings, SettingsCallback } from './nvim/settings';
 
 import store from './lib/store';
 
 let interval = 0;
-let updaterIntervalId;
+let updaterIntervalId: NodeJS.Timeout;
 
 const LAST_CHECKED = 'autoUpdate.lastCheckedForUpdate';
 
@@ -37,21 +37,27 @@ const startUpdater = () => {
   }
 };
 
-const updateInterval = newInterval => {
+const updateInterval = (newInterval: string) => {
   if (interval !== parseInt(newInterval, 10)) {
     interval = parseInt(newInterval, 10);
     startUpdater();
   }
 };
 
-const handleChangeSettings = (_newSettings, allSettings) => {
+const handleChangeSettings: SettingsCallback = (_newSettings, allSettings) => {
   const { autoupdateinterval } = allSettings;
   if (autoupdateinterval !== undefined) {
     updateInterval(autoupdateinterval);
   }
 };
 
-const handleUpdateAvailable = ({ version, releaseNotes }) => {
+const handleUpdateAvailable = ({
+  version,
+  releaseNotes,
+}: {
+  version: string;
+  releaseNotes: string;
+}) => {
   const response = dialog.showMessageBoxSync({
     type: 'question',
     buttons: ['Update', 'Ignore'],
@@ -76,8 +82,8 @@ const handleUpdateDownloaded = () => {
   });
 };
 
-const initAutoUpdate = ({ win, args }) => {
-  updateInterval(getSettings(args).autoupdateinterval);
+const initAutoUpdate = ({ win }: { win: BrowserWindow }) => {
+  updateInterval(getSettings().autoupdateinterval);
   onChangeSettings(win, handleChangeSettings);
 
   autoUpdater.autoDownload = false;
