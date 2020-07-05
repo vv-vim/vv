@@ -41,7 +41,7 @@ jobs:
       run: yarn
 
     - name: Run ESLint
-      run: yarn lint --max-warnings=0
+      run: yarn lint
       if: always()
 
     - name: Run Tests

@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 
-let env;
+let env: NodeJS.ProcessEnv | undefined;
 
 /**
  * Find env variables if the app is started from Finder. We need a correct PATH variable to
@@ -14,7 +14,7 @@ const shellEnv = () => {
     if (!env.SHLVL) {
       try {
         // Try to get user's default shell and get env from it.
-        const envString = execSync(`${env.SHELL || '/bin/bash'} -ilc env`, { encoding: 'UTF-8' });
+        const envString = execSync(`${env.SHELL || '/bin/bash'} -ilc env`, { encoding: 'utf-8' });
         env = envString
           .split('\n')
           .filter(Boolean)

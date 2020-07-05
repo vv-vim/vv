@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, BrowserWindow } from 'electron';
 
 import { getNvimByWindow, setNvimByWindow, deleteNvimByWindow } from './nvimByWindow';
 
@@ -15,9 +15,10 @@ import nvimApi from './api';
 
 ipcMain.on('nvim-send', ({ sender: { id } }, payload) => {
   const nvim = getNvimByWindow(id);
+  // @ts-ignore FIXME
   if (nvim) nvim.send(...payload);
 });
-const initNvim = ({ args, cwd, win }) => {
+const initNvim = ({ args, cwd, win }: { args: string[]; cwd: string; win: BrowserWindow }) => {
   const nvim = nvimApi({
     args,
     cwd,
@@ -33,7 +34,7 @@ const initNvim = ({ args, cwd, win }) => {
 
   initSettings({ win, nvim, args });
 
-  windowSize({ win, args });
+  windowSize({ win });
 
   quit({ win, nvim });
   windowTitle({ win, nvim });

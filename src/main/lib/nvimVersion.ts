@@ -3,18 +3,18 @@ import { execSync } from 'child_process';
 import nvimCommand from './nvimCommand';
 import shellEnv from './shellEnv';
 
-let version;
+let version: string | undefined | null;
 
 /**
  * Get Neovim version string.
- * */
+ */
 const nvimVersion = () => {
   if (version !== undefined) return version;
 
   const env = shellEnv();
   try {
     const execResult = execSync(`${nvimCommand(env)} --version`, {
-      encoding: 'UTF-8',
+      encoding: 'utf-8',
       env,
     });
     if (execResult) {

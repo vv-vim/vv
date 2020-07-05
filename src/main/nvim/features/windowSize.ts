@@ -1,15 +1,15 @@
-import { screen } from 'electron';
-import { getSettings, onChangeSettings } from '../settings';
+import { screen, MenuItemConstructorOptions, BrowserWindow } from 'electron';
+import { getSettings, onChangeSettings, SettingsCallback } from '../settings';
 import { getNvimByWindow } from '../nvimByWindow';
 
-export const toggleFullScreenMenuItem = (_item, win) => {
+export const toggleFullScreenMenuItem: MenuItemConstructorOptions['click'] = (_item, win) => {
   const nvim = getNvimByWindow(win);
   if (nvim) {
     nvim.command('VVset fullscreen!');
   }
 };
 
-const initWindowSize = ({ win }) => {
+const initWindowSize = ({ win }: { win: BrowserWindow }) => {
   const initialBounds = win.getBounds();
   let bounds = win.getBounds();
   let simpleFullScreen = false;
@@ -17,7 +17,7 @@ const initWindowSize = ({ win }) => {
   let isInitial = false;
 
   const set = {
-    windowwidth: w => {
+    windowwidth: (w?: string) => {
       if (w !== undefined) {
         let width = parseInt(w, 10);
         if (w.toString().indexOf('%') !== -1) {
@@ -26,7 +26,7 @@ const initWindowSize = ({ win }) => {
         bounds.width = width;
       }
     },
-    windowheight: h => {
+    windowheight: (h?: string) => {
       if (h !== undefined) {
         let height = parseInt(h, 10);
         if (h.toString().indexOf('%') !== -1) {
@@ -35,7 +35,7 @@ const initWindowSize = ({ win }) => {
         bounds.height = height;
       }
     },
-    windowleft: l => {
+    windowleft: (l?: string) => {
       if (l !== undefined) {
         let left = parseInt(l, 10);
         if (l.toString().indexOf('%') !== -1) {
@@ -46,7 +46,7 @@ const initWindowSize = ({ win }) => {
         bounds.x = left;
       }
     },
-    windowtop: t => {
+    windowtop: (t?: string) => {
       if (t !== undefined) {
         let top = parseInt(t, 10);
         if (t.toString().indexOf('%') !== -1) {
@@ -57,7 +57,7 @@ const initWindowSize = ({ win }) => {
         bounds.y = top;
       }
     },
-    fullscreen: value => {
+    fullscreen: (value: string) => {
       fullScreen = !!parseInt(value, 10);
       if (fullScreen) bounds = win.getBounds();
       if (simpleFullScreen) {
@@ -67,7 +67,7 @@ const initWindowSize = ({ win }) => {
       }
       win.webContents.focus();
     },
-    simplefullscreen: value => {
+    simplefullscreen: (value: string) => {
       simpleFullScreen = !!parseInt(value, 10);
       if (simpleFullScreen && win.isFullScreen()) {
         win.setFullScreen(false);
@@ -86,7 +86,7 @@ const initWindowSize = ({ win }) => {
     },
   };
 
-  const updateWindowSize = (newSettings, allSettings) => {
+  const updateWindowSize: SettingsCallback = (newSettings, allSettings) => {
     let settings = newSettings;
     if (!fullScreen) {
       bounds = win.getBounds();
@@ -104,6 +104,7 @@ const initWindowSize = ({ win }) => {
       'windowheight',
       'windowleft',
       'windowtop',
+      // @ts-ignore FIXME
     ].forEach(key => settings[key] !== undefined && set[key](settings[key]));
     if (!fullScreen) {
       win.setBounds(bounds);

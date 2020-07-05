@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog } from 'electron';
 import { statSync, existsSync } from 'fs';
-import path from 'path';
+import { join /* , resolve */ } from 'path';
 
 import menu from './menu';
 import installCli from './installCli';
@@ -14,17 +14,22 @@ import initAutoUpdate from './autoUpdate';
 import isDev from '../lib/isDev';
 
 import initNvim from './nvim/nvim';
+// import { argsFileNames } from './lib/args';
 
 // import log from '../lib/log';
 
-const windows = [];
-let currentWindow;
+let currentWindow: BrowserWindow | undefined | null;
 
-const filterArgs = args => args.filter(a => !['--inspect'].includes(a));
+const windows: BrowserWindow[] = [];
 
-const cliArgs = args => (args || process.argv).slice(isDev(2, 1));
+/** Empty windows created in advance to make windows creation faster */
+const emptyWindows: BrowserWindow[] = [];
 
-const openDeveloperTools = win => {
+const filterArgs = (args: string[]) => args.filter(a => !['--inspect'].includes(a));
+
+const cliArgs = (args?: string[]) => (args || process.argv).slice(isDev(2, 1));
+
+const openDeveloperTools = (win: BrowserWindow) => {
   win.webContents.openDevTools({ mode: 'detach' });
   win.webContents.on('devtools-opened', () => {
     win.webContents.focus();
@@ -38,8 +43,6 @@ const handleAllClosed = () => {
   }
 };
 
-const emptyWindows = [];
-
 const createEmptyWindow = () => {
   const options = {
     width: 800,
@@ -47,10 +50,11 @@ const createEmptyWindow = () => {
     show: false,
     fullscreenable: false,
     webPreferences: {
-      preload: path.join(app.getAppPath(), isDev('./', '../'), 'src/main/preload.js'),
+      preload: join(app.getAppPath(), isDev('./', '../'), 'src/main/preload.js'),
     },
   };
   let win = new BrowserWindow(options);
+  // @ts-ignore TODO
   win.zoomLevel = 0;
 
   win.on('closed', async () => {
@@ -58,6 +62,7 @@ const createEmptyWindow = () => {
 
     const i = windows.indexOf(win);
     if (i !== -1) windows.splice(i, 1);
+    // @ts-ignore TODO
     win = null;
 
     if (windows.length === 0) handleAllClosed();
@@ -68,24 +73,33 @@ const createEmptyWindow = () => {
   });
 
   win.loadURL(
-    process.env.DEV_SERVER
-      ? 'http://localhost:3000'
-      : `file://${path.join(__dirname, './index.html')}`,
+    process.env.DEV_SERVER ? 'http://localhost:3000' : `file://${join(__dirname, './index.html')}`,
   );
 
   return win;
 };
 
-const getEmptyWindow = () => {
+const getEmptyWindow = (): BrowserWindow => {
   if (emptyWindows.length > 0) {
-    return emptyWindows.pop();
+    return emptyWindows.pop() as BrowserWindow;
   }
   return createEmptyWindow();
 };
 
-const createWindow = (args = [], newCwd) => {
+const createWindow = (args: string[] = [], newCwd?: string) => {
   const cwd = newCwd || process.cwd();
+
+  // const fileNames = argsFileNames(args);
+  // fileNames.forEach(fileName => {
+  //   const resolved = resolve(cwd, fileName);
+  //   if (windows.find(w => filename.startsWith(w.cwd))) {
+  //   }
+  // });
+
   const win = getEmptyWindow();
+
+  // @ts-ignore TODO: don't add custom props to win
+  win.cwd = cwd;
 
   if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
     const [x, y] = currentWindow.getPosition();
@@ -114,12 +128,12 @@ const createWindow = (args = [], newCwd) => {
 
   setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
 
-  initAutoUpdate({ win, args });
+  initAutoUpdate({ win });
 
   return win;
 };
 
-const openFileOrDir = fileName => {
+const openFileOrDir = (fileName: string) => {
   app.addRecentDocument(fileName);
   if (existsSync(fileName) && statSync(fileName).isDirectory()) {
     createWindow([fileName], fileName);
@@ -137,7 +151,7 @@ const openFile = () => {
   }
 };
 
-let fileToOpen;
+let fileToOpen: string | undefined | null;
 app.on('will-finish-launching', () => {
   app.on('open-file', (_e, file) => {
     fileToOpen = file;
@@ -155,7 +169,7 @@ app.on('ready', () => {
   menu({
     createWindow,
     openFile,
-    installCli: installCli(path.join(app.getAppPath(), '../bin/vv')),
+    installCli: installCli(join(app.getAppPath(), '../bin/vv')),
   });
   app.on('open-file', (_e, file) => openFileOrDir(file));
   app.focus();
@@ -178,7 +192,7 @@ app.on('activate', (_e, hasVisibleWindows) => {
   }
 });
 
-if (!isDev()) {
+if (!isDev(true, false)) {
   const gotTheLock = app.requestSingleInstanceLock();
 
   if (!gotTheLock) {
