@@ -12,4 +12,6 @@ Application.registerPlugin(TickerPlugin);
 export * from '@pixi/app';
 export * from '@pixi/core';
 export * from '@pixi/sprite';
+export * from '@pixi/display';
+export * from '@pixi/graphics';
 export { utils };
