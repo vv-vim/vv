@@ -10,7 +10,7 @@ jest.mock('../../nvim', () => ({ on: jest.fn(), input: jest.fn() }));
 jest.mock('../../screen', () => ({ getCursorElement: jest.fn() }));
 
 describe('Keyboard input', () => {
-  const simulateKeyDown = options => {
+  const simulateKeyDown = (options) => {
     const event = new KeyboardEvent('keydown', options);
     document.dispatchEvent(event);
   };

@@ -5,7 +5,7 @@ import { dialog, app } from 'electron';
 // This function is used in 'before-quit' event to switch to close app mode.
 let shouldQuit = false;
 
-export const setShouldQuit = newShouldQuit => {
+export const setShouldQuit = (newShouldQuit) => {
   shouldQuit = newShouldQuit;
 };
 
@@ -19,7 +19,7 @@ const showCloseDialog = async ({ nvim, win }) => {
     win.focus();
     const { response } = await dialog.showMessageBox(win, {
       message: `You have ${unsavedBuffers.length} unsaved buffers. Do you want to save them?`,
-      detail: `${unsavedBuffers.map(b => b.name).join('\n')}\n`,
+      detail: `${unsavedBuffers.map((b) => b.name).join('\n')}\n`,
       cancelId: 2,
       defaultId: 0,
       buttons: ['Save All', 'Discard All', 'Cancel'],
@@ -48,7 +48,7 @@ const initQuit = ({ win, nvim }) => {
   });
 
   // If nvim process is not closed, show Save All dialog.
-  win.on('close', async e => {
+  win.on('close', async (e) => {
     if (isConnected) {
       e.preventDefault();
       showCloseDialog({ win, nvim });

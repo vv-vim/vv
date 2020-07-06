@@ -18,13 +18,13 @@ describe('argsFileNames', () => {
   });
 
   test('skip params started with - or +', () => {
-    ['-param1', '--param2', '+cmd1'].forEach(param => {
+    ['-param1', '--param2', '+cmd1'].forEach((param) => {
       expect(argsFileNames([param, 'file1', 'file2'])).toEqual(['file1', 'file2']);
     });
   });
 
   test('skip params with argument', () => {
-    ['--cmd', '-c', '-i', '-r', '-s', '-S', '-u', '--listen', '--startuptime'].forEach(param => {
+    ['--cmd', '-c', '-i', '-r', '-s', '-S', '-u', '--listen', '--startuptime'].forEach((param) => {
       expect(argsFileNames([param, 'arg', 'file1', 'file2'])).toEqual(['file1', 'file2']);
     });
   });

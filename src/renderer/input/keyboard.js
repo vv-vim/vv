@@ -53,7 +53,7 @@ const specialKey = ({ key, code }) =>
     '|': 'Bar',
   }[key]);
 
-const skip = key =>
+const skip = (key) =>
   ({
     Shift: true,
     Control: true,
@@ -69,7 +69,7 @@ export const modifierPrefix = ({ metaKey, altKey, ctrlKey }) =>
 export const shiftPrefix = ({ shiftKey }) => (shiftKey ? 'S-' : '');
 
 // Filter hotkeys from menu.
-const filterResult = result =>
+const filterResult = (result) =>
   !{
     '<D-c>': true, // Cmd+C
     '<D-v>': true, // Cmd+V
@@ -87,14 +87,14 @@ const filterResult = result =>
   }[result] && result;
 
 // https://github.com/rhysd/NyaoVim/issues/87
-const replaceResult = result =>
+const replaceResult = (result) =>
   ({
     '<C-6>': '<C-^>',
     '<C-->': '<C-_>',
     '<C-2>': '<C-@>',
   }[result] || result);
 
-const eventKeyCode = event => {
+const eventKeyCode = (event) => {
   const { key } = event;
 
   if (skip(key)) return null;
@@ -116,7 +116,7 @@ let inputKey = null;
 let isComposing = false;
 let compositionValue = null;
 
-const handleKeydown = async event => {
+const handleKeydown = async (event) => {
   disableNextInput = true;
   if (!isComposing) {
     inputKey = eventKeyCode(event);
@@ -125,7 +125,7 @@ const handleKeydown = async event => {
 };
 
 // Non-keyboard input. For example insert emoji.
-const handleInput = event => {
+const handleInput = (event) => {
   if (disableNextInput || isComposing) {
     disableNextInput = false;
     return;
@@ -143,7 +143,7 @@ const handleCompositionEnd = () => {
   isComposing = false;
 };
 
-const handleCompositionUpdate = event => {
+const handleCompositionUpdate = (event) => {
   nvim.input(`${'<BS>'.repeat(compositionValue.length)}${event.data}`);
   compositionValue = event.data;
 };
@@ -170,7 +170,7 @@ const initKeyboard = () => {
   // Enable composition input only for insert and command-line modes. Enabling if for other modes
   // is tricky. `preventDefault` does not work for compositionstart, so we need to blur/focus input
   // element for this.
-  nvim.on('redraw', args => {
+  nvim.on('redraw', (args) => {
     for (let i = 0, length = args.length; i < length; i += 1) {
       const [cmd, ...params] = args[i];
       if (cmd === 'mode_change') {

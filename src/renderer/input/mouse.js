@@ -31,7 +31,7 @@ let scrollDeltaY = 0;
 let mouseCoords = [];
 let mouseButtonDown;
 
-const mouseCoordsChanged = event => {
+const mouseCoordsChanged = (event) => {
   const newCoords = screenCoords(event.clientX, event.clientY);
   if (newCoords[0] !== mouseCoords[0] || newCoords[1] !== mouseCoords[1]) {
     mouseCoords = newCoords;
@@ -40,7 +40,7 @@ const mouseCoordsChanged = event => {
   return false;
 };
 
-const buttonName = event =>
+const buttonName = (event) =>
   event.type === 'wheel' ? MOUSE_BUTTON.WHEEL : MOUSE_BUTTON[event.button];
 
 const mouseInput = (event, action) => {
@@ -51,7 +51,7 @@ const mouseInput = (event, action) => {
   nvim.inputMouse(button, action, modifier, GRID, row, col);
 };
 
-const calculateScroll = event => {
+const calculateScroll = (event) => {
   let [scrollX, scrollY] = screenCoords(Math.abs(scrollDeltaX), Math.abs(scrollDeltaY));
   scrollX = Math.floor(scrollX / SCROLL_STEP_X);
   scrollY = Math.floor(scrollY / SCROLL_STEP_Y);
@@ -69,7 +69,7 @@ const calculateScroll = event => {
   }
 };
 
-const handleMousewheel = event => {
+const handleMousewheel = (event) => {
   const { deltaX, deltaY } = event;
   if (scrollDeltaY * deltaY < 0) scrollDeltaY = 0;
   scrollDeltaX += deltaX;
@@ -77,21 +77,21 @@ const handleMousewheel = event => {
   calculateScroll(event);
 };
 
-const handleMousedown = event => {
+const handleMousedown = (event) => {
   event.preventDefault();
   event.stopPropagation();
   mouseButtonDown = true;
   mouseInput(event, ACTION.PRESS);
 };
 
-const handleMouseup = event => {
+const handleMouseup = (event) => {
   event.preventDefault();
   event.stopPropagation();
   mouseButtonDown = false;
   mouseInput(event, ACTION.RELEASE);
 };
 
-const handleMousemove = event => {
+const handleMousemove = (event) => {
   if (mouseButtonDown) {
     event.preventDefault();
     event.stopPropagation();

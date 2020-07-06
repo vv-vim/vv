@@ -34,8 +34,9 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
       ],
       rules: {
+        'no-console': 'error',
         'no-unused-vars': 'off',
-        '@typescript-eslint/ban-ts-ignore': 'warn',
+        '@typescript-eslint/ban-ts-comment': 'warn',
         '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/explicit-function-return-type': 'off',
         'import/prefer-default-export': 'off',
@@ -54,6 +55,7 @@ module.exports = {
 
   rules: {
     'prefer-destructuring': 'off',
+    'no-console': 'error',
     'no-unused-vars': [
       'error',
       {

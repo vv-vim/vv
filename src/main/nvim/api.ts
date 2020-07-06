@@ -50,7 +50,7 @@ const startNvimProcess = ({ args, cwd }: { args: string[]; cwd: string }) => {
   // Pipe errors to std output and also send it in console as error.
   let errorStr = '';
   nvimProcess.stderr.pipe(process.stdout);
-  nvimProcess.stderr.on('data', data => {
+  nvimProcess.stderr.on('data', (data) => {
     errorStr += data.toString();
     debounce(() => {
       if (errorStr) console.error(errorStr); // eslint-disable-line no-console

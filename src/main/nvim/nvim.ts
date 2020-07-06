@@ -26,7 +26,7 @@ const initNvim = ({ args, cwd, win }: { args: string[]; cwd: string; win: Browse
   setNvimByWindow(win, nvim);
 
   // TODO: Queue or smth if webContents are not ready
-  nvim.on('data', data => win.webContents.send('nvim-data', data));
+  nvim.on('data', (data) => win.webContents.send('nvim-data', data));
 
   nvim.on('disconnect', () => {
     deleteNvimByWindow(win);
