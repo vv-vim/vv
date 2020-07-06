@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const common = require('./webpack.common.config');
 
 const config = merge(common, {
-  entry: './src/renderer/index.js',
+  entry: './src/renderer/index.ts',
   output: {
     filename: 'renderer.js',
   },

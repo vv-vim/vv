@@ -1,4 +1,4 @@
-import { app, MenuItemConstructorOptions, BrowserWindow, MenuItem } from 'electron';
+import { app, MenuItemConstructorOptions, BrowserWindow } from 'electron';
 import { getNvimByWindow } from '../nvimByWindow';
 
 const nvimChangeZoom = (win: BrowserWindow, level: number) => {

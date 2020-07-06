@@ -36,6 +36,13 @@ module.exports = {
       rules: {
         'no-console': 'error',
         'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            args: 'all',
+            argsIgnorePattern: '^_',
+          },
+        ],
         '@typescript-eslint/ban-ts-comment': 'warn',
         '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/explicit-function-return-type': 'off',
