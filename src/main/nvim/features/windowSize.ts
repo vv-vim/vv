@@ -105,7 +105,7 @@ const initWindowSize = ({ win }: { win: BrowserWindow }) => {
       'windowleft',
       'windowtop',
       // @ts-ignore FIXME
-    ].forEach(key => settings[key] !== undefined && set[key](settings[key]));
+    ].forEach((key) => settings[key] !== undefined && set[key](settings[key]));
     if (!fullScreen) {
       win.setBounds(bounds);
     }

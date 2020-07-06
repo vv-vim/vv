@@ -29,7 +29,7 @@ const initReloadChanged = ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }) =>
       const { response } = await dialog.showMessageBox(win, {
         message,
         detail: `${Object.keys(changedBuffers)
-          .map(k => changedBuffers[k].name)
+          .map((k) => changedBuffers[k].name)
           .join('\n')}\n`,
         cancelId: 1,
         defaultId: 0,
@@ -38,7 +38,7 @@ const initReloadChanged = ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }) =>
       if (response === 0) {
         nvim.callFunction(
           'VVrefresh',
-          Object.keys(changedBuffers).map(k => changedBuffers[k].bufnr),
+          Object.keys(changedBuffers).map((k) => changedBuffers[k].bufnr),
         );
         changedBuffers = {};
       }

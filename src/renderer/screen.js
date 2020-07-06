@@ -203,7 +203,7 @@ const measureCharSize = () => {
   screenEl.removeChild(char);
 };
 
-const font = p =>
+const font = (p) =>
   [p.hiItalic ? 'italic' : '', p.hiBold ? 'bold' : '', `${scaledFontSize()}px`, fontFamily].join(
     ' ',
   );
@@ -361,7 +361,7 @@ const redrawCursor = () => {
 
 let debouncedRepositionCursor;
 
-export const repositionCursor = newCursor => {
+export const repositionCursor = (newCursor) => {
   if (debouncedRepositionCursor) debouncedRepositionCursor.cancel();
   if (newCursor) cursorPosition = newCursor;
   const left = cursorPosition[1] * charWidth;
@@ -374,7 +374,7 @@ export const repositionCursor = newCursor => {
 debouncedRepositionCursor = debounce(repositionCursor, 10);
 
 const optionSet = {
-  guifont: newFont => {
+  guifont: (newFont) => {
     const [newFontFamily, newFontSize] = newFont.trim().split(':h');
     if (newFontFamily && newFontFamily !== '') {
       nvim.command(`VVset fontfamily=${newFontFamily}`);
@@ -403,7 +403,7 @@ const reprintAllChars = debounce(() => {
 }, 10);
 
 const recalculateHighlightTable = () => {
-  Object.keys(highlightTable).forEach(id => {
+  Object.keys(highlightTable).forEach((id) => {
     if (id > 0) {
       const {
         foreground,
@@ -441,12 +441,12 @@ const redrawCmd = {
   set_title: () => {},
   set_icon: () => {},
 
-  mode_info_set: props => {
+  mode_info_set: (props) => {
     modeInfoSet = props[0][1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
     redrawCursor();
   },
 
-  option_set: options => {
+  option_set: (options) => {
     options.forEach(([option, value]) => {
       if (optionSet[option]) {
         optionSet[option](value);
@@ -456,7 +456,7 @@ const redrawCmd = {
     });
   },
 
-  mode_change: modes => {
+  mode_change: (modes) => {
     [mode] = modes[modes.length - 1];
     redrawCursor();
   },
@@ -484,7 +484,7 @@ const redrawCmd = {
   }, 1000 / TARGET_FPS),
 
   // New api
-  grid_resize: props => {
+  grid_resize: (props) => {
     cols = props[0][1];
     rows = props[0][2];
 
@@ -501,7 +501,7 @@ const redrawCmd = {
     }
   },
 
-  default_colors_set: props => {
+  default_colors_set: (props) => {
     const [foreground, background, special] = props[props.length - 1];
 
     const calculated = {
@@ -527,7 +527,7 @@ const redrawCmd = {
     }
   },
 
-  hl_attr_define: props => {
+  hl_attr_define: (props) => {
     props.forEach(([id, value]) => {
       highlightTable[id] = {
         value,
@@ -536,7 +536,7 @@ const redrawCmd = {
     recalculateHighlightTable();
   },
 
-  grid_line: props => {
+  grid_line: (props) => {
     for (let gridKey = 0, gridLength = props.length; gridKey < gridLength; gridKey += 1) {
       const row = props[gridKey][1];
       const col = props[gridKey][2];
@@ -568,10 +568,10 @@ const redrawCmd = {
 
   grid_clear: () => {
     cursorPosition = [0, 0];
-    charsContainer.children.forEach(c => {
+    charsContainer.children.forEach((c) => {
       c.visible = false; // eslint-disable-line no-param-reassign
     });
-    bgContainer.children.forEach(c => {
+    bgContainer.children.forEach((c) => {
       c.visible = false; // eslint-disable-line no-param-reassign
     });
     for (let i = 0; i <= rows; i += 1) {
@@ -628,40 +628,40 @@ const redrawCmd = {
 };
 
 const handleSet = {
-  fontfamily: newFontFamily => {
+  fontfamily: (newFontFamily) => {
     fontFamily = newFontFamily;
   },
 
-  fontsize: newFontSize => {
+  fontsize: (newFontSize) => {
     fontSize = parseInt(newFontSize, 10);
   },
 
-  letterspacing: newLetterSpacing => {
+  letterspacing: (newLetterSpacing) => {
     letterSpacing = parseInt(newLetterSpacing, 10);
   },
 
-  lineheight: newLineHeight => {
+  lineheight: (newLineHeight) => {
     lineHeight = parseFloat(newLineHeight);
   },
 
-  bold: value => {
+  bold: (value) => {
     showBold = value;
   },
 
-  italic: value => {
+  italic: (value) => {
     showItalic = value;
   },
 
-  underline: value => {
+  underline: (value) => {
     showUnderline = value;
   },
 
-  undercurl: value => {
+  undercurl: (value) => {
     showUndercurl = value;
   },
 };
 
-const redraw = args => {
+const redraw = (args) => {
   for (let i = 0; i < args.length; i += 1) {
     const [cmd, ...props] = args[i];
     if (redrawCmd[cmd]) {
@@ -724,7 +724,7 @@ const updateSettings = (settings, isInitial = false) => {
     'undercurl',
   ];
 
-  Object.keys(settings).forEach(key => {
+  Object.keys(settings).forEach((key) => {
     if (handleSet[key]) {
       requireRedraw = requireRedraw || requireRedrawProps.includes(key);
       handleSet[key](settings[key]);
@@ -744,7 +744,7 @@ initScreen();
 initCursor();
 setScale();
 
-const screen = settings => {
+const screen = (settings) => {
   nvim.on('redraw', redraw);
 
   ipcRenderer.on('updateSettings', (_, s) => updateSettings(s));

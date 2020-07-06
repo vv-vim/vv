@@ -83,7 +83,7 @@ const initSettings = ({ win, nvim, args }: { win: BrowserWindow; nvim: Nvim; arg
 
     win.webContents.send('updateSettings', newSettings, settings);
     if (onChangeSettingsCallbacks[win.webContents.id]) {
-      onChangeSettingsCallbacks[win.webContents.id].forEach(c => c(newSettings, settings));
+      onChangeSettingsCallbacks[win.webContents.id].forEach((c) => c(newSettings, settings));
     }
 
     newSettings = {};
@@ -92,7 +92,6 @@ const initSettings = ({ win, nvim, args }: { win: BrowserWindow; nvim: Nvim; arg
   const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
 
   const applySetting = ([option, props]: [keyof Settings, any]) => {
-    console.log('hey', option, props, typeof props);
     if (props !== null) {
       newSettings[option] = props;
       debouncedApplyAllSettings();

@@ -27,7 +27,7 @@ const send = (command, ...params) => {
   });
 };
 
-const subscribe = s => subscriptions.push(s);
+const subscribe = (s) => subscriptions.push(s);
 
 const filterMethod = (methodToFilter, callback) => (method, ...params) => {
   if (method === methodToFilter) {
@@ -40,7 +40,7 @@ const on = (method, callback) => {
   subscribe(filterMethod(method, callback));
 };
 
-const commandFactory = name => (...params) => send(name, ...params);
+const commandFactory = (name) => (...params) => send(name, ...params);
 
 const nvim = {
   eval: commandFactory('eval'),
@@ -58,7 +58,7 @@ export const initNvim = () =>
     if (type === 1) {
       handleResponse(params[0], params[1], params[2]);
     } else if (type === 2) {
-      subscriptions.forEach(c => c(params[0], params[1]));
+      subscriptions.forEach((c) => c(params[0], params[1]));
     }
   });
 

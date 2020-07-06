@@ -25,7 +25,7 @@ const windows: BrowserWindow[] = [];
 /** Empty windows created in advance to make windows creation faster */
 const emptyWindows: BrowserWindow[] = [];
 
-const filterArgs = (args: string[]) => args.filter(a => !['--inspect'].includes(a));
+const filterArgs = (args: string[]) => args.filter((a) => !['--inspect'].includes(a));
 
 const cliArgs = (args?: string[]) => (args || process.argv).slice(isDev(2, 1));
 
@@ -175,9 +175,9 @@ app.on('ready', () => {
   app.focus();
 });
 
-app.on('before-quit', e => {
+app.on('before-quit', (e) => {
   setShouldQuit(true);
-  const visibleWindows = windows.filter(w => w.isVisible());
+  const visibleWindows = windows.filter((w) => w.isVisible());
   if (visibleWindows.length > 0) {
     e.preventDefault();
     (currentWindow || visibleWindows[0]).close();
