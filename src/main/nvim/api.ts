@@ -16,7 +16,7 @@ import shellEnv from '../lib/shellEnv';
 import nvimCommand from '../lib/nvimCommand';
 import isDev from '../../lib/isDev';
 
-type NvimCommand<R extends any> = (...args: any[]) => Promise<R>;
+export type NvimCommand<R extends any> = (...args: any[]) => Promise<R>;
 
 export type Nvim = {
   on: (method: string, callback: (...p: any[]) => void) => void;
@@ -27,6 +27,7 @@ export type Nvim = {
   callFunction: NvimCommand<any>;
   command: NvimCommand<any>;
   input: NvimCommand<any>;
+  inputMouse: NvimCommand<any>;
   getMode: NvimCommand<{ mode: string }>;
   uiTryResize: NvimCommand<any>;
   uiAttach: NvimCommand<any>;
@@ -99,6 +100,7 @@ const api = ({ args, cwd }: { args: string[]; cwd: string }): Nvim => {
     callFunction: commandFactory('call_function'),
     command: commandFactory('command'),
     input: commandFactory('input'),
+    inputMouse: commandFactory('input_mouse'),
     // @ts-ignore FIXME
     getMode: commandFactory('get_mode'),
     uiTryResize: commandFactory('ui_try_resize'),
@@ -106,15 +108,14 @@ const api = ({ args, cwd }: { args: string[]; cwd: string }): Nvim => {
     subscribe: commandFactory('subscribe'),
     getHlByName: commandFactory('get_hl_by_name'),
     paste: commandFactory('paste'),
-  };
-
-  /**
-   * Fetch current mode from nvim, leaves only first letter to match groups of modes.
-   * https://neovim.io/doc/user/eval.html#mode()
-   */
-  nvim.getShortMode = async () => {
-    const { mode } = await (nvim as Nvim).getMode();
-    return mode.replace('CTRL-', '')[0];
+    /**
+     * Fetch current mode from nvim, leaves only first letter to match groups of modes.
+     * https://neovim.io/doc/user/eval.html#mode()
+     */
+    getShortMode: async () => {
+      const { mode } = await (nvim as Nvim).getMode();
+      return mode.replace('CTRL-', '')[0];
+    },
   };
 
   const on = (method: string, callback: () => void) => {

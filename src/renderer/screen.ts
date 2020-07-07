@@ -1,9 +1,14 @@
+// TODO: Refactor, Fix types.
+/* eslint-disable @typescript-eslint/no-empty-function */
+import type { Cancelable } from 'lodash';
 import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
 import isFinite from 'lodash/isFinite';
 import isEqual from 'lodash/isEqual';
 
 import * as PIXI from './lib/pixi';
+
+import { Settings } from '../main/nvim/settings';
 
 import { remote, ipcRenderer } from './preloaded/electron';
 
@@ -15,22 +20,22 @@ import getColor from '../lib/getColor';
 
 const [body] = document.getElementsByTagName('body');
 
-let screenContainer;
+let screenContainer: HTMLElement;
 
-let cursorEl;
-let cursorPosition = [0, 0];
-let cursorChar;
+let cursorEl: HTMLElement;
+let cursorPosition: [number, number] = [0, 0];
+let cursorChar: string;
 
-let startCursorBlinkOnTimeout;
-let startCursorBlinkOffTimeout;
-let blinkOnCursorBlinkInterval;
-let blinkOffCursorBlinkInterval;
+let startCursorBlinkOnTimeout: NodeJS.Timeout | null;
+let startCursorBlinkOffTimeout: number | null;
+let blinkOnCursorBlinkInterval: NodeJS.Timeout | null;
+let blinkOffCursorBlinkInterval: NodeJS.Timeout | null;
 
-let screenEl;
+let screenEl: HTMLElement;
 
-let scale;
-let charWidth;
-let charHeight;
+let scale: number;
+let charWidth: number;
+let charHeight: number;
 
 let fontFamily = 'monospace';
 let fontSize = 12;
@@ -41,11 +46,12 @@ const defaultFgColor = 'rgb(255,255,255)';
 const defaultBgColor = 'rgb(0,0,0)';
 const defaultSpColor = 'rgb(255,255,255)';
 
-let cols;
-let rows;
+let cols: number;
+let rows: number;
 
-let modeInfoSet;
-let mode;
+// TODO
+let modeInfoSet: any;
+let mode: string;
 
 let showBold = true;
 let showItalic = true;
@@ -53,16 +59,42 @@ let showUnderline = true;
 let showUndercurl = true;
 
 const charCanvas = new OffscreenCanvas(1, 1);
-const charCtx = charCanvas.getContext('2d', { alpha: true });
+const charCtx = charCanvas.getContext('2d', { alpha: true }) as OffscreenCanvasRenderingContext2D;
 
 const currentWindow = remote.getCurrentWindow();
 
-const chars = {};
+type Char = {
+  sprite: PIXI.Sprite;
+  bg: PIXI.Graphics;
+  char?: string | null;
+  hlId?: number;
+};
 
-const highlightTable = {
+const chars: Char[][] = [];
+
+type CalculatedProps = {
+  bgNum?: number;
+  bgColor: string;
+  fgColor: string;
+  spColor?: string;
+  hiItalic: boolean;
+  hiBold: boolean;
+  hiUnderline: boolean;
+  hiUndercurl: boolean;
+};
+
+type HighlightProps = {
+  calculated?: CalculatedProps;
+  // TODO types
+  value?: any;
+};
+
+type HighlightTable = Record<number, HighlightProps>;
+
+const highlightTable: HighlightTable = {
   '0': {
     calculated: {
-      bgColorNum: 0x000000,
+      bgNum: 0x000000,
       bgColor: defaultBgColor,
       fgColor: defaultFgColor,
       spColor: defaultSpColor,
@@ -75,7 +107,7 @@ const highlightTable = {
   // Inverted default color for cursor
   '-1': {
     calculated: {
-      bgColorNum: 0xffffff,
+      bgNum: 0xffffff,
       bgColor: defaultFgColor,
       fgColor: defaultBgColor,
       spColor: defaultSpColor,
@@ -88,18 +120,18 @@ const highlightTable = {
 };
 
 // WebGL
-let stage;
-let renderer;
-let charsContainer;
-let bgContainer;
-let cursorContainer;
-let cursorSprite;
-let cursorBg;
+let stage: PIXI.Container;
+let renderer: PIXI.Renderer;
+let charsContainer: PIXI.Container;
+let bgContainer: PIXI.Container;
+let cursorContainer: PIXI.Container;
+let cursorSprite: PIXI.Sprite;
+let cursorBg: PIXI.Graphics;
 
 let needRerender = false;
 const TARGET_FPS = 60;
 
-export const getCursorElement = () => cursorEl;
+export const getCursorElement = (): HTMLElement => cursorEl;
 
 const windowPixelSize = () => ({
   width: window.screen.width * window.devicePixelRatio,
@@ -109,27 +141,28 @@ const windowPixelSize = () => ({
 const initCursor = () => {
   cursorEl = document.createElement('div');
   cursorEl.style.position = 'absolute';
-  cursorEl.style.zIndex = 100;
-  cursorEl.style.top = 0;
-  cursorEl.style.left = 0;
+  cursorEl.style.zIndex = '100';
+  cursorEl.style.top = '0';
+  cursorEl.style.left = '0';
   screenEl.appendChild(cursorEl);
 };
 
 const initScreen = () => {
-  screenContainer = document.getElementById('screen');
+  screenContainer = document.getElementById('screen') as HTMLElement;
 
   screenContainer.style.position = 'absolute';
   screenContainer.style.transformOrigin = '0 0';
 
   screenEl = document.createElement('div');
 
+  // @ts-ignore incomplete type declaration for style?
   screenEl.style.contain = 'strict';
   screenEl.style.overflow = 'hidden';
 
   // Init WebGL for text
   const pixi = new PIXI.Application({
     transparent: true,
-    autostart: false,
+    autoStart: false,
     ...windowPixelSize(),
   });
 
@@ -181,7 +214,7 @@ const measureCharSize = () => {
   char.style.lineHeight = `${Math.round(scaledFontSize() * lineHeight)}px`;
   char.style.position = 'absolute';
   char.style.left = '-1000px';
-  char.style.top = 0;
+  char.style.top = '0';
   screenEl.appendChild(char);
 
   const oldCharWidth = charWidth;
@@ -203,12 +236,12 @@ const measureCharSize = () => {
   screenEl.removeChild(char);
 };
 
-const font = (p) =>
+const font = (p: CalculatedProps) =>
   [p.hiItalic ? 'italic' : '', p.hiBold ? 'bold' : '', `${scaledFontSize()}px`, fontFamily].join(
     ' ',
   );
 
-const getCharBitmap = (char, props) => {
+const getCharBitmap = (char: string, props: CalculatedProps) => {
   charCtx.fillStyle = props.fgColor;
   charCtx.font = font(props);
   charCtx.textAlign = 'left';
@@ -231,7 +264,7 @@ const getCharBitmap = (char, props) => {
   }
 
   if (props.hiUndercurl) {
-    charCtx.strokeStyle = props.spColor;
+    charCtx.strokeStyle = props.spColor as string;
     charCtx.lineWidth = scaledFontSize() * 0.08;
     const x = charWidth;
     const y = charHeight - (scaledFontSize() * 0.08) / 2;
@@ -246,24 +279,30 @@ const getCharBitmap = (char, props) => {
   return charCanvas.transferToImageBitmap();
 };
 
-const getCharTexture = (char, hlId) => {
+const getCharTexture = (char: string, hlId: number) => {
   const key = `${char}:${hlId}`;
   if (!PIXI.utils.TextureCache[key]) {
     const props = highlightTable[hlId].calculated;
+    // @ts-ignore getCharBitmap returns ImageBitmap that can be used as texture
     PIXI.Texture.addToCache(PIXI.Texture.from(getCharBitmap(char, props)), key);
   }
   return PIXI.Texture.from(key);
 };
 
-const printChar = (i, j, char, hlId) => {
-  if (!chars[i]) chars[i] = {};
-  if (!chars[i][j]) chars[i][j] = {};
-  if (!chars[i][j].sprite) {
-    chars[i][j].sprite = new PIXI.Sprite();
-    chars[i][j].bg = new PIXI.Graphics();
+const initChar = (i: number, j: number) => {
+  if (!chars[i]) chars[i] = [];
+  if (!chars[i][j]) {
+    chars[i][j] = {
+      sprite: new PIXI.Sprite(),
+      bg: new PIXI.Graphics(),
+    };
     charsContainer.addChild(chars[i][j].sprite);
     bgContainer.addChild(chars[i][j].bg);
   }
+};
+
+const printChar = (i: number, j: number, char: string, hlId: number) => {
+  initChar(i, j);
 
   // Print char
   chars[i][j].char = char;
@@ -274,9 +313,9 @@ const printChar = (i, j, char, hlId) => {
 
   // Draw bg
   chars[i][j].bg.position.set(j * charWidth, i * charHeight);
-  if (hlId !== 0 && highlightTable[hlId].calculated.bgNum) {
+  if (hlId !== 0 && highlightTable[hlId]?.calculated?.bgNum) {
     chars[i][j].bg.clear();
-    chars[i][j].bg.beginFill(highlightTable[hlId].calculated.bgNum);
+    chars[i][j].bg.beginFill(highlightTable[hlId]?.calculated?.bgNum);
     if (j === cols - 1) {
       chars[i][j].bg.drawRect(0, 0, charWidth * 2, charHeight);
     } else {
@@ -298,7 +337,11 @@ const cursorBlinkOff = () => {
   renderer.render(stage);
 };
 
-const cursorBlink = ({ blinkon, blinkoff, blinkwait } = {}) => {
+const cursorBlink = ({
+  blinkon,
+  blinkoff,
+  blinkwait,
+}: { blinkon?: number; blinkoff?: number; blinkwait?: number } = {}) => {
   cursorContainer.visible = true;
 
   if (startCursorBlinkOnTimeout) clearTimeout(startCursorBlinkOnTimeout);
@@ -338,7 +381,7 @@ const redrawCursor = () => {
   clearCursor();
 
   const hlId = m.attr_id === 0 ? -1 : m.attr_id;
-  cursorBg.beginFill(highlightTable[hlId].calculated.bgNum);
+  cursorBg.beginFill(highlightTable[hlId]?.calculated?.bgNum);
 
   if (m.cursor_shape === 'block') {
     cursorChar = chars[cursorPosition[0]][cursorPosition[1]].char || ' ';
@@ -359,9 +402,9 @@ const redrawCursor = () => {
   needRerender = true;
 };
 
-let debouncedRepositionCursor;
+let debouncedRepositionCursor: ((newCursor: [number, number]) => void) & Cancelable;
 
-export const repositionCursor = (newCursor) => {
+export const repositionCursor = (newCursor: [number, number]): void => {
   if (debouncedRepositionCursor) debouncedRepositionCursor.cancel();
   if (newCursor) cursorPosition = newCursor;
   const left = cursorPosition[1] * charWidth;
@@ -374,7 +417,7 @@ export const repositionCursor = (newCursor) => {
 debouncedRepositionCursor = debounce(repositionCursor, 10);
 
 const optionSet = {
-  guifont: (newFont) => {
+  guifont: (newFont: string) => {
     const [newFontFamily, newFontSize] = newFont.trim().split(':h');
     if (newFontFamily && newFontFamily !== '') {
       nvim.command(`VVset fontfamily=${newFontFamily}`);
@@ -386,16 +429,18 @@ const optionSet = {
 };
 
 const reprintAllChars = debounce(() => {
-  body.style.background = highlightTable[0].calculated.bgColor;
-  currentWindow.setBackgroundColor(highlightTable[0].calculated.bgColor);
+  if (highlightTable[0]?.calculated?.bgColor) {
+    body.style.background = highlightTable[0].calculated.bgColor;
+    currentWindow.setBackgroundColor(highlightTable[0].calculated.bgColor);
+  }
 
   PIXI.utils.clearTextureCache();
   for (let i = 0; i <= rows; i += 1) {
-    if (!chars[i]) chars[i] = {};
     for (let j = 0; j <= cols; j += 1) {
-      if (!chars[i][j]) chars[i][j] = {};
-      if (chars[i][j].char && isFinite(chars[i][j].hlId)) {
-        printChar(i, j, chars[i][j].char, chars[i][j].hlId);
+      initChar(i, j);
+      const { char, hlId } = chars[i][j];
+      if (char && isFinite(hlId)) {
+        printChar(i, j, char, hlId as number);
       }
     }
   }
@@ -404,7 +449,7 @@ const reprintAllChars = debounce(() => {
 
 const recalculateHighlightTable = () => {
   Object.keys(highlightTable).forEach((id) => {
-    if (id > 0) {
+    if (((id as unknown) as number) > 0) {
       const {
         foreground,
         background,
@@ -415,13 +460,13 @@ const recalculateHighlightTable = () => {
         bold,
         underline,
         undercurl,
-      } = highlightTable[id].value;
+      } = highlightTable[(id as unknown) as number].value;
       const r = reverse || standout;
-      const fg = getColor(foreground, highlightTable[0].calculated.fgColor);
-      const bg = getColor(background, highlightTable[0].calculated.bgColor);
-      const sp = getColor(special, highlightTable[0].calculated.spColor);
+      const fg = getColor(foreground, highlightTable[0]?.calculated?.fgColor) as string;
+      const bg = getColor(background, highlightTable[0]?.calculated?.bgColor) as string;
+      const sp = getColor(special, highlightTable[0]?.calculated?.spColor) as string;
 
-      highlightTable[id].calculated = {
+      highlightTable[(id as unknown) as number].calculated = {
         fgColor: r ? bg : fg,
         bgColor: r ? fg : bg,
         spColor: sp,
@@ -441,14 +486,16 @@ const redrawCmd = {
   set_title: () => {},
   set_icon: () => {},
 
-  mode_info_set: (props) => {
-    modeInfoSet = props[0][1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
+  mode_info_set: (props: any) => {
+    modeInfoSet = props[0][1].reduce((r: any, o: any) => ({ ...r, [o.name]: o }), {});
     redrawCursor();
   },
 
-  option_set: (options) => {
+  option_set: (options: Array<[string, string]>) => {
     options.forEach(([option, value]) => {
+      // @ts-ignore TODO
       if (optionSet[option]) {
+        // @ts-ignore TODO
         optionSet[option](value);
       } else {
         // console.warn('Unknown option', option, value); // eslint-disable-line no-console
@@ -456,7 +503,7 @@ const redrawCmd = {
     });
   },
 
-  mode_change: (modes) => {
+  mode_change: (modes: any) => {
     [mode] = modes[modes.length - 1];
     redrawCursor();
   },
@@ -484,9 +531,11 @@ const redrawCmd = {
   }, 1000 / TARGET_FPS),
 
   // New api
-  grid_resize: (props) => {
+  grid_resize: (props: number[][]) => {
+    /* eslint-disable prefer-destructuring */
     cols = props[0][1];
     rows = props[0][2];
+    /* eslint-enable prefer-destructuring */
 
     if (cols * charWidth > renderer.width || rows * charHeight > renderer.height) {
       // Add extra column on the right to fill it with adjacent color to have a nice right border
@@ -501,12 +550,12 @@ const redrawCmd = {
     }
   },
 
-  default_colors_set: (props) => {
+  default_colors_set: (props: any) => {
     const [foreground, background, special] = props[props.length - 1];
 
     const calculated = {
-      bgColor: getColor(background, defaultBgColor),
-      fgColor: getColor(foreground, defaultFgColor),
+      bgColor: getColor(background, defaultBgColor) as string,
+      fgColor: getColor(foreground, defaultFgColor) as string,
       spColor: getColor(special, defaultSpColor),
       hiItalic: false,
       hiBold: false,
@@ -519,15 +568,15 @@ const redrawCmd = {
         calculated: {
           ...calculated,
           bgNum: foreground,
-          bgColor: getColor(foreground, defaultFgColor),
-          fgColor: getColor(background, defaultBgColor),
+          bgColor: getColor(foreground, defaultFgColor) as string,
+          fgColor: getColor(background, defaultBgColor) as string,
         },
       };
       recalculateHighlightTable();
     }
   },
 
-  hl_attr_define: (props) => {
+  hl_attr_define: (props: Array<[number, any]>) => {
     props.forEach(([id, value]) => {
       highlightTable[id] = {
         value,
@@ -536,7 +585,8 @@ const redrawCmd = {
     recalculateHighlightTable();
   },
 
-  grid_line: (props) => {
+  // TODO types
+  grid_line: (props: any) => {
     for (let gridKey = 0, gridLength = props.length; gridKey < gridLength; gridKey += 1) {
       const row = props[gridKey][1];
       const col = props[gridKey][2];
@@ -575,9 +625,9 @@ const redrawCmd = {
       c.visible = false; // eslint-disable-line no-param-reassign
     });
     for (let i = 0; i <= rows; i += 1) {
-      if (!chars[i]) chars[i] = {};
+      if (!chars[i]) chars[i] = [];
       for (let j = 0; j <= cols; j += 1) {
-        if (!chars[i][j]) chars[i][j] = {};
+        initChar(i, j);
         chars[i][j].char = null;
       }
     }
@@ -586,11 +636,13 @@ const redrawCmd = {
 
   grid_destroy: () => {},
 
-  grid_cursor_goto: ([[_, ...newCursor]]) => {
+  grid_cursor_goto: ([[_, ...newCursor]]: Array<[string, number, number]>) => {
     repositionCursor(newCursor);
   },
 
-  grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]) => {
+  grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]: Array<
+    [string, number, number, number, number, number]
+  >) => {
     for (
       let i = scrollCount > 0 ? top : bottom - 1;
       scrollCount > 0 ? i <= bottom - scrollCount - 1 : i >= top - scrollCount;
@@ -599,11 +651,8 @@ const redrawCmd = {
       for (let j = left; j <= right - 1; j += 1) {
         const sourceI = i + scrollCount;
 
-        if (!chars[i]) chars[i] = {};
-        if (!chars[i][j]) chars[i][j] = {};
-
-        if (!chars[sourceI]) chars[sourceI] = {};
-        if (!chars[sourceI][j]) chars[sourceI][j] = {};
+        initChar(i, j);
+        initChar(sourceI, j);
 
         // Swap char to scroll to destination
         [chars[i][j], chars[sourceI][j]] = [chars[sourceI][j], chars[i][j]];
@@ -628,43 +677,45 @@ const redrawCmd = {
 };
 
 const handleSet = {
-  fontfamily: (newFontFamily) => {
+  fontfamily: (newFontFamily: string) => {
     fontFamily = newFontFamily;
   },
 
-  fontsize: (newFontSize) => {
+  fontsize: (newFontSize: string) => {
     fontSize = parseInt(newFontSize, 10);
   },
 
-  letterspacing: (newLetterSpacing) => {
+  letterspacing: (newLetterSpacing: string) => {
     letterSpacing = parseInt(newLetterSpacing, 10);
   },
 
-  lineheight: (newLineHeight) => {
+  lineheight: (newLineHeight: string) => {
     lineHeight = parseFloat(newLineHeight);
   },
 
-  bold: (value) => {
+  bold: (value: boolean) => {
     showBold = value;
   },
 
-  italic: (value) => {
+  italic: (value: boolean) => {
     showItalic = value;
   },
 
-  underline: (value) => {
+  underline: (value: boolean) => {
     showUnderline = value;
   },
 
-  undercurl: (value) => {
+  undercurl: (value: boolean) => {
     showUndercurl = value;
   },
 };
 
-const redraw = (args) => {
+const redraw = (args: any[]) => {
   for (let i = 0; i < args.length; i += 1) {
     const [cmd, ...props] = args[i];
+    // @ts-ignore TODO
     if (redrawCmd[cmd]) {
+      // @ts-ignore TODO
       redrawCmd[cmd](props);
     } else {
       console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
@@ -689,7 +740,7 @@ const setScale = () => {
 /**
  * Return grid [col, row] coordinates by pixel coordinates.
  */
-export const screenCoords = (width, height) => {
+export const screenCoords = (width: number, height: number): [number, number] => {
   return [Math.floor((width * scale) / charWidth), Math.floor((height * scale) / charHeight)];
 };
 
@@ -711,7 +762,7 @@ const uiAttach = () => {
   );
 };
 
-const updateSettings = (settings, isInitial = false) => {
+const updateSettings = (settings: Settings, isInitial = false) => {
   let requireRedraw = isInitial;
   const requireRedrawProps = [
     'fontfamily',
@@ -725,8 +776,10 @@ const updateSettings = (settings, isInitial = false) => {
   ];
 
   Object.keys(settings).forEach((key) => {
+    // @ts-ignore TODO
     if (handleSet[key]) {
       requireRedraw = requireRedraw || requireRedrawProps.includes(key);
+      // @ts-ignore TODO
       handleSet[key](settings[key]);
     }
   });
@@ -744,7 +797,7 @@ initScreen();
 initCursor();
 setScale();
 
-const screen = (settings) => {
+const screen = (settings: Settings): void => {
   nvim.on('redraw', redraw);
 
   ipcRenderer.on('updateSettings', (_, s) => updateSettings(s));

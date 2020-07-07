@@ -1,6 +1,6 @@
 /**
  * Hides mouse cursor when you start typing. Shows it again when you move mouse.
- * */
+ */
 function showCursor() {
   document.body.style.cursor = 'auto';
   document.addEventListener('keydown', hideCursor); // eslint-disable-line no-use-before-define

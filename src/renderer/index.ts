@@ -1,5 +1,7 @@
 // import log from '../lib/log';
 
+import { IpcRendererEvent } from 'electron';
+
 import { initNvim } from './nvim';
 
 import initScreen from './screen';
@@ -10,7 +12,9 @@ import hideMouseCursor from './features/hideMouseCursor';
 
 import { ipcRenderer } from './preloaded/electron';
 
-const initRenderer = (_event, settings) => {
+import { Settings } from '../main/nvim/settings';
+
+const initRenderer = (_event: IpcRendererEvent, settings: Settings) => {
   initNvim();
   initScreen(settings);
   initKeyboard();
