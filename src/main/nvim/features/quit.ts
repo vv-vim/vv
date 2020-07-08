@@ -1,18 +1,26 @@
-// Handle close window routine
-import { dialog, app } from 'electron';
+/**
+ * Handle close window routine
+ */
 
-// If we want to quit app after closing window, shouldQuit is true.
-// This function is used in 'before-quit' event to switch to close app mode.
+import { dialog, app, BrowserWindow } from 'electron';
+import { Nvim } from '../api';
+
+/**
+ * If we want to quit app after closing window, shouldQuit is true.
+ * This function is used in 'before-quit' event to switch to close app mode.
+ */
 let shouldQuit = false;
 
-export const setShouldQuit = (newShouldQuit) => {
+export const setShouldQuit = (newShouldQuit: boolean): void => {
   shouldQuit = newShouldQuit;
 };
 
-// Show Save All dialog if there are any unsaved buffers.
-// Cancel quit on cancel.
-const showCloseDialog = async ({ nvim, win }) => {
-  const unsavedBuffers = await nvim.callFunction('VVunsavedBuffers', []);
+/**
+ * Show Save All dialog if there are any unsaved buffers.
+ * Cancel quit on cancel.
+ */
+const showCloseDialog = async ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }) => {
+  const unsavedBuffers: Array<{ name: string }> = await nvim.callFunction('VVunsavedBuffers', []);
   if (unsavedBuffers.length === 0) {
     nvim.command('qa');
   } else {
@@ -33,22 +41,22 @@ const showCloseDialog = async ({ nvim, win }) => {
   }
 };
 
-const initQuit = ({ win, nvim }) => {
+const initQuit = ({ win, nvim }: { nvim: Nvim; win: BrowserWindow }): void => {
   let isConnected = true;
 
   // Close window if nvim process is closed.
-  nvim.on('disconnect', async () => {
+  nvim.on('disconnect', () => {
     // Disable fullscreen before close, otherwise it it will keep menu bar hidden after window
     // is closed.
-    await win.hide();
-    await win.setSimpleFullScreen(false);
+    win.hide();
+    win.setSimpleFullScreen(false);
 
     isConnected = false;
     win.close();
   });
 
   // If nvim process is not closed, show Save All dialog.
-  win.on('close', async (e) => {
+  win.on('close', (e: Electron.Event) => {
     if (isConnected) {
       e.preventDefault();
       showCloseDialog({ win, nvim });
