@@ -91,22 +91,27 @@ const getEmptyWindow = (): BrowserWindow => {
 };
 
 const createWindow = (originalArgs: string[] = [], newCwd?: string) => {
+  const settings = getSettings();
   const cwd = newCwd || process.cwd();
 
   const { args, files } = parseArgs(filterArgs(originalArgs));
-  const unopenedFiles = files.reduce<string[]>((result, fileName) => {
-    const resolved = resolve(cwd, fileName);
-    const openInWindow = windows.find((w) => resolved.startsWith(w.cwd));
-    if (openInWindow) {
-      const nvim = getNvimByWindow(openInWindow);
-      if (nvim) {
-        nvim.command(`e ${resolved}`);
-        openInWindow.focus();
-        return result;
-      }
-    }
-    return [...result, fileName];
-  }, []);
+  const unopenedFiles = settings.experimentalOpenInProject
+    ? files.reduce<string[]>((result, fileName) => {
+        const resolved = resolve(cwd, fileName);
+        // @ts-ignore TODO: don't add custom props to win
+        const openInWindow = windows.find((w) => resolved.startsWith(w.cwd));
+        if (openInWindow) {
+          const nvim = getNvimByWindow(openInWindow);
+          if (nvim) {
+            // @ts-ignore TODO: don't add custom props to win
+            nvim.command(`e ${resolved.substring(openInWindow.cwd.length + 1)}`);
+            openInWindow.focus();
+            return result;
+          }
+        }
+        return [...result, fileName];
+      }, [])
+    : files;
 
   if (files.length === 0 || unopenedFiles.length > 0) {
     const win = getEmptyWindow();
@@ -126,7 +131,7 @@ const createWindow = (originalArgs: string[] = [], newCwd?: string) => {
       win,
     });
 
-    const initRenderer = () => win.webContents.send('initRenderer', getSettings());
+    const initRenderer = () => win.webContents.send('initRenderer', settings);
 
     if (win.webContents.isLoading()) {
       win.webContents.on('did-finish-load', initRenderer);

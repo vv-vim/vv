@@ -1,31 +1,32 @@
 let g:vv_settings_synonims = {
-      \  'fu': 'fullscreen',
-      \  'sfu': 'simplefullscreen',
-      \  'width': 'windowwidth',
-      \  'height': 'windowheight',
-      \  'top': 'windowtop',
-      \  'left': 'windowleft'
-      \}
+\  'fu': 'fullscreen',
+\  'sfu': 'simplefullscreen',
+\  'width': 'windowwidth',
+\  'height': 'windowheight',
+\  'top': 'windowtop',
+\  'left': 'windowleft'
+\}
 
 let g:vv_default_settings = {
-      \  'fullscreen': 0,
-      \  'simplefullscreen': 1,
-      \  'bold': 1,
-      \  'italic': 1,
-      \  'underline': 1,
-      \  'undercurl': 1,
-      \  'fontfamily': 'monospace',
-      \  'fontsize': 12,
-      \  'lineheight': 1.25,
-      \  'letterspacing': 0,
-      \  'reloadchanged': 0,
-      \  'windowwidth': v:null,
-      \  'windowheight': v:null,
-      \  'windowleft': v:null,
-      \  'windowtop': v:null,
-      \  'quitoncloselastwindow': 0,
-      \  'autoupdateinterval': 1440
-      \}
+\  'fullscreen': 0,
+\  'simplefullscreen': 1,
+\  'bold': 1,
+\  'italic': 1,
+\  'underline': 1,
+\  'undercurl': 1,
+\  'fontfamily': 'monospace',
+\  'fontsize': 12,
+\  'lineheight': 1.25,
+\  'letterspacing': 0,
+\  'reloadchanged': 0,
+\  'windowwidth': v:null,
+\  'windowheight': v:null,
+\  'windowleft': v:null,
+\  'windowtop': v:null,
+\  'quitoncloselastwindow': 0,
+\  'autoupdateinterval': 1440,
+\  'experimentalOpenInProject': 0
+\}
 
 let g:vv_settings = deepcopy(g:vv_default_settings)
 
