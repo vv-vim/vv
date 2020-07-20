@@ -22,7 +22,7 @@ const getDefaultSettings = (): Settings => ({
   reloadchanged: 0,
   quitoncloselastwindow: 0,
   autoupdateinterval: '1440', // One day, 60*24 minutes
-  experimentalOpenInProject: 0,
+  openInProject: 0,
 });
 
 let hasCustomConfig = false;

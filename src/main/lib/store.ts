@@ -19,7 +19,7 @@ export type Settings = {
   /**
    * WIP for https://github.com/vv-vim/vv/issues/36
    */
-  experimentalOpenInProject: BooleanSetting;
+  openInProject: BooleanSetting;
 };
 
 type StoreData = {

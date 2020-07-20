@@ -95,7 +95,7 @@ const createWindow = (originalArgs: string[] = [], newCwd?: string) => {
   const cwd = newCwd || process.cwd();
 
   const { args, files } = parseArgs(filterArgs(originalArgs));
-  const unopenedFiles = settings.experimentalOpenInProject
+  const unopenedFiles = settings.openInProject
     ? files.reduce<string[]>((result, fileName) => {
         const resolved = resolve(cwd, fileName);
         // @ts-ignore TODO: don't add custom props to win
@@ -104,7 +104,7 @@ const createWindow = (originalArgs: string[] = [], newCwd?: string) => {
           const nvim = getNvimByWindow(openInWindow);
           if (nvim) {
             // @ts-ignore TODO: don't add custom props to win
-            nvim.command(`e ${resolved.substring(openInWindow.cwd.length + 1)}`);
+            nvim.callFunction('VVopenInProject', [resolved.substring(openInWindow.cwd.length + 1)]);
             openInWindow.focus();
             return result;
           }
