@@ -78,6 +78,7 @@ You can setup VV-specific options via the `:VVset` command. It works the same as
 - `windowtop`, `top`: Window position top.
 - `quitoncloselastwindow`: Quit app on close last window. Default: `0`.
 - `autoupdateinterval`: Autoupdate interval in minutes. `0` — disable autoupdate. Default: `1440`, one day.
+- `openinproject`: Open file in existing VV instance if this file is located inside current directory of this instance. By default it will obey [`switchbuf`](https://neovim.io/doc/user/options.html#'switchbuf') option, but you can set `switchbuf` override as a value of this option, for example: `:VVset openinproject=newtab`. Possible values are: `1` use switchbuf, `0` open in new instance, any valid `switchbuf` value. Default: `1`.
 
 You can use these settings in your `init.vim` or change them any time. You can check if VV is loaded by checking the `g:vv` variable:
 

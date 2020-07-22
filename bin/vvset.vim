@@ -26,7 +26,7 @@ let g:vv_default_settings = {
 \  'windowtop': v:null,
 \  'quitoncloselastwindow': 0,
 \  'autoupdateinterval': 1440,
-\  'openInProject': 0
+\  'openInProject': 1
 \}
 
 let g:vv_settings = deepcopy(g:vv_default_settings)

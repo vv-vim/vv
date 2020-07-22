@@ -83,32 +83,61 @@ const getEmptyWindow = (): BrowserWindow => {
   return createEmptyWindow();
 };
 
-const createWindow = (originalArgs: string[] = [], newCwd?: string) => {
+const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
   const settings = getSettings();
   const cwd = newCwd || process.cwd();
 
+  // TODO: Use yargs maybe.
   const { args, files } = parseArgs(filterArgs(originalArgs));
-  const unopenedFiles = settings.openInProject
-    ? files.reduce<string[]>((result, fileName) => {
-        const resolved = resolve(cwd, fileName);
-        // @ts-ignore TODO: don't add custom props to win
-        const openInWindow = windows.find((w) => resolved.startsWith(w.cwd) && !w.isMinimized());
-        if (openInWindow) {
-          const nvim = getNvimByWindow(openInWindow);
-          if (nvim) {
-            nvim.callFunction('VVopenInProject', [
-              // @ts-ignore TODO: don't add custom props to win
-              resolved.substring(openInWindow.cwd.length + 1),
-              argValue(originalArgs, '--open-in-project'),
-            ]);
-            openInWindow.focus();
-            app.focus({ steal: true });
-            return result;
-          }
+  let unopenedFiles = files;
+
+  let { openInProject } = settings;
+  let openInProjectArg = argValue(originalArgs, '--open-in-project');
+  if (openInProjectArg === '0' || openInProjectArg === 'false') {
+    openInProjectArg = undefined;
+    openInProject = 0;
+  }
+  if (openInProjectArg === 'true') {
+    openInProjectArg = '1';
+  }
+
+  // TODO: Rafactor this somewhere to a separate file or function.
+  if (openInProject || openInProjectArg) {
+    await Promise.all(
+      windows.map(async (win) => {
+        const nvim = getNvimByWindow(win);
+        if (!nvim) {
+          return Promise.resolve();
         }
-        return [...result, fileName];
-      }, [])
-    : files;
+        return nvim.callFunction('getcwd', []).then((c) => {
+          // @ts-ignore TODO: don't add custom props to win
+          win.cwd = c; // eslint-disable-line
+        });
+      }),
+    );
+    unopenedFiles = files.reduce<string[]>((result, fileName) => {
+      const resolvedFileName = resolve(cwd, fileName);
+      const openInWindow = windows.find(
+        // @ts-ignore TODO: don't add custom props to win
+        (w) => resolvedFileName.startsWith(w.cwd) && !w.isMinimized(),
+      );
+      if (openInWindow) {
+        const nvim = getNvimByWindow(openInWindow);
+        if (nvim) {
+          // @ts-ignore TODO: don't add custom props to win
+          const relativeFileName = resolvedFileName.substring(openInWindow.cwd.length + 1);
+          nvim.callFunction(
+            'VVopenInProject',
+            openInProjectArg ? [relativeFileName, openInProjectArg] : [relativeFileName],
+          );
+          openInWindow.focus();
+          app.focus({ steal: true });
+          return result;
+        }
+      }
+      return [...result, fileName];
+    }, []);
+  }
 
   if (files.length === 0 || unopenedFiles.length > 0) {
     const win = getEmptyWindow();

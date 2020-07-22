@@ -16,9 +16,6 @@ export type Settings = {
   reloadchanged: BooleanSetting;
   quitoncloselastwindow: BooleanSetting;
   autoupdateinterval: string; // TODO: number
-  /**
-   * WIP for https://github.com/vv-vim/vv/issues/36
-   */
   openInProject: BooleanSetting;
 };
 
