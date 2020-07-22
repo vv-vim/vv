@@ -15,7 +15,7 @@ import initAutoUpdate from './autoUpdate';
 import isDev from '../lib/isDev';
 
 import initNvim from './nvim/nvim';
-import { parseArgs, joinArgs } from './lib/args';
+import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from './lib/args';
 
 // import log from '../lib/log';
 
@@ -25,13 +25,6 @@ const windows: BrowserWindow[] = [];
 
 /** Empty windows created in advance to make windows creation faster */
 const emptyWindows: BrowserWindow[] = [];
-
-/**
- * Remove VV specific arguments not supported by nvim
- */
-const filterArgs = (args: string[]) => args.filter((a) => !['--inspect'].includes(a));
-
-const cliArgs = (args?: string[]) => (args || process.argv).slice(isDev(2, 1));
 
 const openDeveloperTools = (win: BrowserWindow) => {
   win.webContents.openDevTools({ mode: 'detach' });
@@ -99,13 +92,17 @@ const createWindow = (originalArgs: string[] = [], newCwd?: string) => {
     ? files.reduce<string[]>((result, fileName) => {
         const resolved = resolve(cwd, fileName);
         // @ts-ignore TODO: don't add custom props to win
-        const openInWindow = windows.find((w) => resolved.startsWith(w.cwd));
+        const openInWindow = windows.find((w) => resolved.startsWith(w.cwd) && !w.isMinimized());
         if (openInWindow) {
           const nvim = getNvimByWindow(openInWindow);
           if (nvim) {
-            // @ts-ignore TODO: don't add custom props to win
-            nvim.callFunction('VVopenInProject', [resolved.substring(openInWindow.cwd.length + 1)]);
+            nvim.callFunction('VVopenInProject', [
+              // @ts-ignore TODO: don't add custom props to win
+              resolved.substring(openInWindow.cwd.length + 1),
+              argValue(originalArgs, '--open-in-project'),
+            ]);
             openInWindow.focus();
+            app.focus({ steal: true });
             return result;
           }
         }

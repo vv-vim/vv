@@ -4,7 +4,8 @@ let g:vv_settings_synonims = {
 \  'width': 'windowwidth',
 \  'height': 'windowheight',
 \  'top': 'windowtop',
-\  'left': 'windowleft'
+\  'left': 'windowleft',
+\  'openinproject': 'openInProject'
 \}
 
 let g:vv_default_settings = {
@@ -39,8 +40,9 @@ function! VVset(...)
 endfunction
 
 function! VVsettingValue(name)
-  if has_key(g:vv_settings, a:name)
-    return g:vv_settings[a:name]
+  let l:name = VVsettingName(a:name)
+  if has_key(g:vv_settings, l:name)
+    return g:vv_settings[l:name]
   else
     echoerr "Unknown option: ".a:name
   endif
