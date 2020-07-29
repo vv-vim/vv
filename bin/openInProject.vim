@@ -34,3 +34,7 @@ function! VVopenInProjectLoud(fileName, switchbuf_override)
     let &switchbuf = l:original_switchbuf
   endif
 endfunction
+
+function! VVprojectRoot()
+  return getcwd()
+endfunction

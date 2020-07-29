@@ -106,13 +106,11 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
     await Promise.all(
       windows.map(async (win) => {
         const nvim = getNvimByWindow(win);
-        if (!nvim) {
-          return Promise.resolve();
-        }
-        return nvim.callFunction('getcwd', []).then((c) => {
+        if (nvim) {
           // @ts-ignore TODO: don't add custom props to win
-          win.cwd = c; // eslint-disable-line
-        });
+          win.cwd = await nvim.callFunction('VVprojectRoot', []); // eslint-disable-line
+        }
+        return Promise.resolve();
       }),
     );
     unopenedFiles = files.reduce<string[]>((result, fileName) => {
