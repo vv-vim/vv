@@ -16,6 +16,7 @@ export type Settings = {
   reloadchanged: BooleanSetting;
   quitoncloselastwindow: BooleanSetting;
   autoupdateinterval: string; // TODO: number
+  openInProject: BooleanSetting;
 };
 
 type StoreData = {

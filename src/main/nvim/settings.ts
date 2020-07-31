@@ -22,6 +22,7 @@ const getDefaultSettings = (): Settings => ({
   reloadchanged: 0,
   quitoncloselastwindow: 0,
   autoupdateinterval: '1440', // One day, 60*24 minutes
+  openInProject: 0,
 });
 
 let hasCustomConfig = false;
@@ -29,7 +30,7 @@ let hasCustomConfig = false;
 /**
  * Get saved settings if we have them, default settings otherwise.
  * If you run app with -u flag, return default settings.
- * */
+ */
 export const getSettings = (): Settings => {
   if (hasCustomConfig) {
     return getDefaultSettings();
@@ -42,14 +43,22 @@ export const getSettings = (): Settings => {
 
 const onChangeSettingsCallbacks: Record<string, SettingsCallback[]> = {};
 
-export const onChangeSettings = (win: BrowserWindow, callback: SettingsCallback) => {
+export const onChangeSettings = (win: BrowserWindow, callback: SettingsCallback): void => {
   if (!onChangeSettingsCallbacks[win.webContents.id]) {
     onChangeSettingsCallbacks[win.webContents.id] = [];
   }
   onChangeSettingsCallbacks[win.webContents.id].push(callback);
 };
 
-const initSettings = ({ win, nvim, args }: { win: BrowserWindow; nvim: Nvim; args: string[] }) => {
+const initSettings = ({
+  win,
+  nvim,
+  args,
+}: {
+  win: BrowserWindow;
+  nvim: Nvim;
+  args: string[];
+}): void => {
   hasCustomConfig = args.indexOf('-u') !== -1;
   let initialSettings: Settings | null = getSettings();
   let settings = getDefaultSettings();

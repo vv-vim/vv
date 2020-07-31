@@ -17,7 +17,7 @@ const createMenu = ({
   createWindow: () => void;
   openFile: MenuItemConstructorOptions['click'];
   installCli: MenuItemConstructorOptions['click'];
-}) => {
+}): void => {
   const menuTemplate: MenuItemConstructorOptions[] = [
     {
       label: 'VV',

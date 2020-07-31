@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog } from 'electron';
 import { statSync, existsSync } from 'fs';
-import { join /* , resolve */ } from 'path';
+import { join, resolve } from 'path';
 
 import menu from './menu';
 import installCli from './installCli';
@@ -8,13 +8,14 @@ import checkNeovim from './checkNeovim';
 
 import { setShouldQuit } from './nvim/features/quit';
 import { getSettings } from './nvim/settings';
+import { getNvimByWindow } from './nvim/nvimByWindow';
 
 import initAutoUpdate from './autoUpdate';
 
 import isDev from '../lib/isDev';
 
 import initNvim from './nvim/nvim';
-// import { argsFileNames } from './lib/args';
+import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from './lib/args';
 
 // import log from '../lib/log';
 
@@ -24,10 +25,6 @@ const windows: BrowserWindow[] = [];
 
 /** Empty windows created in advance to make windows creation faster */
 const emptyWindows: BrowserWindow[] = [];
-
-const filterArgs = (args: string[]) => args.filter((a) => !['--inspect'].includes(a));
-
-const cliArgs = (args?: string[]) => (args || process.argv).slice(isDev(2, 1));
 
 const openDeveloperTools = (win: BrowserWindow) => {
   win.webContents.openDevTools({ mode: 'detach' });
@@ -86,51 +83,95 @@ const getEmptyWindow = (): BrowserWindow => {
   return createEmptyWindow();
 };
 
-const createWindow = (args: string[] = [], newCwd?: string) => {
+const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
+  const settings = getSettings();
   const cwd = newCwd || process.cwd();
 
-  // const fileNames = argsFileNames(args);
-  // fileNames.forEach(fileName => {
-  //   const resolved = resolve(cwd, fileName);
-  //   if (windows.find(w => filename.startsWith(w.cwd))) {
-  //   }
-  // });
+  // TODO: Use yargs maybe.
+  const { args, files } = parseArgs(filterArgs(originalArgs));
+  let unopenedFiles = files;
 
-  const win = getEmptyWindow();
-
-  // @ts-ignore TODO: don't add custom props to win
-  win.cwd = cwd;
-
-  if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
-    const [x, y] = currentWindow.getPosition();
-    const [width, height] = currentWindow.getSize();
-    win.setBounds({ x: x + 20, y: y + 20, width, height }, false);
+  let { openInProject } = settings;
+  let openInProjectArg = argValue(originalArgs, '--open-in-project');
+  if (openInProjectArg === '0' || openInProjectArg === 'false') {
+    openInProjectArg = undefined;
+    openInProject = 0;
+  }
+  if (openInProjectArg === 'true') {
+    openInProjectArg = '1';
   }
 
-  initNvim({
-    args: filterArgs(args),
-    cwd,
-    win,
-  });
-
-  const initRenderer = () => win.webContents.send('initRenderer', getSettings());
-
-  if (win.webContents.isLoading()) {
-    win.webContents.on('did-finish-load', initRenderer);
-  } else {
-    initRenderer();
+  // TODO: Rafactor this somewhere to a separate file or function.
+  if (openInProject || openInProjectArg) {
+    await Promise.all(
+      windows.map(async (win) => {
+        const nvim = getNvimByWindow(win);
+        if (nvim) {
+          // @ts-ignore TODO: don't add custom props to win
+          win.cwd = await nvim.callFunction('VVprojectRoot', []); // eslint-disable-line
+        }
+        return Promise.resolve();
+      }),
+    );
+    unopenedFiles = files.reduce<string[]>((result, fileName) => {
+      const resolvedFileName = resolve(cwd, fileName);
+      const openInWindow = windows.find(
+        // @ts-ignore TODO: don't add custom props to win
+        (w) => resolvedFileName.startsWith(w.cwd) && !w.isMinimized(),
+      );
+      if (openInWindow) {
+        const nvim = getNvimByWindow(openInWindow);
+        if (nvim) {
+          // @ts-ignore TODO: don't add custom props to win
+          const relativeFileName = resolvedFileName.substring(openInWindow.cwd.length + 1);
+          nvim.callFunction(
+            'VVopenInProject',
+            openInProjectArg ? [relativeFileName, openInProjectArg] : [relativeFileName],
+          );
+          openInWindow.focus();
+          app.focus({ steal: true });
+          return result;
+        }
+      }
+      return [...result, fileName];
+    }, []);
   }
 
-  win.focus();
-  windows.push(win);
+  if (files.length === 0 || unopenedFiles.length > 0) {
+    const win = getEmptyWindow();
 
-  if (args.includes('--inspect')) openDeveloperTools(win);
+    // @ts-ignore TODO: don't add custom props to win
+    win.cwd = cwd;
 
-  setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
+    if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {
+      const [x, y] = currentWindow.getPosition();
+      const [width, height] = currentWindow.getSize();
+      win.setBounds({ x: x + 20, y: y + 20, width, height }, false);
+    }
 
-  initAutoUpdate({ win });
+    initNvim({
+      args: joinArgs({ args, files: unopenedFiles }),
+      cwd,
+      win,
+    });
 
-  return win;
+    const initRenderer = () => win.webContents.send('initRenderer', settings);
+
+    if (win.webContents.isLoading()) {
+      win.webContents.on('did-finish-load', initRenderer);
+    } else {
+      initRenderer();
+    }
+
+    win.focus();
+    windows.push(win);
+
+    if (originalArgs.includes('--inspect')) openDeveloperTools(win);
+
+    setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
+
+    initAutoUpdate({ win });
+  }
 };
 
 const openFileOrDir = (fileName: string) => {
@@ -151,55 +192,53 @@ const openFile = () => {
   }
 };
 
-let fileToOpen: string | undefined | null;
-app.on('will-finish-launching', () => {
-  app.on('open-file', (_e, file) => {
-    fileToOpen = file;
-  });
-});
+const gotTheLock = isDev(true, false) || app.requestSingleInstanceLock();
 
-app.on('ready', () => {
-  checkNeovim();
-  if (fileToOpen) {
-    openFileOrDir(fileToOpen);
-    fileToOpen = null;
-  } else {
-    createWindow(cliArgs());
-  }
-  menu({
-    createWindow,
-    openFile,
-    installCli: installCli(join(app.getAppPath(), '../bin/vv')),
-  });
-  app.on('open-file', (_e, file) => openFileOrDir(file));
-  app.focus();
-});
-
-app.on('before-quit', (e) => {
-  setShouldQuit(true);
-  const visibleWindows = windows.filter((w) => w.isVisible());
-  if (visibleWindows.length > 0) {
-    e.preventDefault();
-    (currentWindow || visibleWindows[0]).close();
-  }
-});
-
-app.on('window-all-closed', handleAllClosed);
-
-app.on('activate', (_e, hasVisibleWindows) => {
-  if (!hasVisibleWindows) {
-    createWindow();
-  }
-});
-
-if (!isDev(true, false)) {
-  const gotTheLock = app.requestSingleInstanceLock();
-
-  if (!gotTheLock) {
-    app.quit();
-  } else {
-    app.on('second-instance', (_e, args, cwd) => {
-      createWindow(cliArgs(args), cwd);
+if (!gotTheLock) {
+  app.quit();
+} else {
+  let fileToOpen: string | undefined | null;
+  app.on('will-finish-launching', () => {
+    app.on('open-file', (_e, file) => {
+      fileToOpen = file;
     });
-  }
+  });
+
+  app.on('ready', () => {
+    checkNeovim();
+    if (fileToOpen) {
+      openFileOrDir(fileToOpen);
+      fileToOpen = null;
+    } else {
+      createWindow(cliArgs());
+    }
+    menu({
+      createWindow,
+      openFile,
+      installCli: installCli(join(app.getAppPath(), '../bin/vv')),
+    });
+    app.on('open-file', (_e, file) => openFileOrDir(file));
+    app.focus();
+  });
+
+  app.on('second-instance', (_e, args, cwd) => {
+    createWindow(cliArgs(args), cwd);
+  });
+
+  app.on('before-quit', (e) => {
+    setShouldQuit(true);
+    const visibleWindows = windows.filter((w) => w.isVisible());
+    if (visibleWindows.length > 0) {
+      e.preventDefault();
+      (currentWindow || visibleWindows[0]).close();
+    }
+  });
+
+  app.on('window-all-closed', handleAllClosed);
+
+  app.on('activate', (_e, hasVisibleWindows) => {
+    if (!hasVisibleWindows) {
+      createWindow();
+    }
+  });
 }

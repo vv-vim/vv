@@ -2,6 +2,7 @@ let g:vv = 1
 
 source <sfile>:h/vvset.vim
 source <sfile>:h/reloadChanged.vim
+source <sfile>:h/openInProject.vim
 
 set termguicolors
 
