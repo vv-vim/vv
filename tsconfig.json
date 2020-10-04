@@ -6,7 +6,13 @@
     "strict": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@renderer/*": ["src/renderer/*"],
+      "@main/*": ["src/main/*"],
+      "@lib/*": ["src/lib/*"]
+    }
   },
   "include": ["src", "@types"]
 }

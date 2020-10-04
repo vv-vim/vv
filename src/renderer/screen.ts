@@ -6,15 +6,15 @@ import throttle from 'lodash/throttle';
 import isFinite from 'lodash/isFinite';
 import isEqual from 'lodash/isEqual';
 
+import getColor from '@lib/getColor';
+import { Settings } from '@main/lib/store';
+
 import * as PIXI from './lib/pixi';
 
-import { Settings } from '../main/nvim/settings';
-
-import { remote, ipcRenderer } from './preloaded/electron';
+import { remote } from './preloaded/electron';
+import { Transport } from './transport/transport';
 
 import nvim from './nvim';
-
-import getColor from '../lib/getColor';
 
 // import log from './../lib/log';
 
@@ -797,10 +797,10 @@ initScreen();
 initCursor();
 setScale();
 
-const screen = (settings: Settings): void => {
+const screen = ({ settings, transport }: { settings: Settings; transport: Transport }): void => {
   nvim.on('redraw', redraw);
 
-  ipcRenderer.on('updateSettings', (_, s) => updateSettings(s));
+  transport.on('updateSettings', updateSettings);
   updateSettings(settings, true);
 
   uiAttach();

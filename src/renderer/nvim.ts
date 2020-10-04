@@ -1,7 +1,10 @@
 // TODO: Refactor to use same API for main and renderer.
 
-import { ipcRenderer } from './preloaded/electron';
-import { Nvim } from '../main/nvim/api';
+import { Nvim } from '@main/nvim/api';
+
+import { Transport } from './transport/transport';
+
+let transport: Transport;
 
 let requestId = 0;
 const requestPromises: Record<
@@ -26,7 +29,7 @@ const handleResponse = (id: string, error: Error, result: any) => {
 const send = (command: string, ...params: any[]) => {
   requestId += 1;
   const id = requestId * 2 + 1; // Request id for renderer is always odd
-  ipcRenderer.send('nvim-send', [id, command, ...params]);
+  transport.send('nvim-send', [id, command, ...params]);
   return new Promise((resolve, reject) => {
     requestPromises[id] = {
       resolve,
@@ -79,8 +82,9 @@ const nvim: Partial<Nvim> = {
   },
 };
 
-export const initNvim = (): void => {
-  ipcRenderer.on('nvim-data', (_e, [type, ...params]) => {
+export const initNvim = (newTransport: Transport): void => {
+  transport = newTransport;
+  transport.on('nvim-data', ([type, ...params]) => {
     if (type === 1) {
       handleResponse(params[0], params[1], params[2]);
     } else if (type === 2) {
