@@ -9,14 +9,14 @@ import isEqual from 'lodash/isEqual';
 import getColor from '@lib/getColor';
 import { Settings } from '@main/lib/store';
 
-import * as PIXI from './lib/pixi';
+import * as PIXI from '@renderer/lib/pixi';
 
-import { remote } from './preloaded/electron';
-import { Transport } from './transport/transport';
+import { remote } from '@renderer/preloaded/electron';
+import { Transport } from '@renderer/transport/transport';
 
-import nvim from './nvim';
+import nvim from '@renderer/nvim';
 
-// import log from './../lib/log';
+// import log from '@lib/log';
 
 const [body] = document.getElementsByTagName('body');
 

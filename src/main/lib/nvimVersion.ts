@@ -1,14 +1,14 @@
 import { execSync } from 'child_process';
 
-import nvimCommand from './nvimCommand';
-import shellEnv from './shellEnv';
+import nvimCommand from '@main/lib/nvimCommand';
+import shellEnv from '@main/lib/shellEnv';
 
 let version: string | undefined | null;
 
 /**
  * Get Neovim version string.
  */
-const nvimVersion = () => {
+const nvimVersion = (): string | undefined | null => {
   if (version !== undefined) return version;
 
   const env = shellEnv();

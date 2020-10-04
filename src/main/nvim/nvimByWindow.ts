@@ -1,9 +1,10 @@
 import { BrowserWindow } from 'electron';
-import { Nvim } from './api';
+
+import { Nvim } from '@main/nvim/api';
 
 const nvimByWindowId: Record<number, Nvim> = [];
 
-export const getNvimByWindow = (winOrId?: number | BrowserWindow) => {
+export const getNvimByWindow = (winOrId?: number | BrowserWindow): Nvim | null => {
   if (!winOrId) {
     return null;
   }
@@ -16,13 +17,13 @@ export const getNvimByWindow = (winOrId?: number | BrowserWindow) => {
   return null;
 };
 
-export const setNvimByWindow = (win: BrowserWindow, nvim: Nvim) => {
+export const setNvimByWindow = (win: BrowserWindow, nvim: Nvim): void => {
   if (win.webContents) {
     nvimByWindowId[win.webContents.id] = nvim;
   }
 };
 
-export const deleteNvimByWindow = (win: BrowserWindow) => {
+export const deleteNvimByWindow = (win: BrowserWindow): void => {
   if (win.webContents) {
     delete nvimByWindowId[win.webContents.id];
   }

@@ -2,18 +2,18 @@ import { BrowserWindow } from 'electron';
 
 import { Transport } from '@main/transport/transport';
 
-import { setNvimByWindow, deleteNvimByWindow } from './nvimByWindow';
+import { setNvimByWindow, deleteNvimByWindow } from '@main/nvim/nvimByWindow';
 
-import quit from './features/quit';
-import windowTitle from './features/windowTitle';
-import zoom from './features/zoom';
-import reloadChanged from './features/reloadChanged';
-import windowSize from './features/windowSize';
-import focusAutocmd from './features/focusAutocmd';
+import quit from '@main/nvim/features/quit';
+import windowTitle from '@main/nvim/features/windowTitle';
+import zoom from '@main/nvim/features/zoom';
+import reloadChanged from '@main/nvim/features/reloadChanged';
+import windowSize from '@main/nvim/features/windowSize';
+import focusAutocmd from '@main/nvim/features/focusAutocmd';
 
-import initSettings from './settings';
+import initSettings from '@main/nvim/settings';
 
-import nvimApi from './api';
+import nvimApi from '@main/nvim/api';
 
 const initNvim = ({
   args,

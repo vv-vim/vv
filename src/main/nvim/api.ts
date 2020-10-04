@@ -12,9 +12,10 @@ import { encode, EncodeStream, DecodeStream } from 'msgpack-lite';
 
 import debounce from 'lodash/debounce';
 
-import shellEnv from '../lib/shellEnv';
-import nvimCommand from '../lib/nvimCommand';
-import isDev from '../../lib/isDev';
+import isDev from '@lib/isDev';
+
+import shellEnv from '@main/lib/shellEnv';
+import nvimCommand from '@main/lib/nvimCommand';
 
 export type NvimCommand<R extends any> = (...args: any[]) => Promise<R>;
 

@@ -1,10 +1,11 @@
 import { app, dialog, shell } from 'electron';
 import semver from 'semver';
-import nvimVersion from './lib/nvimVersion';
+
+import nvimVersion from '@main/lib/nvimVersion';
 
 const REQUIRED_VERSION = '0.4.0';
 
-const checkNeovim = () => {
+const checkNeovim = (): void => {
   const version = nvimVersion();
   if (!version) {
     const result = dialog.showMessageBoxSync({

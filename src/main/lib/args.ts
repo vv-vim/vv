@@ -1,4 +1,4 @@
-import isDev from '../../lib/isDev';
+import isDev from '@lib/isDev';
 
 const ARGS_WITH_PARAM = [
   '--cmd',
