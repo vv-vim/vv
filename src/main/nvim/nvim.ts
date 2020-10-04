@@ -40,6 +40,10 @@ const initNvim = ({
     nvim.send(...payload);
   });
 
+  transport.on('set-background-color', (bgColor: string) => {
+    win.setBackgroundColor(bgColor);
+  });
+
   nvim.on('disconnect', () => {
     // TODO: remove listeners from transport?
     deleteNvimByWindow(win);

@@ -11,12 +11,13 @@ import { Settings } from '@main/lib/store';
 
 import * as PIXI from '@renderer/lib/pixi';
 
-import { remote } from '@renderer/preloaded/electron';
 import { Transport } from '@renderer/transport/transport';
 
 import nvim from '@renderer/nvim';
 
 // import log from '@lib/log';
+
+let transport: Transport;
 
 const [body] = document.getElementsByTagName('body');
 
@@ -60,8 +61,6 @@ let showUndercurl = true;
 
 const charCanvas = new OffscreenCanvas(1, 1);
 const charCtx = charCanvas.getContext('2d', { alpha: true }) as OffscreenCanvasRenderingContext2D;
-
-const currentWindow = remote.getCurrentWindow();
 
 type Char = {
   sprite: PIXI.Sprite;
@@ -431,7 +430,7 @@ const optionSet = {
 const reprintAllChars = debounce(() => {
   if (highlightTable[0]?.calculated?.bgColor) {
     body.style.background = highlightTable[0].calculated.bgColor;
-    currentWindow.setBackgroundColor(highlightTable[0].calculated.bgColor);
+    transport.send('set-background-color', highlightTable[0].calculated.bgColor);
   }
 
   PIXI.utils.clearTextureCache();
@@ -797,7 +796,15 @@ initScreen();
 initCursor();
 setScale();
 
-const screen = ({ settings, transport }: { settings: Settings; transport: Transport }): void => {
+const screen = ({
+  settings,
+  transport: newTransport,
+}: {
+  settings: Settings;
+  transport: Transport;
+}): void => {
+  transport = newTransport;
+
   nvim.on('redraw', redraw);
 
   transport.on('updateSettings', updateSettings);
