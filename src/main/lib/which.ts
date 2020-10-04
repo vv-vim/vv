@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
-import shellEnv from './shellEnv';
+
+import shellEnv from '@main/lib/shellEnv';
 
 /**
  * Checks if command exists in shell.

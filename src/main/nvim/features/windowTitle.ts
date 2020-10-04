@@ -1,9 +1,9 @@
 import fs from 'fs';
-
 import { BrowserWindow } from 'electron';
-import { Nvim } from '../api';
 
-const initWindowTitle = ({ nvim, win }: { win: BrowserWindow; nvim: Nvim }) => {
+import { Nvim } from '@main/nvim/api';
+
+const initWindowTitle = ({ nvim, win }: { win: BrowserWindow; nvim: Nvim }): void => {
   nvim.on('redraw', (args) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];

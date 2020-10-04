@@ -2,12 +2,12 @@
  * @jest-environment jsdom
  */
 
-import initKeyboard from '../keyboard';
+import initKeyboard from '@renderer/input/keyboard';
 
-import nvim from '../../nvim';
+import nvim from '@renderer/nvim';
 
-jest.mock('../../nvim', () => ({ on: jest.fn(), input: jest.fn() }));
-jest.mock('../../screen', () => ({ getCursorElement: jest.fn() }));
+jest.mock('@renderer/nvim', () => ({ on: jest.fn(), input: jest.fn() }));
+jest.mock('@renderer/screen', () => ({ getCursorElement: jest.fn() }));
 
 describe('Keyboard input', () => {
   const simulateKeyDown = (options: KeyboardEventInit) => {

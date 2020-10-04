@@ -1,10 +1,11 @@
+import { dialog, BrowserWindow } from 'electron';
+
+import { Nvim } from '@main/nvim/api';
+
 /**
  * Show "Reload changed" dialog when opened files changed ouside (ex. switch git branch).
  */
-import { dialog, BrowserWindow } from 'electron';
-import { Nvim } from '../api';
-
-const initReloadChanged = ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }) => {
+const initReloadChanged = ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }): void => {
   type Buffer = {
     bufnr: string;
     name: string;

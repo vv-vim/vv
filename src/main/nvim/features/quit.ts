@@ -3,7 +3,7 @@
  */
 
 import { dialog, app, BrowserWindow } from 'electron';
-import { Nvim } from '../api';
+import { Nvim } from '@main/nvim/api';
 
 /**
  * If we want to quit app after closing window, shouldQuit is true.

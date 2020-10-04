@@ -4,22 +4,22 @@ import { join, resolve } from 'path';
 
 import isDev from '@lib/isDev';
 
-import menu from './menu';
-import installCli from './installCli';
-import checkNeovim from './checkNeovim';
+import menu from '@main/menu';
+import installCli from '@main/installCli';
+import checkNeovim from '@main/checkNeovim';
 
-import { setShouldQuit } from './nvim/features/quit';
-import { getSettings } from './nvim/settings';
-import { getNvimByWindow } from './nvim/nvimByWindow';
+import { setShouldQuit } from '@main/nvim/features/quit';
+import { getSettings } from '@main/nvim/settings';
+import { getNvimByWindow } from '@main/nvim/nvimByWindow';
 
-import initAutoUpdate from './autoUpdate';
+import initAutoUpdate from '@main/autoUpdate';
 
-import initNvim from './nvim/nvim';
-import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from './lib/args';
+import initNvim from '@main/nvim/nvim';
+import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from '@main/lib/args';
 
-import initTransport from './transport/transport';
+import initTransport from '@main/transport/transport';
 
-// import log from '../lib/log';
+// import log from '@lib/log';
 
 let currentWindow: BrowserWindow | undefined | null;
 

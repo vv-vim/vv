@@ -2,7 +2,7 @@
 
 import { Nvim } from '@main/nvim/api';
 
-import { Transport } from './transport/transport';
+import { Transport } from '@renderer/transport/transport';
 
 let transport: Transport;
 

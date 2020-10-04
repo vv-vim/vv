@@ -1,8 +1,8 @@
 import throttle from 'lodash/throttle';
 
-import { modifierPrefix } from './keyboard';
-import { screenCoords } from '../screen';
-import nvim from '../nvim';
+import { modifierPrefix } from '@renderer/input/keyboard';
+import { screenCoords } from '@renderer/screen';
+import nvim from '@renderer/nvim';
 
 const GRID = 0;
 
@@ -102,7 +102,7 @@ const handleMousemove = (event: MouseEvent) => {
   }
 };
 
-const initMouse = () => {
+const initMouse = (): void => {
   nvim.command('set mouse=a'); // Enable mouse events
 
   document.addEventListener('mousedown', handleMousedown);

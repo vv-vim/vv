@@ -1,5 +1,5 @@
 import { app, MenuItemConstructorOptions, BrowserWindow } from 'electron';
-import { getNvimByWindow } from '../nvimByWindow';
+import { getNvimByWindow } from '@main/nvim/nvimByWindow';
 
 const nvimChangeZoom = (win: BrowserWindow, level: number) => {
   const nvim = getNvimByWindow(win);
@@ -44,7 +44,7 @@ export const actualSizeMenuItem: MenuItemConstructorOptions['click'] = (_item, w
   }
 };
 
-const initZoom = ({ win }: { win: BrowserWindow }) => {
+const initZoom = ({ win }: { win: BrowserWindow }): void => {
   win.on('focus', () => {
     disableActualSizeItem(win);
   });
