@@ -1,1 +1,11 @@
-export const { ipcRenderer, remote } = window.electron;
+import { IpcRenderer } from 'electron';
+
+declare global {
+  interface Window {
+    electron: {
+      ipcRenderer: IpcRenderer;
+    };
+  }
+}
+
+export const { ipcRenderer } = window.electron;

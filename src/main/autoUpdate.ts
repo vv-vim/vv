@@ -82,7 +82,7 @@ const handleUpdateDownloaded = () => {
   });
 };
 
-const initAutoUpdate = ({ win }: { win: BrowserWindow }) => {
+const initAutoUpdate = ({ win }: { win: BrowserWindow }): void => {
   updateInterval(getSettings().autoupdateinterval);
   onChangeSettings(win, handleChangeSettings);
 
