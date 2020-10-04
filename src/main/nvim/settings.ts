@@ -1,10 +1,11 @@
 import debounce from 'lodash/debounce';
 import { BrowserWindow } from 'electron';
-import { Nvim } from './api';
 
-import store, { Settings } from '../lib/store';
+import { Nvim } from '@main/nvim/api';
 
-export { Settings } from '../lib/store';
+import store, { Settings } from '@main/lib/store';
+
+import { Transport } from '@main/transport/transport';
 
 export type SettingsCallback = (newSettings: Partial<Settings>, allSettings: Settings) => void;
 
@@ -54,10 +55,12 @@ const initSettings = ({
   win,
   nvim,
   args,
+  transport,
 }: {
   win: BrowserWindow;
   nvim: Nvim;
   args: string[];
+  transport: Transport;
 }): void => {
   hasCustomConfig = args.indexOf('-u') !== -1;
   let initialSettings: Settings | null = getSettings();
@@ -90,7 +93,7 @@ const initSettings = ({
     }
     store.set('lastSettings', settings);
 
-    win.webContents.send('updateSettings', newSettings, settings);
+    transport.send('updateSettings', newSettings, settings);
     if (onChangeSettingsCallbacks[win.webContents.id]) {
       onChangeSettingsCallbacks[win.webContents.id].forEach((c) => c(newSettings, settings));
     }

@@ -48,6 +48,7 @@ module.exports = {
         '@typescript-eslint/explicit-function-return-type': 'off',
         'import/prefer-default-export': 'off',
         'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+        'import/no-unresolved': 'off', // TypeScript handles this
         'import/extensions': [
           'error',
           'ignorePackages',

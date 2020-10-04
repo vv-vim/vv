@@ -1,6 +1,8 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { BrowserWindow } from 'electron';
 
-import { getNvimByWindow, setNvimByWindow, deleteNvimByWindow } from './nvimByWindow';
+import { Transport } from '@main/transport/transport';
+
+import { setNvimByWindow, deleteNvimByWindow } from './nvimByWindow';
 
 import quit from './features/quit';
 import windowTitle from './features/windowTitle';
@@ -13,12 +15,17 @@ import initSettings from './settings';
 
 import nvimApi from './api';
 
-ipcMain.on('nvim-send', ({ sender: { id } }, payload) => {
-  const nvim = getNvimByWindow(id);
-  // @ts-ignore FIXME
-  if (nvim) nvim.send(...payload);
-});
-const initNvim = ({ args, cwd, win }: { args: string[]; cwd: string; win: BrowserWindow }) => {
+const initNvim = ({
+  args,
+  cwd,
+  win,
+  transport,
+}: {
+  args: string[];
+  cwd: string;
+  win: BrowserWindow;
+  transport: Transport;
+}): void => {
   const nvim = nvimApi({
     args,
     cwd,
@@ -26,13 +33,19 @@ const initNvim = ({ args, cwd, win }: { args: string[]; cwd: string; win: Browse
   setNvimByWindow(win, nvim);
 
   // TODO: Queue or smth if webContents are not ready
-  nvim.on('data', (data) => win.webContents.send('nvim-data', data));
+  nvim.on('data', (data) => transport.send('nvim-data', data));
+
+  transport.on('nvim-send', (payload) => {
+    // @ts-ignore FIXME
+    nvim.send(...payload);
+  });
 
   nvim.on('disconnect', () => {
+    // TODO: remove listeners from transport?
     deleteNvimByWindow(win);
   });
 
-  initSettings({ win, nvim, args });
+  initSettings({ win, nvim, args, transport });
 
   windowSize({ win });
 

@@ -2,6 +2,8 @@ import { app, BrowserWindow, dialog } from 'electron';
 import { statSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 
+import isDev from '@lib/isDev';
+
 import menu from './menu';
 import installCli from './installCli';
 import checkNeovim from './checkNeovim';
@@ -12,10 +14,10 @@ import { getNvimByWindow } from './nvim/nvimByWindow';
 
 import initAutoUpdate from './autoUpdate';
 
-import isDev from '../lib/isDev';
-
 import initNvim from './nvim/nvim';
 import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from './lib/args';
+
+import initTransport from './transport/transport';
 
 // import log from '../lib/log';
 
@@ -149,13 +151,16 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
       win.setBounds({ x: x + 20, y: y + 20, width, height }, false);
     }
 
+    const transport = initTransport(win);
+
     initNvim({
       args: joinArgs({ args, files: unopenedFiles }),
       cwd,
       win,
+      transport,
     });
 
-    const initRenderer = () => win.webContents.send('initRenderer', settings);
+    const initRenderer = () => transport.send('initRenderer', settings);
 
     if (win.webContents.isLoading()) {
       win.webContents.on('did-finish-load', initRenderer);
