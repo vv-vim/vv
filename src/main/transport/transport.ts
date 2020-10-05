@@ -1,38 +1,59 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { ipcMain } from 'electron';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Args = any[];
 
 type Listener = (...args: Args) => void;
 
-export type Transport = {
-  on: (channel: string, listener: Listener) => void;
-  send: (channel: string, ...args: Args) => void;
-};
-
 /**
  * Transport between main and renderer.
  * This is WIP. Adding this abstraction on top of ipcMain to be able to switch to websockets or smth
  * for server mode.
  */
-const transport = (win: BrowserWindow): Transport => ({
+export type Transport = {
   /**
    * Receive message from renderer.
    */
-  on: (channel, listener) => {
-    ipcMain.on(channel, ({ sender: { id } }, ...args) => {
-      if (id === win.webContents.id) {
-        listener(...args);
-      }
-    });
-  },
+  on: (channel: string, listener: Listener) => void;
 
   /**
    * Send message to renderer.
    */
-  send: (channel, ...args) => {
-    win.webContents.send(channel, ...args);
-  },
-});
+  send: (channel: string, ...args: Args) => void;
+};
+
+/**
+ * Init transport between main and renderer to be used for main side.
+ */
+const transport = (newWin: Electron.BrowserWindow): Transport => {
+  let win: Electron.BrowserWindow | null = newWin;
+  const winId = win.id;
+
+  win.on('closed', () => {
+    win = null;
+  });
+
+  return {
+    on: (channel, listener) => {
+      if (win) {
+        const ipcListener = ({ sender: { id } }: Electron.IpcMainEvent, ...args: Args) => {
+          if (id === winId) {
+            listener(...args);
+          }
+        };
+        ipcMain.on(channel, ipcListener);
+        win.on('closed', () => {
+          ipcMain.removeListener(channel, ipcListener);
+        });
+      }
+    },
+
+    send: (channel, ...args) => {
+      if (win) {
+        win.webContents.send(channel, ...args);
+      }
+    },
+  };
+};
 
 export default transport;

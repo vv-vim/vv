@@ -45,10 +45,10 @@ export const getSettings = (): Settings => {
 const onChangeSettingsCallbacks: Record<string, SettingsCallback[]> = {};
 
 export const onChangeSettings = (win: BrowserWindow, callback: SettingsCallback): void => {
-  if (!onChangeSettingsCallbacks[win.webContents.id]) {
-    onChangeSettingsCallbacks[win.webContents.id] = [];
+  if (!onChangeSettingsCallbacks[win.id]) {
+    onChangeSettingsCallbacks[win.id] = [];
   }
-  onChangeSettingsCallbacks[win.webContents.id].push(callback);
+  onChangeSettingsCallbacks[win.id].push(callback);
 };
 
 const initSettings = ({
@@ -94,8 +94,8 @@ const initSettings = ({
     store.set('lastSettings', settings);
 
     transport.send('updateSettings', newSettings, settings);
-    if (onChangeSettingsCallbacks[win.webContents.id]) {
-      onChangeSettingsCallbacks[win.webContents.id].forEach((c) => c(newSettings, settings));
+    if (onChangeSettingsCallbacks[win.id]) {
+      onChangeSettingsCallbacks[win.id].forEach((c) => c(newSettings, settings));
     }
 
     newSettings = {};

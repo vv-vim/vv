@@ -12,19 +12,19 @@ export const getNvimByWindow = (winOrId?: number | BrowserWindow): Nvim | null =
     return nvimByWindowId[winOrId];
   }
   if (winOrId.webContents) {
-    return nvimByWindowId[winOrId.webContents.id];
+    return nvimByWindowId[winOrId.id];
   }
   return null;
 };
 
 export const setNvimByWindow = (win: BrowserWindow, nvim: Nvim): void => {
   if (win.webContents) {
-    nvimByWindowId[win.webContents.id] = nvim;
+    nvimByWindowId[win.id] = nvim;
   }
 };
 
 export const deleteNvimByWindow = (win: BrowserWindow): void => {
   if (win.webContents) {
-    delete nvimByWindowId[win.webContents.id];
+    delete nvimByWindowId[win.id];
   }
 };

@@ -5,16 +5,16 @@ import initTransport from '@main/transport/transport';
 jest.mock('electron', () => ({
   ipcMain: {
     on: jest.fn(),
+    removeListener: jest.fn(),
   },
 }));
 
 describe('main transport', () => {
-  const send = jest.fn();
-
   const win = ({
+    id: 'winId',
+    on: jest.fn(),
     webContents: {
-      id: 'winId',
-      send,
+      send: jest.fn(),
     },
   } as unknown) as BrowserWindow;
 
@@ -52,17 +52,35 @@ describe('main transport', () => {
       ipcListener({ sender: { id: 'winId' } });
       expect(listener).toHaveBeenCalledWith();
     });
+
+    test('subscribes to win `closed` event', () => {
+      transport.on('test-channel', listener);
+      expect(win.on).toHaveBeenCalledWith('closed', expect.any(Function));
+    });
+
+    test('removes event listener on win `closed` event', () => {
+      transport.on('test-channel', listener);
+      (win.on as jest.Mock).mock.calls[0][1]();
+      expect(ipcMain.removeListener).toHaveBeenCalledWith('test-channel', expect.any(Function));
+    });
   });
 
   describe('send', () => {
     test('pass args to win.webContents', () => {
       transport.send('test-channel', 'arg1', 'arg2');
-      expect(send).toHaveBeenCalledWith('test-channel', 'arg1', 'arg2');
+      expect(win.webContents.send).toHaveBeenCalledWith('test-channel', 'arg1', 'arg2');
     });
 
     test('with no args', () => {
       transport.send('test-channel');
-      expect(send).toHaveBeenCalledWith('test-channel');
+      expect(win.webContents.send).toHaveBeenCalledWith('test-channel');
+    });
+
+    test('does not send anything if window is closed', () => {
+      const t = initTransport(win);
+      (win.on as jest.Mock).mock.calls[0][1]();
+      t.send('test-channel');
+      expect(win.webContents.send).not.toHaveBeenCalled();
     });
   });
 });
