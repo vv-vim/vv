@@ -8,4 +8,4 @@ declare global {
   }
 }
 
-export const { ipcRenderer } = window.electron;
+export const { ipcRenderer } = window.electron || {};

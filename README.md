@@ -111,6 +111,19 @@ yarn start
 
 You can run tests with `yarn test` and ESLint with `yarn lint` commands.
 
+## Server
+
+You can run Neovim remotely in browser via VV server:
+
+```
+yarn webpack:watch
+yarn server:dev
+```
+
+Then open [http://localhost:3000](http://localhost:3000)
+
+Server is in a very early stage of development, just proof of concept. Please check this milestone for development status: [https://github.com/vv-vim/vv/milestone/1](https://github.com/vv-vim/vv/milestone/1).
+
 ## Name
 
 The VV name comes from the bash shortcut `vv` that I use to start Vim.

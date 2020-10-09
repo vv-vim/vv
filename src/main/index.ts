@@ -17,7 +17,7 @@ import initAutoUpdate from '@main/autoUpdate';
 import initNvim from '@main/nvim/nvim';
 import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from '@main/lib/args';
 
-import initTransport from '@main/transport/transport';
+import initTransport from '@main/transport/ipc';
 
 // import log from '@lib/log';
 

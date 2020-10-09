@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron';
 
-import initTransport from '@main/transport/transport';
+import initTransport from '@main/transport/ipc';
 
 jest.mock('electron', () => ({
   ipcMain: {

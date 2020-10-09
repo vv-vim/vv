@@ -1,5 +1,4 @@
 // TODO: TS is a mess here, fix it.
-import { app } from 'electron';
 
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import path from 'path';
@@ -39,13 +38,21 @@ export type Nvim = {
   getShortMode: () => Promise<string>;
 };
 
-const vvSourceCommand = () =>
-  `source ${path.join(app.getAppPath(), isDev('./', '../'), 'bin/vv.vim')}`;
+const vvSourceCommand = (appPath?: string) =>
+  appPath ? `source ${path.join(appPath, isDev('./', '../'), 'bin/vv.vim')}` : 'source bin/vv.vim';
 
-const startNvimProcess = ({ args, cwd }: { args: string[]; cwd: string }) => {
+const startNvimProcess = ({
+  args = [],
+  cwd,
+  appPath,
+}: {
+  args?: string[];
+  cwd?: string;
+  appPath?: string;
+}) => {
   const env = shellEnv();
 
-  const nvimArgs = ['--embed', '--cmd', vvSourceCommand(), ...args];
+  const nvimArgs = ['--embed', '--cmd', vvSourceCommand(appPath), ...args];
 
   const nvimProcess = spawn(nvimCommand(env), nvimArgs, { cwd, env });
 
@@ -67,7 +74,15 @@ const startNvimProcess = ({ args, cwd }: { args: string[]; cwd: string }) => {
   return nvimProcess;
 };
 
-const api = ({ args, cwd }: { args: string[]; cwd: string }): Nvim => {
+const api = ({
+  args = [],
+  cwd,
+  appPath,
+}: {
+  args?: string[];
+  cwd?: string;
+  appPath?: string;
+}): Nvim => {
   let proc: ChildProcessWithoutNullStreams;
   let msgpackIn: NodeJS.ReadStream;
   let msgpackOut: NodeJS.WriteStream;
@@ -134,7 +149,7 @@ const api = ({ args, cwd }: { args: string[]; cwd: string }): Nvim => {
     subscriptions = subscriptions.filter(([m, c]) => !(method === m && callback === c));
   };
 
-  proc = startNvimProcess({ args, cwd });
+  proc = startNvimProcess({ args, cwd, appPath });
 
   const decodeStream: DecodeStream = createDecodeStream();
   const encodeStream: EncodeStream = createEncodeStream();
@@ -174,7 +189,7 @@ const api = ({ args, cwd }: { args: string[]; cwd: string }): Nvim => {
   // Source vv specific ext on -u NONE
   const uFlagIndex = args.indexOf('-u');
   if (uFlagIndex !== -1 && args[uFlagIndex + 1] === 'NONE') {
-    (nvim as Nvim).command(vvSourceCommand());
+    (nvim as Nvim).command(vvSourceCommand(appPath));
   }
 
   return {

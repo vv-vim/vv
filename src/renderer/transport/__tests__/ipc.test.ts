@@ -1,6 +1,6 @@
 import { ipcRenderer } from '@renderer/preloaded/electron';
 
-import initTransport from '@renderer/transport/transport';
+import initTransport from '@renderer/transport/ipc';
 
 jest.mock('@renderer/preloaded/electron', () => ({
   ipcRenderer: {
