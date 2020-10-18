@@ -1,6 +1,6 @@
-import { BrowserWindow } from 'electron';
+import { app, BrowserWindow } from 'electron';
 
-import { Transport } from '@main/transport/transport';
+import { Transport } from '@main/transport/types';
 
 import { setNvimByWindow, deleteNvimByWindow } from '@main/nvim/nvimByWindow';
 
@@ -29,6 +29,7 @@ const initNvim = ({
   const nvim = nvimApi({
     args,
     cwd,
+    appPath: app.getAppPath(),
   });
   setNvimByWindow(win, nvim);
 

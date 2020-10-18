@@ -1,15 +1,13 @@
 import debounce from 'lodash/debounce';
-import { BrowserWindow } from 'electron';
+
+import { Settings } from '@main/lib/store';
 
 import { Nvim } from '@main/nvim/api';
-
-import store, { Settings } from '@main/lib/store';
-
-import { Transport } from '@main/transport/types';
+import { Transport } from '@server/transport/types';
 
 export type SettingsCallback = (newSettings: Partial<Settings>, allSettings: Settings) => void;
 
-const getDefaultSettings = (): Settings => ({
+export const getDefaultSettings = (): Settings => ({
   fullscreen: 0,
   simplefullscreen: 1,
   bold: 1,
@@ -28,42 +26,17 @@ const getDefaultSettings = (): Settings => ({
 
 let hasCustomConfig = false;
 
-/**
- * Get saved settings if we have them, default settings otherwise.
- * If you run app with -u flag, return default settings.
- */
-export const getSettings = (): Settings => {
-  if (hasCustomConfig) {
-    return getDefaultSettings();
-  }
-  return {
-    ...getDefaultSettings(),
-    ...store.get('lastSettings'),
-  };
-};
-
-const onChangeSettingsCallbacks: Record<string, SettingsCallback[]> = {};
-
-export const onChangeSettings = (win: BrowserWindow, callback: SettingsCallback): void => {
-  if (!onChangeSettingsCallbacks[win.id]) {
-    onChangeSettingsCallbacks[win.id] = [];
-  }
-  onChangeSettingsCallbacks[win.id].push(callback);
-};
-
 const initSettings = ({
-  win,
   nvim,
   args,
   transport,
 }: {
-  win: BrowserWindow;
   nvim: Nvim;
-  args: string[];
+  args?: string[];
   transport: Transport;
 }): void => {
-  hasCustomConfig = args.indexOf('-u') !== -1;
-  let initialSettings: Settings | null = getSettings();
+  hasCustomConfig = args?.indexOf('-u') !== -1;
+  let initialSettings: Settings | null = getDefaultSettings();
   let settings = getDefaultSettings();
 
   let newSettings: Partial<Settings> = {};
@@ -76,7 +49,6 @@ const initSettings = ({
 
     // If we have initial settings newSetting will be only those that different from initialSettings. We
     // aleady applied initialSettings when we created a window.
-    // Also store default colors to settings to avoid blinks on init.
     if (initialSettings && !hasCustomConfig) {
       newSettings = Object.keys(settings).reduce<Partial<Settings>>((result, key) => {
         // @ts-ignore TODO FIXME
@@ -91,12 +63,8 @@ const initSettings = ({
       }, {});
       initialSettings = null;
     }
-    store.set('lastSettings', settings);
 
     transport.send('updateSettings', newSettings, settings);
-    if (onChangeSettingsCallbacks[win.id]) {
-      onChangeSettingsCallbacks[win.id].forEach((c) => c(newSettings, settings));
-    }
 
     newSettings = {};
   };

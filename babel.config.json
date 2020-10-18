@@ -9,6 +9,7 @@
         "alias": {
           "@renderer": "./src/renderer",
           "@main": "./src/main",
+          "@server": "./src/server",
           "@lib": "./src/lib"
         }
       }

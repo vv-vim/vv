@@ -11,7 +11,7 @@ import { Settings } from '@main/lib/store';
 
 import * as PIXI from '@renderer/lib/pixi';
 
-import { Transport } from '@renderer/transport/transport';
+import { Transport } from '@renderer/transport/types';
 
 import nvim from '@renderer/nvim';
 
@@ -218,7 +218,7 @@ const measureCharSize = () => {
 
   const oldCharWidth = charWidth;
   const oldCharHeight = charHeight;
-  charWidth = char.offsetWidth + scaledLetterSpacing();
+  charWidth = Math.max(char.offsetWidth + scaledLetterSpacing(), 1);
   charHeight = char.offsetHeight;
   if (oldCharWidth !== charWidth || oldCharHeight !== charHeight) {
     cursorSprite.x = -charWidth;
@@ -807,7 +807,7 @@ const screen = ({
 
   nvim.on('redraw', redraw);
 
-  transport.on('updateSettings', updateSettings);
+  transport.on('updateSettings', (s) => updateSettings(s));
   updateSettings(settings, true);
 
   uiAttach();
