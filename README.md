@@ -67,6 +67,7 @@ You can setup VV-specific options via the `:VVset` command. It works the same as
 - `italic'`: Allow italic. Default: `1`.
 - `underline`: Allow underline. Default: `1`.
 - `undercurl`: Allow undercurl. Default: `1`.
+- `strikethrough`: Allow strikethrough. Default: `1`.
 - `fontfamily`: Font family. Syntax is the same as CSS `font-family`. Default: `monospace`.
 - `fontsize`: Font size in pixels. Default: `12`.
 - `lineheight`: Line height related to font size. Pixel value is `fontsize * lineheight`. Default: `1.25`.

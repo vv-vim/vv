@@ -58,6 +58,7 @@ let showBold = true;
 let showItalic = true;
 let showUnderline = true;
 let showUndercurl = true;
+let showStrikethrough = true;
 
 const charCanvas = new OffscreenCanvas(1, 1);
 const charCtx = charCanvas.getContext('2d', { alpha: true }) as OffscreenCanvasRenderingContext2D;
@@ -80,6 +81,7 @@ type CalculatedProps = {
   hiBold: boolean;
   hiUnderline: boolean;
   hiUndercurl: boolean;
+  hiStrikethrough: boolean;
 };
 
 type HighlightProps = {
@@ -101,6 +103,7 @@ const highlightTable: HighlightTable = {
       hiBold: false,
       hiUnderline: false,
       hiUndercurl: false,
+      hiStrikethrough: false,
     },
   },
   // Inverted default color for cursor
@@ -114,6 +117,7 @@ const highlightTable: HighlightTable = {
       hiBold: false,
       hiUnderline: false,
       hiUndercurl: false,
+      hiStrikethrough: false,
     },
   },
 };
@@ -272,6 +276,15 @@ const getCharBitmap = (char: string, props: CalculatedProps) => {
     charCtx.moveTo(x, y);
     charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
     charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
+    charCtx.stroke();
+  }
+
+  if (props.hiStrikethrough) {
+    charCtx.strokeStyle = props.fgColor;
+    charCtx.lineWidth = scale;
+    charCtx.beginPath();
+    charCtx.moveTo(charWidth, charHeight * 0.5);
+    charCtx.lineTo(charWidth * 2, charHeight * 0.5);
     charCtx.stroke();
   }
 
@@ -459,6 +472,7 @@ const recalculateHighlightTable = () => {
         bold,
         underline,
         undercurl,
+        strikethrough,
       } = highlightTable[(id as unknown) as number].value;
       const r = reverse || standout;
       const fg = getColor(foreground, highlightTable[0]?.calculated?.fgColor) as string;
@@ -474,6 +488,7 @@ const recalculateHighlightTable = () => {
         hiBold: showBold && bold,
         hiUnderline: showUnderline && underline,
         hiUndercurl: showUndercurl && undercurl,
+        hiStrikethrough: showStrikethrough && strikethrough,
       };
     }
   });
@@ -560,6 +575,7 @@ const redrawCmd = {
       hiBold: false,
       hiUnderline: false,
       hiUndercurl: false,
+      hiStrikethrough: false,
     };
     if (!highlightTable[0] || !isEqual(highlightTable[0].calculated, calculated)) {
       highlightTable[0] = { calculated };
@@ -707,6 +723,10 @@ const handleSet = {
   undercurl: (value: boolean) => {
     showUndercurl = value;
   },
+
+  strikethrough: (value: boolean) => {
+    showStrikethrough = value;
+  },
 };
 
 const redraw = (args: any[]) => {
@@ -763,6 +783,7 @@ const uiAttach = () => {
 
 const updateSettings = (settings: Settings, isInitial = false) => {
   let requireRedraw = isInitial;
+  let requireRecalculateHighlight = false;
   const requireRedrawProps = [
     'fontfamily',
     'fontsize',
@@ -772,16 +793,31 @@ const updateSettings = (settings: Settings, isInitial = false) => {
     'italic',
     'underline',
     'undercurl',
+    'strikethrough',
+  ];
+
+  const requireRecalculateHighlightProps = [
+    'bold',
+    'italic',
+    'underline',
+    'undercurl',
+    'strikethrough',
   ];
 
   Object.keys(settings).forEach((key) => {
     // @ts-ignore TODO
     if (handleSet[key]) {
       requireRedraw = requireRedraw || requireRedrawProps.includes(key);
+      requireRecalculateHighlight =
+        requireRecalculateHighlight || requireRecalculateHighlightProps.includes(key);
       // @ts-ignore TODO
       handleSet[key](settings[key]);
     }
   });
+
+  if (requireRecalculateHighlight && !isInitial) {
+    recalculateHighlightTable();
+  }
 
   if (requireRedraw) {
     measureCharSize();
