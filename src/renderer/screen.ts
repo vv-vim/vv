@@ -1,6 +1,5 @@
 // TODO: Refactor, Fix types.
-/* eslint-disable @typescript-eslint/no-empty-function */
-import type { Cancelable } from 'lodash';
+import type { DebouncedFunc } from 'lodash';
 import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
 import isFinite from 'lodash/isFinite';
@@ -401,7 +400,7 @@ const redrawCursor = () => {
   needRerender = true;
 };
 
-let debouncedRepositionCursor: ((newCursor: [number, number]) => void) & Cancelable;
+let debouncedRepositionCursor: DebouncedFunc<(newCursor: [number, number]) => void>;
 
 export const repositionCursor = (newCursor: [number, number]): void => {
   if (debouncedRepositionCursor) debouncedRepositionCursor.cancel();
@@ -482,8 +481,12 @@ const recalculateHighlightTable = () => {
 
 // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
 const redrawCmd = {
-  set_title: () => {},
-  set_icon: () => {},
+  set_title: () => {
+    /* empty */
+  },
+  set_icon: () => {
+    /* empty */
+  },
 
   mode_info_set: (props: any) => {
     modeInfoSet = props[0][1].reduce((r: any, o: any) => ({ ...r, [o.name]: o }), {});
@@ -507,20 +510,38 @@ const redrawCmd = {
     redrawCursor();
   },
 
-  mouse_on: () => {},
-  mouse_off: () => {},
+  mouse_on: () => {
+    /* empty */
+  },
+  mouse_off: () => {
+    /* empty */
+  },
 
-  busy_start: () => {},
-  busy_stop: () => {},
+  busy_start: () => {
+    /* empty */
+  },
+  busy_stop: () => {
+    /* empty */
+  },
 
-  suspend: () => {},
+  suspend: () => {
+    /* empty */
+  },
 
-  update_menu: () => {},
+  update_menu: () => {
+    /* empty */
+  },
 
-  bell: () => {},
-  visual_bell: () => {},
+  bell: () => {
+    /* empty */
+  },
+  visual_bell: () => {
+    /* empty */
+  },
 
-  hl_group_set: () => {},
+  hl_group_set: () => {
+    /* empty */
+  },
 
   flush: throttle(() => {
     if (needRerender) {
@@ -633,7 +654,9 @@ const redrawCmd = {
     needRerender = true;
   },
 
-  grid_destroy: () => {},
+  grid_destroy: () => {
+    /* empty */
+  },
 
   grid_cursor_goto: ([[_, ...newCursor]]: Array<[string, number, number]>) => {
     repositionCursor(newCursor);
