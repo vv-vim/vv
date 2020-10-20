@@ -19,7 +19,7 @@ describe('Keyboard input', () => {
     initKeyboard();
   });
 
-  test('test', () => {
+  test('ctrl key adds <C-*> modifier', () => {
     simulateKeyDown({ key: 'a', ctrlKey: true });
     expect(nvim.input).toHaveBeenCalledWith('<C-a>');
   });
