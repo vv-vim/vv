@@ -9,6 +9,7 @@ export type Settings = {
   italic: BooleanSetting;
   underline: BooleanSetting;
   undercurl: BooleanSetting;
+  strikethrough: BooleanSetting;
   fontfamily: string;
   fontsize: string; // TODO: number
   lineheight: string; // TODO: number

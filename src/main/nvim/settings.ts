@@ -16,6 +16,7 @@ const getDefaultSettings = (): Settings => ({
   italic: 1,
   underline: 1,
   undercurl: 1,
+  strikethrough: 1,
   fontfamily: 'monospace',
   fontsize: '12',
   lineheight: '1.25',
