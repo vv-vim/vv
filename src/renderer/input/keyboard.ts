@@ -1,5 +1,5 @@
 import nvim from '@renderer/nvim';
-import { getCursorElement } from '@renderer/screen';
+import { Screen } from '@renderer/screen';
 
 // :help keyCode
 const specialKey = ({ key, code }: KeyboardEvent): string =>
@@ -153,7 +153,7 @@ const handleCompositionUpdate = (event: CompositionEvent) => {
   compositionValue = event.data;
 };
 
-const initKeyboard = (): void => {
+const initKeyboard = ({ getCursorElement }: Pick<Screen, 'getCursorElement'>): void => {
   const input = document.createElement('input');
 
   input.style.position = 'absolute';

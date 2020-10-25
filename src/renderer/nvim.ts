@@ -1,6 +1,6 @@
 // TODO: Refactor to use same API for main and renderer.
 
-import { Nvim } from '@main/nvim/api';
+import { Nvim } from '@renderer/types';
 
 import { Transport } from '@renderer/transport/types';
 

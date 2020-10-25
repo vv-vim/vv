@@ -1,6 +1,4 @@
-// import log from '@lib/log';
-
-import { Settings } from '@main/lib/store';
+import { Settings } from '@renderer/types';
 
 import initTransport from '@renderer/transport/transport';
 import { initNvim } from '@renderer/nvim';
@@ -14,9 +12,9 @@ const renderer = (): void => {
 
   const initRenderer = (settings: Settings) => {
     initNvim(transport);
-    initScreen({ settings, transport });
-    initKeyboard();
-    initMouse();
+    const screen = initScreen({ settings, transport });
+    initKeyboard(screen);
+    initMouse(screen);
     hideMouseCursor();
   };
 

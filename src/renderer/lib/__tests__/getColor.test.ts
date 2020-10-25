@@ -1,4 +1,4 @@
-import getColor from '@lib/getColor';
+import getColor from '@renderer/lib/getColor';
 
 describe('getColor', () => {
   test('0 is black', () => {
