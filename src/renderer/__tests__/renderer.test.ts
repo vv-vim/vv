@@ -14,7 +14,7 @@ jest.mock('@renderer/transport/transport', () => () => mockTransport);
 jest.mock('@renderer/nvim', () => ({
   initNvim: jest.fn(),
 }));
-jest.mock('@renderer/screen', () => jest.fn());
+jest.mock('@renderer/screen', () => jest.fn(() => 'fakeScreen'));
 jest.mock('@renderer/input/keyboard', () => jest.fn());
 jest.mock('@renderer/input/mouse', () => jest.fn());
 jest.mock('@renderer/features/hideMouseCursor', () => jest.fn());
@@ -44,13 +44,13 @@ describe('renderer', () => {
   test('init keyboard', () => {
     renderer();
     mockTransport.on.mock.calls[0][1]('settings');
-    expect(initKeyboard).toHaveBeenCalledWith();
+    expect(initKeyboard).toHaveBeenCalledWith('fakeScreen');
   });
 
   test('init mouse', () => {
     renderer();
     mockTransport.on.mock.calls[0][1]('settings');
-    expect(initMouse).toHaveBeenCalledWith();
+    expect(initMouse).toHaveBeenCalledWith('fakeScreen');
   });
 
   test('init hideMouseCursor', () => {
