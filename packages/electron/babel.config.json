@@ -1,0 +1,17 @@
+{
+  "presets": ["@babel/preset-env", "@babel/preset-typescript"],
+  "plugins": [
+    "@babel/plugin-proposal-optional-chaining",
+    [
+      "module-resolver",
+      {
+        "root": ["."],
+        "alias": {
+          "@renderer": "./src/renderer",
+          "@main": "./src/main",
+          "@lib": "./src/lib"
+        }
+      }
+    ]
+  ]
+}

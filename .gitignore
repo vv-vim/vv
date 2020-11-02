@@ -1,18 +1,12 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+**/node_modules/**
 
-# production
-/build
-/dist
+**/build/**
+**/dist/**
+**/coverage/**
+**/tmp/**
 
-# misc
 .DS_Store
-
-/tmp
-
-# Test coverage report
-/coverage
-
 .env
+yarn-error.log
