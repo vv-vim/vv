@@ -1,0 +1,59 @@
+{
+  "name": "@vvim/server",
+  "version": "0.0.1",
+  "description": "VV Server: Run Neovim remotely in browser",
+  "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
+  "keywords": [
+    "vim",
+    "neovim",
+    "client",
+    "gui",
+    "electron"
+  ],
+  "license": "MIT",
+  "main": "./build/main.js",
+  "sideEffects": false,
+  "scripts": {
+    "test": "jest",
+    "clean": "rm -rf dist/*",
+    "webpack:dev": "webpack --watch --config ./config/webpack.config.js",
+    "webpack:prod": "webpack --config ./config/webpack.prod.config.js",
+    "server:dev": "nodemon build/server.js",
+    "server": "node build/server.js",
+    "dev": "npm-run-all --parallel build:watch server:dev",
+    "start": "npm-run-all clean webpack:prod server"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.1",
+    "@babel/plugin-proposal-optional-chaining": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "@babel/preset-typescript": "^7.12.1",
+    "@types/express": "^4.17.8",
+    "@types/jest": "^26.0.14",
+    "@types/lodash": "^4.14.162",
+    "@types/msgpack-lite": "^0.1.7",
+    "@types/node": "^14.11.10",
+    "@types/ws": "^7.2.7",
+    "babel-loader": "^8.1.0",
+    "babel-plugin-module-resolver": "^4.0.0",
+    "html-webpack-plugin": "^4.3.0",
+    "jest": "^26.5.3",
+    "jest-github-actions-reporter": "^1.0.2",
+    "node-fetch": "^2.6.1",
+    "nodemon": "^2.0.5",
+    "typescript": "^4.0.3",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-merge": "^4.1.2"
+  },
+  "dependencies": {
+    "@vvim/browser-renderer": "0.0.1",
+    "child_process": "^1.0.2",
+    "express": "^4.17.1",
+    "lodash": "^4.17.20",
+    "msgpack-lite": "^0.1.26",
+    "npm-run-all": "^4.1.5",
+    "semver": "^7.3.2",
+    "ws": "^7.3.1"
+  }
+}

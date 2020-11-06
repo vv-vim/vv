@@ -38,7 +38,7 @@ You can also build it manually. You will need [Node.js](https://nodejs.org/en/do
 
 ```
 $ git clone git@github.com:vv-vim/vv.git
-$ cd vv
+$ cd vv/packages/electron
 $ yarn
 $ yarn build
 ```
@@ -98,10 +98,11 @@ VV also sets `set termguicolors` on startup.
 
 ## Development
 
-First, you need start a webpack watch process in a separate terminal:
+First, you need start a Webpack watch process in a separate terminal:
 
 ```
-yarn webpack:watch
+cd package/electron
+yarn dev
 ```
 
 Then you can run the app:
@@ -112,18 +113,16 @@ yarn start
 
 You can run tests with `yarn test` and ESLint with `yarn lint` commands.
 
+If you are working on Browser Renderer you can run Webpack with `yarn dev` command in `packages/browser-renderer`
+directory.
+
 ## Server
 
-You can run Neovim remotely in browser via VV server:
+You can run Neovim remotely in browser via VV Server. More info: [packages/server/README.md](packages/server/README.md)
 
-```
-yarn webpack:watch
-yarn server:dev
-```
+## Browser Renderer
 
-Then open [http://localhost:3000](http://localhost:3000)
-
-Server is in a very early stage of development, just proof of concept. Please check this milestone for development status: [https://github.com/vv-vim/vv/milestone/1](https://github.com/vv-vim/vv/milestone/1).
+[Browser Renderer](packages/browser-renderer/README.md) is a separate package used in Electron app and Server.
 
 ## Name
 

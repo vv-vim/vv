@@ -12,7 +12,7 @@ module.exports = {
     browser: true,
     'jest/globals': true,
   },
-  ignorePatterns: ['/tmp/', '/build/', '/dist/', 'node_modules/'],
+  ignorePatterns: ['**/tmp/**', '**/build/**', '**/dist/**', '**/node_modules/**', '**/@types/**'],
   settings: {
     'import/resolver': {
       node: {
