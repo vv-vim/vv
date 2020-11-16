@@ -12,7 +12,7 @@ const mockTransport = {
 jest.mock('@renderer/transport/transport', () => () => mockTransport);
 
 jest.mock('@renderer/nvim', () => ({
-  initNvim: jest.fn(),
+  initNvim: jest.fn(() => 'fakeNvim'),
 }));
 jest.mock('@renderer/screen', () => jest.fn(() => 'fakeScreen'));
 jest.mock('@renderer/input/keyboard', () => jest.fn());
@@ -44,7 +44,7 @@ describe('renderer', () => {
   test('init keyboard', () => {
     renderer();
     mockTransport.on.mock.calls[0][1]('settings');
-    expect(initKeyboard).toHaveBeenCalledWith('fakeScreen');
+    expect(initKeyboard).toHaveBeenCalledWith({ nvim: 'fakeNvim', screen: 'fakeScreen' });
   });
 
   test('init mouse', () => {

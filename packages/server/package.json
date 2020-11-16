@@ -20,7 +20,7 @@
     "webpack:prod": "webpack --config ./config/webpack.prod.config.js",
     "server:dev": "nodemon build/server.js",
     "server": "node build/server.js",
-    "dev": "npm-run-all --parallel build:watch server:dev",
+    "dev": "npm-run-all --parallel webpack:dev server:dev",
     "start": "npm-run-all clean webpack:prod server"
   },
   "devDependencies": {

@@ -1,5 +1,4 @@
 // TODO: Refactor, Fix types.
-import type { DebouncedFunc } from 'lodash';
 import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
 import isFinite from 'lodash/isFinite';
@@ -423,10 +422,7 @@ const screen = ({
     needRerender = true;
   };
 
-  let debouncedRepositionCursor: DebouncedFunc<(newCursor: [number, number]) => void>;
-
   const repositionCursor = (newCursor: [number, number]): void => {
-    if (debouncedRepositionCursor) debouncedRepositionCursor.cancel();
     if (newCursor) cursorPosition = newCursor;
     const left = cursorPosition[1] * charWidth;
     const top = cursorPosition[0] * charHeight;
@@ -434,8 +430,6 @@ const screen = ({
     cursorEl.style.transform = `translate(${left}px, ${top}px)`;
     redrawCursor();
   };
-
-  debouncedRepositionCursor = debounce(repositionCursor, 10);
 
   const optionSet = {
     guifont: (newFont: string) => {
@@ -721,6 +715,10 @@ const screen = ({
         }
       }
       needRerender = true;
+    },
+
+    win_viewport: () => {
+      // Why nvim sending it without ext_multigrid enabled?
     },
   };
 
