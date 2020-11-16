@@ -20,6 +20,11 @@
   "scripts": {
     "bootstrap": "yarn; yarn build:browser-renderer",
     "build:browser-renderer": "yarn workspace @vvim/browser-renderer build",
+    "dev:browser-renderer": "yarn workspace @vvim/browser-renderer dev",
+    "dev:electron": "yarn workspace @vvim/electron dev",
+    "dev:server": "yarn workspace @vvim/server dev",
+    "dev": "npm-run-all --parallel dev:*",
+    "start:electron": "yarn workspace @vvim/electron start",
     "lint": "yarn eslint . --ext .js,.ts",
     "test": "yarn workspaces run test --reporters=\"default\" --reporters=\"jest-github-actions-reporter\"",
     "typecheck": "yarn workspaces run tsc"
@@ -35,6 +40,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "husky": "^4.3.0",
     "lint-staged": "^10.4.2",
+    "npm-run-all": "^4.1.5",
     "prettier": "^2.1.2",
     "typescript": "^4.0.3"
   },

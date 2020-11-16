@@ -1,5 +1,4 @@
 // TODO: Refactor, Fix types.
-import type { DebouncedFunc } from 'lodash';
 import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
 import isFinite from 'lodash/isFinite';
@@ -423,10 +422,14 @@ const screen = ({
     needRerender = true;
   };
 
-  let debouncedRepositionCursor: DebouncedFunc<(newCursor: [number, number]) => void>;
+  const rerenderIfNeeded = throttle(() => {
+    if (needRerender) {
+      needRerender = false;
+      renderer.render(stage);
+    }
+  }, 1000 / TARGET_FPS);
 
   const repositionCursor = (newCursor: [number, number]): void => {
-    if (debouncedRepositionCursor) debouncedRepositionCursor.cancel();
     if (newCursor) cursorPosition = newCursor;
     const left = cursorPosition[1] * charWidth;
     const top = cursorPosition[0] * charHeight;
@@ -434,8 +437,6 @@ const screen = ({
     cursorEl.style.transform = `translate(${left}px, ${top}px)`;
     redrawCursor();
   };
-
-  debouncedRepositionCursor = debounce(repositionCursor, 10);
 
   const optionSet = {
     guifont: (newFont: string) => {
@@ -568,12 +569,15 @@ const screen = ({
       /* empty */
     },
 
-    flush: throttle(() => {
-      if (needRerender) {
-        needRerender = false;
-        renderer.render(stage);
-      }
-    }, 1000 / TARGET_FPS),
+    flush: () => {
+      rerenderIfNeeded();
+
+      // Workaround to make cursor work fine in fzf.vim (or maybe somewhere else).
+      // For some reason nvim sends incorrect cursor position when you type anything in fzf and then sends the
+      // correct one if you send anything to nvim.
+      // TODO: investigate it. That might be a bug of nvim, fzf or vv.
+      nvim.getMode();
+    },
 
     // New api
     grid_resize: (props: number[][]) => {
@@ -721,6 +725,10 @@ const screen = ({
         }
       }
       needRerender = true;
+    },
+
+    win_viewport: () => {
+      /* Why nvim sending it without ext_multigrid enabled? */
     },
   };
 
