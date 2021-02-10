@@ -21,6 +21,11 @@ VV is built on Electron. There are no barriers to porting it to Windows or Linux
 VV is available via Homebrew Cask:
 
 ```
+$ brew install vv
+```
+
+NOTE: older versions of brew require a special command to install `vv`
+```
 $ brew cask install vv
 ```
 
