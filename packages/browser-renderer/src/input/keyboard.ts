@@ -1,4 +1,4 @@
-import nvim from '@renderer/nvim';
+import { Nvim } from '@renderer/nvim';
 import { Screen } from '@renderer/screen';
 
 // :help keyCode
@@ -21,14 +21,11 @@ const specialKey = ({ key, code }: KeyboardEvent): string =>
     NumpadDivide: 'kDivide',
     NumpadEnter: 'kEnter',
     NumpadDecimal: 'kPoint',
-  } as Record<string, string>)[code] ||
-  ({
     Escape: 'Esc',
     Backspace: 'BS',
     Delete: 'Del',
     Enter: 'CR',
     Tab: 'Tab',
-    '<': '<lt>',
     ArrowUp: 'Up',
     ArrowDown: 'Down',
     ArrowLeft: 'Left',
@@ -49,6 +46,9 @@ const specialKey = ({ key, code }: KeyboardEvent): string =>
     F10: 'F10',
     F11: 'F11',
     F12: 'F12',
+  } as Record<string, string>)[code] ||
+  ({
+    '<': 'lt',
     '\\': 'Bslash',
     '|': 'Bar',
   } as Record<string, string>)[key]);
@@ -60,15 +60,25 @@ const skip = (key: string) =>
     Alt: true,
     Meta: true,
     CapsLock: true,
-    Dead: true,
   } as Record<string, boolean>)[key]);
 
-export const modifierPrefix = ({ metaKey, altKey, ctrlKey }: KeyboardEvent | MouseEvent): string =>
-  `${metaKey ? 'D-' : ''}${altKey ? 'A-' : ''}${ctrlKey ? 'C-' : ''}`;
+export const modifierPrefix = (
+  { metaKey, altKey, ctrlKey }: KeyboardEvent | MouseEvent,
+  insertMode?: boolean,
+): string => {
+  if (insertMode && altKey && !ctrlKey && !metaKey) {
+    return '';
+  }
+  return `${metaKey ? 'D-' : ''}${altKey ? 'A-' : ''}${ctrlKey ? 'C-' : ''}`;
+};
 
-export const shiftPrefix = ({ shiftKey }: KeyboardEvent): string => (shiftKey ? 'S-' : '');
+export const shiftPrefix = ({ shiftKey, key }: KeyboardEvent): string =>
+  shiftKey && key !== '<' ? 'S-' : '';
 
-// Filter hotkeys from menu.
+/**
+ * Filter hotkeys from menu.
+ * TODO: Make it customizable and make it work differently in browser and electron app.
+ */
 const filterResult = (result: string) =>
   !({
     '<D-c>': true, // Cmd+C
@@ -94,19 +104,28 @@ const replaceResult = (result: string) =>
     '<C-2>': '<C-@>',
   } as Record<string, string>)[result] || result);
 
-const eventKeyCode = (event: KeyboardEvent): string | null => {
+const eventKeyCode = (event: KeyboardEvent, insertMode?: boolean): string | null => {
   const { key } = event;
 
   if (skip(key)) return null;
 
-  const modifier = modifierPrefix(event);
+  // Handle Alt + modifier key input (for example Alt + i)
+  let deadKey;
+  if (key === 'Dead') {
+    if (!insertMode && event.altKey && event.code.match(/^Key[A-Z]$/)) {
+      deadKey = event.code[3].toLowerCase();
+    } else {
+      return null;
+    }
+  }
+
+  const modifier = modifierPrefix(event, insertMode);
   const shift = shiftPrefix(event);
   const special = specialKey(event);
 
-  const keyCode = special || key;
+  const keyCode = deadKey || special || key;
 
-  const result =
-    modifier || (special && special !== '<lt>') ? `<${modifier}${shift}${keyCode}>` : keyCode;
+  const result = modifier || special ? `<${modifier}${shift}${keyCode}>` : keyCode;
 
   const filteredResult = filterResult(result);
   if (!filteredResult) {
@@ -116,44 +135,15 @@ const eventKeyCode = (event: KeyboardEvent): string | null => {
   return replaceResult(filteredResult);
 };
 
-let disableNextInput = false;
-let inputKey: string | null = null;
-let isComposing = false;
-let compositionValue = null;
+const initKeyboard = ({ nvim, screen }: { nvim: Nvim; screen: Screen }): void => {
+  const { getCursorElement } = screen;
 
-const handleKeydown = async (event: KeyboardEvent) => {
-  disableNextInput = true;
-  if (!isComposing) {
-    inputKey = eventKeyCode(event);
-    if (inputKey) nvim.input(inputKey);
-  }
-};
+  let disableNextInput = false;
+  let inputKey: string | null = null;
+  let isComposing = false;
+  let compositionValue = null;
+  let insertMode = false;
 
-// Non-keyboard input. For example insert emoji.
-const handleInput = (event: InputEvent) => {
-  if (disableNextInput || isComposing) {
-    disableNextInput = false;
-    return;
-  }
-  nvim.input(event.data);
-};
-
-// Composition input for logograms or diacritical signs. Also works for speech input.
-const handleCompositionStart = () => {
-  isComposing = true;
-  compositionValue = inputKey || '';
-};
-
-const handleCompositionEnd = () => {
-  isComposing = false;
-};
-
-const handleCompositionUpdate = (event: CompositionEvent) => {
-  nvim.input(`${'<BS>'.repeat(compositionValue.length)}${event.data}`);
-  compositionValue = event.data;
-};
-
-const initKeyboard = ({ getCursorElement }: Pick<Screen, 'getCursorElement'>): void => {
   const input = document.createElement('input');
 
   input.style.position = 'absolute';
@@ -165,30 +155,65 @@ const initKeyboard = ({ getCursorElement }: Pick<Screen, 'getCursorElement'>): v
 
   (getCursorElement() || document.getElementsByTagName('body')[0]).appendChild(input);
 
+  const handleKeydown = async (event: KeyboardEvent) => {
+    disableNextInput = true;
+    if (!isComposing) {
+      inputKey = eventKeyCode(event, insertMode);
+      if (inputKey) {
+        nvim.input(inputKey);
+      }
+    }
+  };
+
+  // Non-keyboard input. For example insert emoji.
+  const handleInput = (event: InputEvent) => {
+    if (disableNextInput || isComposing) {
+      disableNextInput = false;
+      return;
+    }
+    nvim.input(event.data);
+  };
+
+  // Composition input for logograms or diacritical signs. Also works for speech input.
+  const handleCompositionStart = () => {
+    isComposing = true;
+    compositionValue = inputKey || '';
+  };
+
+  const handleCompositionEnd = () => {
+    isComposing = false;
+  };
+
+  const handleCompositionUpdate = (event: CompositionEvent) => {
+    nvim.input(`${'<BS>'.repeat(compositionValue.length)}${event.data}`);
+    compositionValue = event.data;
+  };
+
   document.addEventListener('keydown', handleKeydown);
 
-  // @ts-ignore TODO
+  // @ts-expect-error input event type is incorrect
   input.addEventListener('input', handleInput);
   input.addEventListener('compositionstart', handleCompositionStart);
-  // @ts-ignore TODO
+  // @ts-expect-error compositionupdate even type is incorrect
   input.addEventListener('compositionupdate', handleCompositionUpdate);
   input.addEventListener('compositionend', handleCompositionEnd);
 
   // Enable composition input only for insert and command-line modes. Enabling if for other modes
   // is tricky. `preventDefault` does not work for compositionstart, so we need to blur/focus input
   // element for this.
-  nvim.on('redraw', (args: string[]) => {
-    for (let i = 0, { length } = args; i < length; i += 1) {
-      const [cmd, ...params] = args[i];
+  nvim.on('redraw', (args) => {
+    args.forEach(([cmd, [mode]]) => {
       if (cmd === 'mode_change') {
         // https://github.com/neovim/neovim/blob/master/src/nvim/cursor_shape.c#L18
-        if (['insert', 'cmdline_normal'].includes(params[0][0])) {
+        if (['insert', 'cmdline_normal'].includes(mode)) {
+          insertMode = true;
           input.focus();
         } else {
+          insertMode = false;
           input.blur();
         }
       }
-    }
+    });
   });
 };
 

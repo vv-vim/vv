@@ -11,9 +11,9 @@ const renderer = (): void => {
   const transport = initTransport();
 
   const initRenderer = (settings: Settings) => {
-    initNvim(transport);
+    const nvim = initNvim(transport);
     const screen = initScreen({ settings, transport });
-    initKeyboard(screen);
+    initKeyboard({ nvim, screen });
     initMouse(screen);
     hideMouseCursor();
   };

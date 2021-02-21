@@ -1,25 +1,3 @@
-export type NvimCommand<R extends any> = (...args: any[]) => Promise<R>;
-
-export type Nvim = {
-  on: (method: string, callback: (...p: any[]) => void) => void;
-  off: (method: string, callback: () => void) => void;
-  send: (customId: number | null, command: string, ...params: any[]) => Promise<any>;
-
-  eval: NvimCommand<any>;
-  callFunction: NvimCommand<any>;
-  command: NvimCommand<any>;
-  input: NvimCommand<any>;
-  inputMouse: NvimCommand<any>;
-  getMode: NvimCommand<{ mode: string }>;
-  uiTryResize: NvimCommand<any>;
-  uiAttach: NvimCommand<any>;
-  subscribe: NvimCommand<any>;
-  getHlByName: NvimCommand<any>;
-  paste: NvimCommand<any>;
-
-  getShortMode: () => Promise<string>;
-};
-
 type BooleanSetting = 0 | 1;
 
 export type Settings = {

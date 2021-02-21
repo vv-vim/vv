@@ -1,8 +1,28 @@
 // TODO: Refactor to use same API for main and renderer.
 
-import { Nvim } from '@renderer/types';
-
 import { Transport } from '@renderer/transport/types';
+
+export type NvimCommand<R extends any> = (...args: any[]) => Promise<R>;
+
+export type Nvim = {
+  on: (method: string, callback: (args: Array<[string, any[]]>) => void) => void;
+  off: (method: string, callback: () => void) => void;
+  send: (customId: number | null, command: string, ...params: any[]) => Promise<any>;
+
+  eval: NvimCommand<any>;
+  callFunction: NvimCommand<any>;
+  command: NvimCommand<any>;
+  input: NvimCommand<any>;
+  inputMouse: NvimCommand<any>;
+  getMode: NvimCommand<{ mode: string }>;
+  uiTryResize: NvimCommand<any>;
+  uiAttach: NvimCommand<any>;
+  subscribe: NvimCommand<any>;
+  getHlByName: NvimCommand<any>;
+  paste: NvimCommand<any>;
+
+  getShortMode: () => Promise<string>;
+};
 
 let transport: Transport;
 
@@ -82,7 +102,7 @@ const nvim: Partial<Nvim> = {
   },
 };
 
-export const initNvim = (newTransport: Transport): void => {
+export const initNvim = (newTransport: Transport): Nvim => {
   transport = newTransport;
   transport.on('nvim-data', ([type, ...params]) => {
     if (type === 1) {
@@ -91,6 +111,13 @@ export const initNvim = (newTransport: Transport): void => {
       subscriptions.forEach((c) => c(params[0], params[1]));
     }
   });
+  return {
+    on,
+    off,
+    subscribe,
+    send,
+    ...nvim,
+  } as Nvim;
 };
 
 export default {

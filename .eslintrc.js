@@ -34,6 +34,7 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
       ],
       rules: {
+        'prefer-destructuring': 'off',
         'no-console': 'error',
         'no-unused-vars': 'off',
         '@typescript-eslint/no-unused-vars': [
