@@ -2,7 +2,7 @@
 
 VV is a Neovim client for macOS. A pure, fast, minimalistic Vim experience with good macOS integration. Optimized for speed and nice font rendering.
 
-![VV screenshot](assets/screenshot.png)
+![VV screenshot](packages/electron/assets/screenshot.png)
 
 - Fast text render via WebGL.
 - OS integration: copy/paste, mouse, scroll.
@@ -25,6 +25,7 @@ $ brew install vv
 ```
 
 NOTE: older versions of brew require a special command to install `vv`
+
 ```
 $ brew cask install vv
 ```
@@ -43,9 +44,9 @@ You can also build it manually. You will need [Node.js](https://nodejs.org/en/do
 
 ```
 $ git clone git@github.com:vv-vim/vv.git
-$ cd vv/packages/electron
+$ cd vv
 $ yarn
-$ yarn build
+$ yarn build:electron
 ```
 
 This will generate a VV.app binary in the dist directory. Copy VV.app to your /Applications folder and add the CLI launcher `vv` to your `/usr/local/bin`.
@@ -69,7 +70,7 @@ You can setup VV-specific options via the `:VVset` command. It works the same as
 - `fullscreen`, `fu`: Switch to fullscreen mode. You can also toggle fullscreen with `Cmd+Ctrl+F`. Default: `0`.
 - `simplefullscreen`, `sfu`: Use simple or standard fullscreen mode. Simple mode is faster than standard macOS fullscreen mode. It does not have any transition animation. Default: `1`.
 - `bold`: Allow bold font. You can completely disable bold even if the colorscheme uses it. Default: `1`.
-- `italic'`: Allow italic. Default: `1`.
+- `italic`: Allow italic. Default: `1`.
 - `underline`: Allow underline. Default: `1`.
 - `undercurl`: Allow undercurl. Default: `1`.
 - `strikethrough`: Allow strikethrough. Default: `1`.
@@ -106,20 +107,18 @@ VV also sets `set termguicolors` on startup.
 First, you need start a Webpack watch process in a separate terminal:
 
 ```
-cd package/electron
 yarn dev
 ```
 
 Then you can run the app:
 
 ```
-yarn start
+yarn start:electron
 ```
 
 You can run tests with `yarn test` and ESLint with `yarn lint` commands.
 
-If you are working on Browser Renderer you can run Webpack with `yarn dev` command in `packages/browser-renderer`
-directory.
+It is written on TypeScript, but it uses Babel to build. It does not check types during the build. If you want do do type check manually you can run it with `yarn typecheck`.
 
 ## Server
 

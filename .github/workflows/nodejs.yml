@@ -38,7 +38,10 @@ jobs:
           yarn-${{ runner.os }}-
 
     - name: Install Dependencies
-      run: yarn bootstrap
+      run: yarn
+
+    - name: Build Browser Renderer
+      run: yarn build:browser-renderer
 
     - name: Run ESLint
       run: yarn lint
