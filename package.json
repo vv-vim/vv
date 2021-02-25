@@ -18,8 +18,8 @@
     "packages/*"
   ],
   "scripts": {
-    "bootstrap": "yarn; yarn build:browser-renderer",
     "build:browser-renderer": "yarn workspace @vvim/browser-renderer build",
+    "build:electron": "yarn build:browser-renderer; yarn workspace @vvim/electron build",
     "dev:browser-renderer": "yarn workspace @vvim/browser-renderer dev",
     "dev:electron": "yarn workspace @vvim/electron dev",
     "dev:server": "yarn workspace @vvim/server dev",
