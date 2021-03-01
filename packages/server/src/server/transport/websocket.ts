@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import { Server } from 'http';
 
-import { Transport, Listener } from '@server/transport/types';
+import { Transport, Listener } from 'src/server/transport/types';
 
 /**
  * Init transport between main and renderer via websocket on server side.

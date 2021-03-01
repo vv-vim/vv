@@ -1,6 +1,6 @@
 // TODO: Refactor to use same API for main and renderer.
 
-import { Transport } from '@renderer/transport/types';
+import { Transport } from 'src/transport/types';
 
 export type NvimCommand<R extends any> = (...args: any[]) => Promise<R>;
 
@@ -41,8 +41,7 @@ const handleResponse = (id: string, error: Error, result: any) => {
     } else {
       requestPromises[id].resolve(result);
     }
-    // @ts-ignore FIXME
-    requestPromises[id] = null;
+    delete requestPromises[id];
   }
 };
 
@@ -86,7 +85,7 @@ const nvim: Partial<Nvim> = {
   command: commandFactory('command'),
   input: commandFactory('input'),
   inputMouse: commandFactory('input_mouse'),
-  // @ts-ignore FIXME
+  // @ts-expect-error FIXME
   getMode: commandFactory('get_mode'),
   uiTryResize: commandFactory('ui_try_resize'),
   uiAttach: commandFactory('ui_attach'),

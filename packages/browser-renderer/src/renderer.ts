@@ -1,11 +1,11 @@
-import { Settings } from '@renderer/types';
+import { Settings } from 'src/types';
 
-import initTransport from '@renderer/transport/transport';
-import { initNvim } from '@renderer/nvim';
-import initScreen from '@renderer/screen';
-import initKeyboard from '@renderer/input/keyboard';
-import initMouse from '@renderer/input/mouse';
-import hideMouseCursor from '@renderer/features/hideMouseCursor';
+import initTransport from 'src/transport/transport';
+import { initNvim } from 'src/nvim';
+import initScreen from 'src/screen';
+import initKeyboard from 'src/input/keyboard';
+import initMouse from 'src/input/mouse';
+import hideMouseCursor from 'src/features/hideMouseCursor';
 
 const renderer = (): void => {
   const transport = initTransport();

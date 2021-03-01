@@ -8,9 +8,9 @@ import { Renderer, BatchRenderer } from '@pixi/core';
 import { TickerPlugin } from '@pixi/ticker';
 import * as utils from '@pixi/utils';
 
-// @ts-ignore
+// @ts-expect-error
 Renderer.registerPlugin('batch', BatchRenderer);
-// @ts-ignore
+// @ts-expect-error
 Application.registerPlugin(TickerPlugin);
 
 export * from '@pixi/app';

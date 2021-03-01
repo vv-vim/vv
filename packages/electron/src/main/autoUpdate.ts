@@ -2,9 +2,9 @@ import { dialog, BrowserWindow } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import html2plaintext from 'html2plaintext';
 
-import { getSettings, onChangeSettings, SettingsCallback } from '@main/nvim/settings';
+import { getSettings, onChangeSettings, SettingsCallback } from 'src/main/nvim/settings';
 
-import store from '@main/lib/store';
+import store from 'src/main/lib/store';
 
 let interval = 0;
 let updaterIntervalId: NodeJS.Timeout;

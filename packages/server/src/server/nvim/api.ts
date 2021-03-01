@@ -3,18 +3,14 @@
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import path from 'path';
 
-// @ts-ignore FIXME
-import { createDecodeStream } from 'msgpack-lite/lib/decode-stream';
-// @ts-ignore FIXME
-import { createEncodeStream } from 'msgpack-lite/lib/encode-stream';
-import { encode, EncodeStream, DecodeStream } from 'msgpack-lite';
+import { createEncodeStream, createDecodeStream, encode, DecodeStream } from 'msgpack-lite';
 
 import debounce from 'lodash/debounce';
 
-import isDev from '@lib/isDev';
+import isDev from 'src/lib/isDev';
 
-import shellEnv from '@server/lib/shellEnv';
-import nvimCommand from '@server/lib/nvimCommand';
+import shellEnv from 'src/server/lib/shellEnv';
+import nvimCommand from 'src/server/lib/nvimCommand';
 
 export type NvimCommand<R extends any> = (...args: any[]) => Promise<R>;
 
@@ -84,8 +80,8 @@ const api = ({
   appPath?: string;
 }): Nvim => {
   let proc: ChildProcessWithoutNullStreams;
-  let msgpackIn: NodeJS.ReadStream;
-  let msgpackOut: NodeJS.WriteStream;
+  let msgpackIn: DecodeStream;
+  let msgpackOut: NodeJS.WritableStream;
 
   let requestId = 0;
   const requestPromises: Record<
@@ -93,7 +89,7 @@ const api = ({
     { resolve: (result: any) => void; reject: (error: any) => void }
   > = {};
 
-  let subscriptions: [string, () => void][] = [];
+  let subscriptions: [string, (...a: any[]) => void][] = [];
 
   const send = (customId: number | null, command: string, ...params: any[]) => {
     if (!msgpackOut) {
@@ -117,7 +113,7 @@ const api = ({
     command: commandFactory('command'),
     input: commandFactory('input'),
     inputMouse: commandFactory('input_mouse'),
-    // @ts-ignore FIXME
+    // @ts-expect-error FIXME
     getMode: commandFactory('get_mode'),
     uiTryResize: commandFactory('ui_try_resize'),
     uiAttach: commandFactory('ui_attach'),
@@ -151,12 +147,10 @@ const api = ({
 
   proc = startNvimProcess({ args, cwd, appPath });
 
-  const decodeStream: DecodeStream = createDecodeStream();
-  const encodeStream: EncodeStream = createEncodeStream();
+  const decodeStream = createDecodeStream();
+  const encodeStream = createEncodeStream();
 
-  // @ts-ignore FIXME
   msgpackIn = proc.stdout.pipe(decodeStream);
-  // @ts-ignore FIXME
   msgpackOut = encodeStream.pipe(proc.stdin);
 
   // https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md
@@ -170,16 +164,13 @@ const api = ({
         } else {
           requestPromises[id].resolve(result);
         }
-        // @ts-ignore FIXME
-        requestPromises[id] = null;
+        delete requestPromises[id];
       }
     } else if (type === 2) {
       // Receive notification
       const [method, params] = rest;
       subscriptions.forEach(([m, c]) => {
-        // @ts-ignore FIXME
         if (m === method) {
-          // @ts-ignore FIXME
           c(params);
         }
       });

@@ -2,22 +2,22 @@ import { app, BrowserWindow, dialog } from 'electron';
 import { statSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
 
-import isDev from '@lib/isDev';
+import isDev from 'src/lib/isDev';
 
-import menu from '@main/menu';
-import installCli from '@main/installCli';
-import checkNeovim from '@main/checkNeovim';
+import menu from 'src/main/menu';
+import installCli from 'src/main/installCli';
+import checkNeovim from 'src/main/checkNeovim';
 
-import { setShouldQuit } from '@main/nvim/features/quit';
-import { getSettings } from '@main/nvim/settings';
-import { getNvimByWindow } from '@main/nvim/nvimByWindow';
+import { setShouldQuit } from 'src/main/nvim/features/quit';
+import { getSettings } from 'src/main/nvim/settings';
+import { getNvimByWindow } from 'src/main/nvim/nvimByWindow';
 
-import initAutoUpdate from '@main/autoUpdate';
+import initAutoUpdate from 'src/main/autoUpdate';
 
-import initNvim from '@main/nvim/nvim';
-import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from '@main/lib/args';
+import initNvim from 'src/main/nvim/nvim';
+import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from 'src/main/lib/args';
 
-import initTransport from '@main/transport/ipc';
+import initTransport from 'src/main/transport/ipc';
 
 let currentWindow: BrowserWindow | undefined | null;
 
@@ -51,7 +51,7 @@ const createEmptyWindow = () => {
     },
   };
   let win = new BrowserWindow(options);
-  // @ts-ignore TODO
+  // @ts-expect-error TODO
   win.zoomLevel = 0;
 
   win.on('closed', async () => {
@@ -59,7 +59,7 @@ const createEmptyWindow = () => {
 
     const i = windows.indexOf(win);
     if (i !== -1) windows.splice(i, 1);
-    // @ts-ignore TODO
+    // @ts-expect-error TODO
     win = null;
 
     if (windows.length === 0) handleAllClosed();
@@ -107,7 +107,7 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
       windows.map(async (win) => {
         const nvim = getNvimByWindow(win);
         if (nvim) {
-          // @ts-ignore TODO: don't add custom props to win
+          // @ts-expect-error TODO: don't add custom props to win
           win.cwd = await nvim.callFunction('VVprojectRoot', []); // eslint-disable-line
         }
         return Promise.resolve();
@@ -116,13 +116,13 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
     unopenedFiles = files.reduce<string[]>((result, fileName) => {
       const resolvedFileName = resolve(cwd, fileName);
       const openInWindow = windows.find(
-        // @ts-ignore TODO: don't add custom props to win
+        // @ts-expect-error TODO: don't add custom props to win
         (w) => resolvedFileName.startsWith(w.cwd) && !w.isMinimized(),
       );
       if (openInWindow) {
         const nvim = getNvimByWindow(openInWindow);
         if (nvim) {
-          // @ts-ignore TODO: don't add custom props to win
+          // @ts-expect-error TODO: don't add custom props to win
           const relativeFileName = resolvedFileName.substring(openInWindow.cwd.length + 1);
           nvim.callFunction(
             'VVopenInProject',
@@ -140,7 +140,7 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
   if (files.length === 0 || unopenedFiles.length > 0) {
     const win = getEmptyWindow();
 
-    // @ts-ignore TODO: don't add custom props to win
+    // @ts-expect-error TODO: don't add custom props to win
     win.cwd = cwd;
 
     if (currentWindow && !currentWindow.isFullScreen() && !currentWindow.isSimpleFullScreen()) {

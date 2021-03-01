@@ -1,11 +1,11 @@
 import { Menu, MenuItemConstructorOptions } from 'electron';
 
-// import { handleCloseWindow } from '@main/nvim/features/closeWindow';
+// import { handleCloseWindow } from 'src/main/nvim/features/closeWindow';
 
-import { copyMenuItem, pasteMenuItem, selectAllMenuItem } from '@main/nvim/features/copyPaste';
-import { zoomInMenuItem, zoomOutMenuItem, actualSizeMenuItem } from '@main/nvim/features/zoom';
-import { closeWindowMenuItem } from '@main/nvim/features/closeWindow';
-import { toggleFullScreenMenuItem } from '@main/nvim/features/windowSize';
+import { copyMenuItem, pasteMenuItem, selectAllMenuItem } from 'src/main/nvim/features/copyPaste';
+import { zoomInMenuItem, zoomOutMenuItem, actualSizeMenuItem } from 'src/main/nvim/features/zoom';
+import { closeWindowMenuItem } from 'src/main/nvim/features/closeWindow';
+import { toggleFullScreenMenuItem } from 'src/main/nvim/features/windowSize';
 
 let menu: Menu;
 

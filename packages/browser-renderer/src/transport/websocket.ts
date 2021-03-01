@@ -1,4 +1,4 @@
-import { Transport, Listener } from '@renderer/transport/types';
+import { Transport, Listener } from 'src/transport/types';
 
 /**
  * Init transport between main and renderer via WebSocket.

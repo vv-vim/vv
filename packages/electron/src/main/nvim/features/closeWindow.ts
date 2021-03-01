@@ -1,6 +1,6 @@
 import { MenuItemConstructorOptions } from 'electron';
 
-import { getNvimByWindow } from '@main/nvim/nvimByWindow';
+import { getNvimByWindow } from 'src/main/nvim/nvimByWindow';
 
 export const closeWindowMenuItem: MenuItemConstructorOptions['click'] = async (_item, win) => {
   if (win) {

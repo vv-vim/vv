@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 
-import { Transport, Args } from '@main/transport/types';
+import { Transport, Args } from 'src/main/transport/types';
 
 /**
  * Init transport between main and renderer to be used for main side.

@@ -1,13 +1,13 @@
 import express from 'express';
 import http from 'http';
 
-import initNvim from '@server/nvim/nvim';
-import { getDefaultSettings } from '@server/nvim/settings';
-import websocketTransport from '@server/transport/websocket';
+import initNvim from 'src/server/nvim/nvim';
+import { getDefaultSettings } from 'src/server/nvim/settings';
+import websocketTransport from 'src/server/transport/websocket';
 
-import { cliArgs } from '@server/lib/args';
+import { cliArgs } from 'src/server/lib/args';
 
-import { Transport } from '@server/transport/types';
+import { Transport } from 'src/server/transport/types';
 
 const { PORT = 3000 } = process.env;
 

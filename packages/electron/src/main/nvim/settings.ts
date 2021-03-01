@@ -1,11 +1,11 @@
 import debounce from 'lodash/debounce';
 import { BrowserWindow } from 'electron';
 
-import { Nvim } from '@main/nvim/api';
+import { Nvim } from 'src/main/nvim/api';
 
-import store, { Settings } from '@main/lib/store';
+import store, { Settings } from 'src/main/lib/store';
 
-import { Transport } from '@main/transport/types';
+import { Transport } from 'src/main/transport/types';
 
 export type SettingsCallback = (newSettings: Partial<Settings>, allSettings: Settings) => void;
 
@@ -80,11 +80,11 @@ const initSettings = ({
     // Also store default colors to settings to avoid blinks on init.
     if (initialSettings && !hasCustomConfig) {
       newSettings = Object.keys(settings).reduce<Partial<Settings>>((result, key) => {
-        // @ts-ignore TODO FIXME
+        // @ts-expect-error TODO FIXME
         if (initialSettings[key] !== settings[key]) {
           return {
             ...result,
-            // @ts-ignore TODO FIXME
+            // @ts-expect-error TODO FIXME
             [key]: settings[key],
           };
         }

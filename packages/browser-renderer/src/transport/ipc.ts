@@ -1,6 +1,6 @@
-import { ipcRenderer } from '@renderer/preloaded/electron';
+import { ipcRenderer } from 'src/preloaded/electron';
 
-import { Transport } from '@renderer/transport/types';
+import { Transport } from 'src/transport/types';
 
 /**
  * Init transport between main and renderer via Electron ipcRenderer.
