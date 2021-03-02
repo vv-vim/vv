@@ -11,7 +11,7 @@ import * as PIXI from 'src/lib/pixi';
 
 import { Transport } from 'src/transport/types';
 
-import nvim from 'src/nvim';
+import type Nvim from 'src/Nvim';
 
 export type Screen = {
   screenCoords: (width: number, height: number) => [number, number];
@@ -20,13 +20,13 @@ export type Screen = {
 
 const screen = ({
   settings,
-  transport: newTransport,
+  transport,
+  nvim,
 }: {
   settings: Settings;
   transport: Transport;
+  nvim: Nvim;
 }): Screen => {
-  let transport: Transport;
-
   let screenContainer: HTMLDivElement;
   let cursorEl: HTMLDivElement;
   let screenEl: HTMLDivElement;
@@ -862,8 +862,6 @@ const screen = ({
   initScreen();
   initCursor();
   setScale();
-
-  transport = newTransport;
 
   nvim.on('redraw', redraw);
 

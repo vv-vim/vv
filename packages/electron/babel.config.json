@@ -1,15 +1,3 @@
 {
-  "presets": ["@babel/preset-env", "@babel/preset-typescript"],
-  "plugins": [
-    "@babel/plugin-proposal-optional-chaining",
-    [
-      "module-resolver",
-      {
-        "root": ["."],
-        "alias": {
-          "src": "./src"
-        }
-      }
-    ]
-  ]
+  "extends": "../../babel.config.json"
 }

@@ -1,7 +1,7 @@
 import { Settings } from 'src/types';
 
 import initTransport from 'src/transport/transport';
-import { initNvim } from 'src/nvim';
+import Nvim from 'src/Nvim';
 import initScreen from 'src/screen';
 import initKeyboard from 'src/input/keyboard';
 import initMouse from 'src/input/mouse';
@@ -11,10 +11,10 @@ const renderer = (): void => {
   const transport = initTransport();
 
   const initRenderer = (settings: Settings) => {
-    const nvim = initNvim(transport);
-    const screen = initScreen({ settings, transport });
+    const nvim = new Nvim(transport.nvim);
+    const screen = initScreen({ nvim, settings, transport });
     initKeyboard({ nvim, screen });
-    initMouse(screen);
+    initMouse({ nvim, screen });
     hideMouseCursor();
   };
 

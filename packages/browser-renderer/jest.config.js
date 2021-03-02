@@ -1,7 +1,8 @@
 module.exports = {
+  testEnvironment: 'jsdom',
   clearMocks: true,
-  coverageDirectory: 'coverage',
-  testEnvironment: 'node',
-  collectCoverageFrom: ['src/**/*.{ts,js}'],
-  testPathIgnorePatterns: ['/node_modules/', 'dist'],
+  moduleNameMapper: {
+    'src/(.*)': ['<rootDir>/src/$1'],
+  },
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 };

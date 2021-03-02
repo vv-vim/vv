@@ -2,7 +2,7 @@ import throttle from 'lodash/throttle';
 
 import { modifierPrefix } from 'src/input/keyboard';
 import { Screen } from 'src/screen';
-import nvim from 'src/nvim';
+import type Nvim from 'src/Nvim';
 
 const GRID = 0;
 
@@ -27,7 +27,9 @@ const ACTION = {
 
 type Action = typeof ACTION[keyof typeof ACTION];
 
-const initMouse = ({ screenCoords }: Screen): void => {
+// const initMouse = ({ screenCoords }: Screen, nvim: Nvim): void => {
+const initMouse = ({ screen, nvim }: { screen: Screen; nvim: Nvim }): void => {
+  const { screenCoords } = screen;
   let scrollDeltaX = 0;
   let scrollDeltaY = 0;
 

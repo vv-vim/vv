@@ -20,9 +20,9 @@ const transport = ({
     const callbacks: Record<string, Listener[]> = {};
 
     ws.on('message', (data: string) => {
-      const [channel, ...args] = JSON.parse(data);
+      const [channel, args] = JSON.parse(data);
       if (callbacks[channel]) {
-        callbacks[channel].forEach((listener) => listener(...args));
+        callbacks[channel].forEach((listener) => listener(args));
       }
     });
 

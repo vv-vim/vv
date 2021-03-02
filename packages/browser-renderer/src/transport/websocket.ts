@@ -8,20 +8,34 @@ const transport = (): Transport => {
 
   const callbacks: Record<string, Listener[]> = {};
 
+  const addCallback = (channel: string, listener: Listener) => {
+    callbacks[channel] = [...(callbacks[channel] || []), listener];
+  };
+
   socket.onmessage = ({ data }) => {
-    const [channel, ...args] = JSON.parse(data);
+    const [channel, args] = JSON.parse(data);
     if (callbacks[channel]) {
-      callbacks[channel].forEach((listener) => listener(...args));
+      callbacks[channel].forEach((listener) => listener(args));
     }
   };
 
   return {
     on: (channel, listener) => {
-      callbacks[channel] = [...(callbacks[channel] || []), listener];
+      addCallback(channel, listener);
     },
 
     send: (channel, ...args) => {
       socket.send(JSON.stringify([channel, ...args]));
+    },
+
+    nvim: {
+      write: (id: number, command: string, params: string[]) => {
+        socket.send(JSON.stringify(['nvim-send', [id, command, params]]));
+      },
+
+      read: (callback) => {
+        addCallback('nvim-data', callback);
+      },
     },
   };
 };
