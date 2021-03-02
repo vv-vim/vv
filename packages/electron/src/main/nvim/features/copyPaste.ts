@@ -1,6 +1,6 @@
 import { clipboard, MenuItemConstructorOptions } from 'electron';
 
-import { getNvimByWindow } from '@main/nvim/nvimByWindow';
+import { getNvimByWindow } from 'src/main/nvim/nvimByWindow';
 
 export const pasteMenuItem: MenuItemConstructorOptions['click'] = async (_item, win) => {
   const nvim = getNvimByWindow(win);

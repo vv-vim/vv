@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { BrowserWindow } from 'electron';
 
-import { Nvim } from '@main/nvim/api';
+import { Nvim } from 'src/main/nvim/api';
 
 const initWindowTitle = ({ nvim, win }: { win: BrowserWindow; nvim: Nvim }): void => {
   nvim.on('redraw', (args) => {

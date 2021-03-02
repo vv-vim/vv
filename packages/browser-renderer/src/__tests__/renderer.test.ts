@@ -1,23 +1,23 @@
-import renderer from '@renderer/renderer';
+import renderer from 'src/renderer';
 
-import { initNvim } from '@renderer/nvim';
-import initScreen from '@renderer/screen';
-import initKeyboard from '@renderer/input/keyboard';
-import initMouse from '@renderer/input/mouse';
-import hideMouseCursor from '@renderer/features/hideMouseCursor';
+import { initNvim } from 'src/nvim';
+import initScreen from 'src/screen';
+import initKeyboard from 'src/input/keyboard';
+import initMouse from 'src/input/mouse';
+import hideMouseCursor from 'src/features/hideMouseCursor';
 
 const mockTransport = {
   on: jest.fn(),
 };
-jest.mock('@renderer/transport/transport', () => () => mockTransport);
+jest.mock('src/transport/transport', () => () => mockTransport);
 
-jest.mock('@renderer/nvim', () => ({
+jest.mock('src/nvim', () => ({
   initNvim: jest.fn(() => 'fakeNvim'),
 }));
-jest.mock('@renderer/screen', () => jest.fn(() => 'fakeScreen'));
-jest.mock('@renderer/input/keyboard', () => jest.fn());
-jest.mock('@renderer/input/mouse', () => jest.fn());
-jest.mock('@renderer/features/hideMouseCursor', () => jest.fn());
+jest.mock('src/screen', () => jest.fn(() => 'fakeScreen'));
+jest.mock('src/input/keyboard', () => jest.fn());
+jest.mock('src/input/mouse', () => jest.fn());
+jest.mock('src/features/hideMouseCursor', () => jest.fn());
 
 describe('renderer', () => {
   beforeEach(() => {

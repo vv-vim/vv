@@ -1,4 +1,4 @@
-import { parseArgs, joinArgs, filterArgs, argValue } from '@server/lib/args';
+import { parseArgs, joinArgs, filterArgs, argValue } from 'src/server/lib/args';
 
 describe('parseArgs', () => {
   test('return empty array if input is empty', () => {

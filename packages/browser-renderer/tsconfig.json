@@ -1,17 +1,7 @@
 {
+  "extends": "../../tsconfig",
   "compilerOptions": {
-    "target": "esnext",
-    "allowJs": true,
-    "noEmit": true,
-    "strict": true,
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "declaration": true,
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "paths": {
-      "@renderer/*": ["src/*"]
-    }
+    "baseUrl": "."
   },
   "include": ["src", "@types"]
 }

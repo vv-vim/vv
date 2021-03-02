@@ -1,5 +1,5 @@
-import { Nvim } from '@renderer/nvim';
-import { Screen } from '@renderer/screen';
+import { Nvim } from 'src/nvim';
+import { Screen } from 'src/screen';
 
 // :help keyCode
 const specialKey = ({ key, code }: KeyboardEvent): string =>
@@ -194,7 +194,6 @@ const initKeyboard = ({ nvim, screen }: { nvim: Nvim; screen: Screen }): void =>
   // @ts-expect-error input event type is incorrect
   input.addEventListener('input', handleInput);
   input.addEventListener('compositionstart', handleCompositionStart);
-  // @ts-expect-error compositionupdate even type is incorrect
   input.addEventListener('compositionupdate', handleCompositionUpdate);
   input.addEventListener('compositionend', handleCompositionEnd);
 

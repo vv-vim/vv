@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 
-import nvimCommand from '@main/lib/nvimCommand';
-import shellEnv from '@main/lib/shellEnv';
+import nvimCommand from 'src/main/lib/nvimCommand';
+import shellEnv from 'src/main/lib/shellEnv';
 
 let version: string | undefined | null;
 

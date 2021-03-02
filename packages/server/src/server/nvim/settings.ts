@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 
-import { Nvim } from '@server/nvim/api';
-import { Transport } from '@server/transport/types';
+import { Nvim } from 'src/server/nvim/api';
+import { Transport } from 'src/server/transport/types';
 
 type BooleanSetting = 0 | 1;
 
@@ -70,11 +70,11 @@ const initSettings = ({
     // aleady applied initialSettings when we created a window.
     if (initialSettings && !hasCustomConfig) {
       newSettings = Object.keys(settings).reduce<Partial<Settings>>((result, key) => {
-        // @ts-ignore TODO FIXME
+        // @ts-expect-error TODO FIXME
         if (initialSettings[key] !== settings[key]) {
           return {
             ...result,
-            // @ts-ignore TODO FIXME
+            // @ts-expect-error TODO FIXME
             [key]: settings[key],
           };
         }

@@ -1,19 +1,19 @@
 import { app, BrowserWindow } from 'electron';
 
-import { Transport } from '@main/transport/types';
+import { Transport } from 'src/main/transport/types';
 
-import { setNvimByWindow, deleteNvimByWindow } from '@main/nvim/nvimByWindow';
+import { setNvimByWindow, deleteNvimByWindow } from 'src/main/nvim/nvimByWindow';
 
-import quit from '@main/nvim/features/quit';
-import windowTitle from '@main/nvim/features/windowTitle';
-import zoom from '@main/nvim/features/zoom';
-import reloadChanged from '@main/nvim/features/reloadChanged';
-import windowSize from '@main/nvim/features/windowSize';
-import focusAutocmd from '@main/nvim/features/focusAutocmd';
+import quit from 'src/main/nvim/features/quit';
+import windowTitle from 'src/main/nvim/features/windowTitle';
+import zoom from 'src/main/nvim/features/zoom';
+import reloadChanged from 'src/main/nvim/features/reloadChanged';
+import windowSize from 'src/main/nvim/features/windowSize';
+import focusAutocmd from 'src/main/nvim/features/focusAutocmd';
 
-import initSettings from '@main/nvim/settings';
+import initSettings from 'src/main/nvim/settings';
 
-import nvimApi from '@main/nvim/api';
+import nvimApi from 'src/main/nvim/api';
 
 const initNvim = ({
   args,
@@ -37,7 +37,7 @@ const initNvim = ({
   nvim.on('data', (data) => transport.send('nvim-data', data));
 
   transport.on('nvim-send', (payload) => {
-    // @ts-ignore FIXME
+    // @ts-expect-error FIXME
     nvim.send(...payload);
   });
 

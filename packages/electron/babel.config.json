@@ -7,9 +7,7 @@
       {
         "root": ["."],
         "alias": {
-          "@renderer": "./src/renderer",
-          "@main": "./src/main",
-          "@lib": "./src/lib"
+          "src": "./src"
         }
       }
     ]

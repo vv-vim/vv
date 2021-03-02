@@ -1,7 +1,7 @@
 import { screen, MenuItemConstructorOptions, BrowserWindow } from 'electron';
 
-import { getSettings, onChangeSettings, SettingsCallback } from '@main/nvim/settings';
-import { getNvimByWindow } from '@main/nvim/nvimByWindow';
+import { getSettings, onChangeSettings, SettingsCallback } from 'src/main/nvim/settings';
+import { getNvimByWindow } from 'src/main/nvim/nvimByWindow';
 
 export const toggleFullScreenMenuItem: MenuItemConstructorOptions['click'] = (_item, win) => {
   const nvim = getNvimByWindow(win);
@@ -105,7 +105,7 @@ const initWindowSize = ({ win }: { win: BrowserWindow }): void => {
       'windowheight',
       'windowleft',
       'windowtop',
-      // @ts-ignore FIXME
+      // @ts-expect-error FIXME
     ].forEach((key) => settings[key] !== undefined && set[key](settings[key]));
     if (!fullScreen) {
       win.setBounds(bounds);

@@ -1,8 +1,8 @@
 import throttle from 'lodash/throttle';
 
-import { modifierPrefix } from '@renderer/input/keyboard';
-import { Screen } from '@renderer/screen';
-import nvim from '@renderer/nvim';
+import { modifierPrefix } from 'src/input/keyboard';
+import { Screen } from 'src/screen';
+import nvim from 'src/nvim';
 
 const GRID = 0;
 
@@ -44,7 +44,7 @@ const initMouse = ({ screenCoords }: Screen): void => {
   };
 
   const buttonName = (event: MouseEvent) =>
-    // @ts-ignore TODO
+    // @ts-expect-error TODO
     event.type === 'wheel' ? MOUSE_BUTTON.WHEEL : MOUSE_BUTTON[event.button];
 
   const mouseInput = (event: MouseEvent, action: Action) => {

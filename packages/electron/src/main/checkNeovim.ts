@@ -1,7 +1,7 @@
 import { app, dialog, shell } from 'electron';
 import semver from 'semver';
 
-import nvimVersion from '@main/lib/nvimVersion';
+import nvimVersion from 'src/main/lib/nvimVersion';
 
 const REQUIRED_VERSION = '0.4.0';
 

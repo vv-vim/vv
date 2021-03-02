@@ -4,14 +4,14 @@ import throttle from 'lodash/throttle';
 import isFinite from 'lodash/isFinite';
 import isEqual from 'lodash/isEqual';
 
-import getColor from '@renderer/lib/getColor';
-import { Settings } from '@renderer/types';
+import getColor from 'src/lib/getColor';
+import { Settings } from 'src/types';
 
-import * as PIXI from '@renderer/lib/pixi';
+import * as PIXI from 'src/lib/pixi';
 
-import { Transport } from '@renderer/transport/types';
+import { Transport } from 'src/transport/types';
 
-import nvim from '@renderer/nvim';
+import nvim from 'src/nvim';
 
 export type Screen = {
   screenCoords: (width: number, height: number) => [number, number];
@@ -35,7 +35,7 @@ const screen = ({
   let cursorChar: string;
 
   let startCursorBlinkOnTimeout: NodeJS.Timeout | null;
-  let startCursorBlinkOffTimeout: number | null;
+  let startCursorBlinkOffTimeout: NodeJS.Timeout | null;
   let blinkOnCursorBlinkInterval: NodeJS.Timeout | null;
   let blinkOffCursorBlinkInterval: NodeJS.Timeout | null;
 
@@ -166,7 +166,7 @@ const screen = ({
 
     screenEl = document.createElement('div');
 
-    // @ts-ignore incomplete type declaration for style?
+    // @ts-expect-error incomplete type declaration for style?
     screenEl.style.contain = 'strict';
     screenEl.style.overflow = 'hidden';
 
@@ -303,7 +303,7 @@ const screen = ({
     const key = `${char}:${hlId}`;
     if (!PIXI.utils.TextureCache[key]) {
       const props = highlightTable[hlId].calculated;
-      // @ts-ignore getCharBitmap returns ImageBitmap that can be used as texture
+      // @ts-expect-error getCharBitmap returns ImageBitmap that can be used as texture
       PIXI.Texture.addToCache(PIXI.Texture.from(getCharBitmap(char, props)), key);
     }
     return PIXI.Texture.from(key);
@@ -514,9 +514,9 @@ const screen = ({
 
     option_set: (options: Array<[string, string]>) => {
       options.forEach(([option, value]) => {
-        // @ts-ignore TODO
+        // @ts-expect-error TODO
         if (optionSet[option]) {
-          // @ts-ignore TODO
+          // @ts-expect-error TODO
           optionSet[option](value);
         } else {
           // console.warn('Unknown option', option, value); // eslint-disable-line no-console
@@ -763,9 +763,9 @@ const screen = ({
   const redraw = (args: any[]) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
-      // @ts-ignore TODO
+      // @ts-expect-error TODO
       if (redrawCmd[cmd]) {
-        // @ts-ignore TODO
+        // @ts-expect-error TODO
         redrawCmd[cmd](props);
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
@@ -836,12 +836,12 @@ const screen = ({
     ];
 
     Object.keys(newSettings).forEach((key) => {
-      // @ts-ignore TODO
+      // @ts-expect-error TODO
       if (handleSet[key]) {
         requireRedraw = requireRedraw || requireRedrawProps.includes(key);
         requireRecalculateHighlight =
           requireRecalculateHighlight || requireRecalculateHighlightProps.includes(key);
-        // @ts-ignore TODO
+        // @ts-expect-error TODO
         handleSet[key](newSettings[key]);
       }
     });

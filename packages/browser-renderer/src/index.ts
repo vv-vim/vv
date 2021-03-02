@@ -1,3 +1,3 @@
-import renderer from '@renderer/renderer';
+import renderer from 'src/renderer';
 
 export default renderer;

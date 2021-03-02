@@ -1,4 +1,4 @@
-import { Transport } from '@server/transport/types';
+import { Transport } from 'src/server/transport/types';
 
 // TODO
 // import quit from '@main/nvim/features/quit';
@@ -8,9 +8,9 @@ import { Transport } from '@server/transport/types';
 // import windowSize from '@main/nvim/features/windowSize';
 // import focusAutocmd from '@main/nvim/features/focusAutocmd';
 
-import initSettings from '@server/nvim/settings';
+import initSettings from 'src/server/nvim/settings';
 
-import nvimApi from '@server/nvim/api';
+import nvimApi from 'src/server/nvim/api';
 
 const initNvim = ({
   args,
@@ -29,7 +29,7 @@ const initNvim = ({
   nvim.on('data', (data) => transport.send('nvim-data', data));
 
   transport.on('nvim-send', (payload) => {
-    // @ts-ignore FIXME
+    // @ts-expect-error FIXME
     nvim.send(...payload);
   });
 

@@ -1,8 +1,8 @@
-import ipcTransport from '@renderer/transport/ipc';
-import websocketTransport from '@renderer/transport/websocket';
-import isWeb from '@renderer/lib/isWeb';
+import ipcTransport from 'src/transport/ipc';
+import websocketTransport from 'src/transport/websocket';
+import isWeb from 'src/lib/isWeb';
 
-import { Transport } from '@renderer/transport/types';
+import { Transport } from 'src/transport/types';
 
 const transport = (): Transport => (isWeb() ? websocketTransport() : ipcTransport());
 

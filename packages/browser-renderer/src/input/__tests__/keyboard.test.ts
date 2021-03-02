@@ -2,10 +2,10 @@
  * @jest-environment jsdom
  */
 
-import initKeyboard from '@renderer/input/keyboard';
+import initKeyboard from 'src/input/keyboard';
 
-import { Nvim } from '@renderer/nvim';
-import { Screen } from '@renderer/screen';
+import { Nvim } from 'src/nvim';
+import { Screen } from 'src/screen';
 
 describe('Keyboard input', () => {
   const nvimOn = jest.fn();
