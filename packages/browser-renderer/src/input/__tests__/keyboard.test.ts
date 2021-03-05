@@ -1,10 +1,6 @@
-/**
- * @jest-environment jsdom
- */
-
 import initKeyboard from 'src/input/keyboard';
 
-import { Nvim } from 'src/nvim';
+import Nvim from 'src/Nvim';
 import { Screen } from 'src/screen';
 
 describe('Keyboard input', () => {
@@ -27,7 +23,6 @@ describe('Keyboard input', () => {
   const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
 
   beforeEach(() => {
-    jest.clearAllMocks();
     initKeyboard({ screen, nvim });
   });
 

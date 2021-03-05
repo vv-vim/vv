@@ -40,18 +40,18 @@ jobs:
     - name: Install Dependencies
       run: yarn
 
-    - name: Build Browser Renderer
-      run: yarn build:browser-renderer
+    - name: Build Required Packages
+      run: yarn ci:bootstrap
 
     - name: Run ESLint
-      run: yarn lint
+      run: yarn ci:lint
       if: always()
 
     - name: Run Tests
-      run: yarn test
+      run: yarn ci:test
       if: always()
 
     - name: Run TypeScript check
-      run: yarn typecheck
+      run: yarn ci:typecheck
       if: always()
 

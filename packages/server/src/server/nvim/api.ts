@@ -91,7 +91,7 @@ const api = ({
 
   let subscriptions: [string, (...a: any[]) => void][] = [];
 
-  const send = (customId: number | null, command: string, ...params: any[]) => {
+  const send = (customId: number | null, command: string, params: any[]) => {
     if (!msgpackOut) {
       throw new Error('Neovim is not initialized');
     }
@@ -105,7 +105,7 @@ const api = ({
     });
   };
 
-  const commandFactory = (name: string) => (...params: any[]) => send(null, name, ...params);
+  const commandFactory = (name: string) => (...params: any[]) => send(null, name, params);
 
   const nvim: Partial<Nvim> = {
     eval: commandFactory('eval'),

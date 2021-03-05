@@ -1,3 +1,5 @@
+import { NvimTransport } from 'src/Nvim';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Args = any[];
 
@@ -18,4 +20,6 @@ export type Transport = {
    * Send message to main.
    */
   send: (channel: string, ...args: Args) => void;
+
+  nvim: NvimTransport;
 };

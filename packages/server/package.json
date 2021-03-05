@@ -24,10 +24,6 @@
     "start": "npm-run-all clean webpack:prod server"
   },
   "devDependencies": {
-    "@babel/core": "^7.13.8",
-    "@babel/plugin-proposal-optional-chaining": "^7.13.8",
-    "@babel/preset-env": "^7.13.8",
-    "@babel/preset-typescript": "^7.13.0",
     "@types/express": "^4.17.11",
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.168",
@@ -35,10 +31,8 @@
     "@types/node": "^14.14.31",
     "@types/ws": "^7.4.0",
     "babel-loader": "^8.2.2",
-    "babel-plugin-module-resolver": "^4.1.0",
     "html-webpack-plugin": "^4.3.0",
     "jest": "^26.6.3",
-    "jest-github-actions-reporter": "^1.0.3",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.7",
     "npm-run-all": "^4.1.5",

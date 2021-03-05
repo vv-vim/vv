@@ -12,10 +12,6 @@ jest.mock('src/preloaded/electron', () => ({
 describe('main transport', () => {
   const transport = initTransport();
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe('on', () => {
     const listener = jest.fn();
 

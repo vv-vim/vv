@@ -20,10 +20,6 @@ describe('main transport', () => {
 
   const transport = initTransport(win);
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe('on', () => {
     const listener = jest.fn();
 
