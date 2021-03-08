@@ -23,6 +23,9 @@
     "dev": "npm-run-all --parallel webpack:dev server:dev",
     "start": "npm-run-all clean webpack:prod server"
   },
+  "browserslist": [
+    "maintained node versions"
+  ],
   "devDependencies": {
     "@types/express": "^4.17.11",
     "@types/lodash": "^4.14.168",

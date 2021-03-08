@@ -1,6 +1,6 @@
 import renderer from 'src/renderer';
 
-import Nvim from 'src/Nvim';
+import Nvim from '@vvim/nvim';
 import initScreen from 'src/screen';
 import initKeyboard from 'src/input/keyboard';
 import initMouse from 'src/input/mouse';
@@ -12,7 +12,7 @@ const mockTransport = {
 };
 jest.mock('src/transport/transport', () => () => mockTransport);
 
-jest.mock('src/Nvim');
+jest.mock('@vvim/nvim');
 jest.mock('src/screen', () => jest.fn(() => 'fakeScreen'));
 jest.mock('src/input/keyboard', () => jest.fn());
 jest.mock('src/input/mouse', () => jest.fn());

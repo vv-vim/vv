@@ -1,4 +1,4 @@
-import Nvim, { NvimTransport } from 'src/Nvim';
+import Nvim, { NvimTransport } from 'src/nvim';
 
 describe('Nvim', () => {
   const read = jest.fn();

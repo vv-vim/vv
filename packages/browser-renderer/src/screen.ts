@@ -11,7 +11,7 @@ import * as PIXI from 'src/lib/pixi';
 
 import { Transport } from 'src/transport/types';
 
-import type Nvim from 'src/Nvim';
+import type Nvim from '@vvim/nvim';
 
 export type Screen = {
   screenCoords: (width: number, height: number) => [number, number];

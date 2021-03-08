@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'src/preloaded/electron';
 
 import { Transport } from 'src/transport/types';
-import { MessageType } from 'src/Nvim';
+import { MessageType } from '@vvim/nvim';
 
 /**
  * Init transport between main and renderer via Electron ipcRenderer.

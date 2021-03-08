@@ -1,3 +1,5 @@
+// TODO: Use commander or yargs
+
 import isDev from 'src/lib/isDev';
 
 const ARGS_WITH_PARAM = [
@@ -16,7 +18,7 @@ const ARGS_WITH_PARAM = [
 /**
  * Args specific to VV
  */
-const VV_ARGS = ['--inspect', '--open-in-project'];
+const VV_ARGS = ['--debug', '--inspect', '--open-in-project'];
 
 /**
  * Parse CLI args and return the list of files and arguments.

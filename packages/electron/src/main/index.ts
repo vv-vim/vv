@@ -40,11 +40,11 @@ const handleAllClosed = () => {
   }
 };
 
-const createEmptyWindow = () => {
+const createEmptyWindow = (isDebug = false) => {
   const options = {
     width: 800,
     height: 600,
-    show: false,
+    show: isDebug,
     fullscreenable: false,
     webPreferences: {
       preload: join(app.getAppPath(), isDev('./', '../'), 'src/main/preload.js'),
@@ -76,17 +76,18 @@ const createEmptyWindow = () => {
   return win;
 };
 
-const getEmptyWindow = (): BrowserWindow => {
+const getEmptyWindow = (isDebug = false): BrowserWindow => {
   if (emptyWindows.length > 0) {
     return emptyWindows.pop() as BrowserWindow;
   }
-  return createEmptyWindow();
+  return createEmptyWindow(isDebug);
 };
 
 const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
   const settings = getSettings();
   const cwd = newCwd || process.cwd();
 
+  const isDebug = originalArgs.includes('--debug') || originalArgs.includes('--inspect');
   // TODO: Use yargs maybe.
   const { args, files } = parseArgs(filterArgs(originalArgs));
   let unopenedFiles = files;
@@ -138,7 +139,7 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
   }
 
   if (files.length === 0 || unopenedFiles.length > 0) {
-    const win = getEmptyWindow();
+    const win = getEmptyWindow(isDebug);
 
     // @ts-expect-error TODO: don't add custom props to win
     win.cwd = cwd;
@@ -169,9 +170,11 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
     win.focus();
     windows.push(win);
 
-    if (originalArgs.includes('--inspect')) openDeveloperTools(win);
-
-    setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
+    if (isDebug) {
+      openDeveloperTools(win);
+    } else {
+      setTimeout(() => emptyWindows.push(createEmptyWindow()), 1000);
+    }
 
     initAutoUpdate({ win });
   }

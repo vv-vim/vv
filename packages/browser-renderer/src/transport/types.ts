@@ -1,4 +1,4 @@
-import { NvimTransport } from 'src/Nvim';
+import { NvimTransport } from '@vvim/nvim';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Args = any[];
