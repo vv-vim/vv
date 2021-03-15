@@ -33,6 +33,10 @@
     "dev": "yarn webpack:dev",
     "start": "electron ."
   },
+  "browserslist": [
+    "electron 11.3",
+    "node 12"
+  ],
   "devDependencies": {
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.168",

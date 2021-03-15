@@ -18,6 +18,9 @@ export type NvimTransport = {
   read: (callback: (message: MessageType) => void) => void;
 };
 
+/**
+ * Lightweight transport agnostic Neovim API client to be used in other @vvim packages.
+ */
 class Nvim {
   private requestId = 0;
 

@@ -2,7 +2,7 @@ import throttle from 'lodash/throttle';
 
 import { modifierPrefix } from 'src/input/keyboard';
 import { Screen } from 'src/screen';
-import type Nvim from 'src/Nvim';
+import type Nvim from '@vvim/nvim';
 
 const GRID = 0;
 

@@ -1,0 +1,14 @@
+{
+  "extends": "../../babel.config.json",
+  "plugins": [
+    [
+      "module-resolver",
+      {
+        "root": ["."],
+        "alias": {
+          "src": "./src"
+        }
+      }
+    ]
+  ]
+}

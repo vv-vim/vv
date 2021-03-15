@@ -1,6 +1,6 @@
 import initKeyboard from 'src/input/keyboard';
 
-import Nvim from 'src/Nvim';
+import Nvim from '@vvim/nvim';
 import { Screen } from 'src/screen';
 
 describe('Keyboard input', () => {

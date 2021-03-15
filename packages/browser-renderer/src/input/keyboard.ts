@@ -1,4 +1,4 @@
-import type Nvim from 'src/Nvim';
+import type Nvim from '@vvim/nvim';
 import { Screen } from 'src/screen';
 
 // :help keyCode

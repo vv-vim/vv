@@ -1,16 +1,13 @@
 {
-  "name": "@vvim/browser-renderer",
+  "name": "@vvim/nvim",
   "version": "0.0.1",
-  "description": "VV Browser Renderer",
+  "description": "Lightweight transport agnostic Neovim API client to be used in other @vvim packages",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
   "keywords": [
     "vim",
     "neovim",
     "client",
-    "gui",
-    "renderer",
-    "browser",
-    "webgl"
+    "api"
   ],
   "homepage": "https://github.com/vv-vim/vv#readme",
   "license": "MIT",
@@ -37,7 +34,8 @@
   },
   "browserslist": [
     "defaults",
-    "last 2 electron versions"
+    "last 2 electron versions",
+    "maintained node versions"
   ],
   "devDependencies": {
     "@types/express": "^4.17.11",
@@ -48,14 +46,6 @@
     "pixi.js": "^5.3.8"
   },
   "dependencies": {
-    "@vvim/nvim": "0.0.1",
-    "@pixi/app": "^5.3.8",
-    "@pixi/core": "^5.3.8",
-    "@pixi/display": "^5.3.8",
-    "@pixi/graphics": "^5.3.8",
-    "@pixi/sprite": "^5.3.8",
-    "@pixi/ticker": "^5.3.8",
-    "@pixi/utils": "^5.3.8",
     "lodash": "^4.17.21",
     "ws": "^7.4.3"
   }
