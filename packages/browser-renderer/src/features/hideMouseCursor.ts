@@ -7,7 +7,7 @@ function showCursor() {
   document.removeEventListener('mousemove', showCursor);
 }
 
-function hideCursor() {
+function hideCursor(): void {
   document.body.style.cursor = 'none';
   document.addEventListener('mousemove', showCursor);
   document.removeEventListener('keydown', hideCursor);

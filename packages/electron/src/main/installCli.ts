@@ -36,7 +36,7 @@ const showErrorDialog = (error: Error) => {
   });
 };
 
-const installCli = (binPath: string) => () => {
+const installCli = (binPath: string) => (): void => {
   let path = which('vv');
   if (path && path.indexOf('VV.app/Contents/MacOS/vv') === -1) {
     path = path.replace('\n', '');
