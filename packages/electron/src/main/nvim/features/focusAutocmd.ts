@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron';
 
-import { Nvim } from 'src/main/nvim/api';
+import type Nvim from '@vvim/nvim';
 
 /**
  * Emit FocusGained or FocusLost autocmd when app window get or loose focus.

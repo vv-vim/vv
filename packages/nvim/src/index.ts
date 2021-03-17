@@ -2,6 +2,6 @@
 
 import Nvim from './Nvim';
 
-export type { MessageType, NvimTransport } from './Nvim';
+export * from './types';
 
 export default Nvim;

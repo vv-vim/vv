@@ -1,22 +1,4 @@
-// TODO: Refactor to use same API for main and renderer.
-
-type RequestMessage = [0, number, string, any[]];
-type ResponseMessage = [1, number, any, any];
-type NotificationMessage = [2, string, any[]];
-
-export type MessageType = RequestMessage | ResponseMessage | NotificationMessage;
-
-export type NvimTransport = {
-  /**
-   *
-   */
-  write: (id: number, command: string, params: any[]) => void;
-
-  /**
-   *
-   */
-  read: (callback: (message: MessageType) => void) => void;
-};
+import type { NvimTransport } from './types';
 
 /**
  * Lightweight transport agnostic Neovim API client to be used in other @vvim packages.
@@ -33,8 +15,11 @@ class Nvim {
     { resolve: (result: any) => void; reject: (error: any) => void }
   > = {};
 
-  constructor(transport: NvimTransport) {
+  private isRenderer: boolean;
+
+  constructor(transport: NvimTransport, isRenderer = false) {
     this.transport = transport;
+    this.isRenderer = isRenderer;
 
     this.transport.read((params) => {
       if (params[0] === 0) {
@@ -46,12 +31,18 @@ class Nvim {
         this.handleNotification(params[1], params[2]);
       }
     });
+
+    this.transport.onClose(() => {
+      this.handleNotification('close');
+    });
   }
 
   request<R = void>(command: string, params: any[] = []): Promise<R> {
     this.requestId += 1;
-    const id = this.requestId * 2 + 1; // Request id for renderer is always odd
-    this.transport.write(id, command, params);
+    // Workaround to avoid request ids conflict vetween main and renderer. Renderer ids are even, main ids are odd.
+    // TODO: sync request id between all instances.
+    const id = this.requestId * 2 + (this.isRenderer ? 0 : 1);
+    this.transport.write(id, `nvim_${command}`, params);
     return new Promise((resolve, reject) => {
       this.requestPromises[id] = {
         resolve,
@@ -60,7 +51,7 @@ class Nvim {
     });
   }
 
-  private handleNotification(command: string, params: any[]) {
+  private handleNotification(command: string, params?: any[]) {
     if (this.subscriptions[command]) {
       this.subscriptions[command].forEach((c) => c(params));
     }
@@ -78,7 +69,9 @@ class Nvim {
   }
 
   on(method: string, callback: (...p: any[]) => void): void {
-    this.subscribe(method);
+    if (method !== 'close') {
+      this.subscribe(method);
+    }
 
     if (!this.subscriptions[method]) {
       this.subscriptions[method] = [];
@@ -96,9 +89,11 @@ class Nvim {
 
   subscribe = this.commandFactory('subscribe');
 
-  eval = this.commandFactory('eval');
+  eval = <Result = void>(command: string, params?: any[]): Promise<Result> =>
+    this.request('eval', [command, params]);
 
-  callFunction = this.commandFactory('call_function');
+  callFunction = <Result = void>(name: string, params: any[]): Promise<Result> =>
+    this.request('call_function', [name, params]);
 
   command = this.commandFactory('command');
 

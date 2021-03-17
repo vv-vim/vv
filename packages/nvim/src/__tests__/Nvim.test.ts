@@ -1,12 +1,16 @@
-import Nvim, { NvimTransport } from 'src/nvim';
+import Nvim from 'src/nvim';
+
+import type { NvimTransport } from 'src/types';
 
 describe('Nvim', () => {
   const read = jest.fn();
   const write = jest.fn();
+  const onClose = jest.fn();
 
   const transportMock: NvimTransport = {
     write,
     read,
+    onClose,
   };
 
   let nvim: Nvim;
@@ -20,14 +24,22 @@ describe('Nvim', () => {
   describe('request', () => {
     test('call write on request', () => {
       nvim.request('command', ['param1', 'param2']);
-      expect(write).toHaveBeenCalledWith(3, 'command', ['param1', 'param2']);
+      expect(write).toHaveBeenCalledWith(3, 'nvim_command', ['param1', 'param2']);
     });
 
-    test('increment request id on second call', () => {
+    test('increment request id on second call and it is always odd', () => {
       nvim.request('command1');
-      expect(write).toHaveBeenCalledWith(3, 'command1', []);
+      expect(write).toHaveBeenCalledWith(3, 'nvim_command1', []);
       nvim.request('command2');
-      expect(write).toHaveBeenCalledWith(5, 'command2', []);
+      expect(write).toHaveBeenCalledWith(5, 'nvim_command2', []);
+    });
+
+    test('in renderer mode request id is always even', () => {
+      nvim = new Nvim(transportMock, true);
+      nvim.request('command1');
+      expect(write).toHaveBeenCalledWith(2, 'nvim_command1', []);
+      nvim.request('command2');
+      expect(write).toHaveBeenCalledWith(4, 'nvim_command2', []);
     });
 
     test('receives result of request', async () => {
@@ -46,7 +58,7 @@ describe('Nvim', () => {
   describe('notification', () => {
     test('send `subscribe` when you subscribe', () => {
       nvim.on('onSomething', () => null);
-      expect(write).toHaveBeenCalledWith(3, 'subscribe', ['onSomething']);
+      expect(write).toHaveBeenCalledWith(3, 'nvim_subscribe', ['onSomething']);
     });
 
     test('receives notification for subscription', () => {
@@ -85,7 +97,7 @@ describe('Nvim', () => {
         write.mockClear();
         nvim = new Nvim(transportMock);
         nvim[command]('param1', 'param2');
-        expect(write).toHaveBeenCalledWith(3, request, ['param1', 'param2']);
+        expect(write).toHaveBeenCalledWith(3, `nvim_${request}`, ['param1', 'param2']);
       });
     });
 
@@ -100,5 +112,18 @@ describe('Nvim', () => {
       simulateResponse([1, 3, null, { mode: 'CTRL-n' }]);
       expect(await resultPromise).toBe('n');
     });
+  });
+
+  test('onClose', () => {
+    const callback1 = jest.fn();
+    const callback2 = jest.fn();
+
+    nvim.on('close', callback1);
+    nvim.on('close', callback2);
+
+    onClose.mock.calls[0][0]();
+
+    expect(callback1).toHaveBeenCalled();
+    expect(callback2).toHaveBeenCalled();
   });
 });

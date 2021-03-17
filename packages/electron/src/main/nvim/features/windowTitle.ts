@@ -1,10 +1,10 @@
 import fs from 'fs';
 import { BrowserWindow } from 'electron';
 
-import { Nvim } from 'src/main/nvim/api';
+import type Nvim from '@vvim/nvim';
 
 const initWindowTitle = ({ nvim, win }: { win: BrowserWindow; nvim: Nvim }): void => {
-  nvim.on('redraw', (args) => {
+  nvim.on('redraw', (args: Array<[string, ...any[]]>) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       if (cmd === 'set_title') {
@@ -13,7 +13,7 @@ const initWindowTitle = ({ nvim, win }: { win: BrowserWindow; nvim: Nvim }): voi
     }
   });
 
-  nvim.on('vv:filename', ([filename]) => {
+  nvim.on('vv:filename', ([filename]: string[]) => {
     if (fs.existsSync(filename)) {
       win.setRepresentedFilename(filename);
     }

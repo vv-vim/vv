@@ -39,7 +39,7 @@ describe('renderer', () => {
   test('init nvim', () => {
     renderer();
     mockTransport.on.mock.calls[0][1]('settings');
-    expect(Nvim).toHaveBeenCalledWith(mockTransport.nvim);
+    expect(Nvim).toHaveBeenCalledWith(mockTransport.nvim, true);
   });
 
   test('init keyboard', () => {

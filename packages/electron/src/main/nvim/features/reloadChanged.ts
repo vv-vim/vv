@@ -1,6 +1,6 @@
 import { dialog, BrowserWindow } from 'electron';
 
-import { Nvim } from 'src/main/nvim/api';
+import type Nvim from '@vvim/nvim';
 
 /**
  * Show "Reload changed" dialog when opened files changed ouside (ex. switch git branch).

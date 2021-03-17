@@ -96,7 +96,9 @@ const api = ({
       throw new Error('Neovim is not initialized');
     }
     const id = customId || (requestId += 1) * 2;
-    msgpackOut.write(encode([0, id, `nvim_${command}`, params]));
+    msgpackOut.write(
+      encode([0, id, command.startsWith('nvim_') ? command : `nvim_${command}`, params]),
+    );
     return new Promise((resolve, reject) => {
       requestPromises[id] = {
         resolve,
