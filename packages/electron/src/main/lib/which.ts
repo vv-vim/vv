@@ -5,7 +5,7 @@ import shellEnv from 'src/main/lib/shellEnv';
 /**
  * Checks if command exists in shell.
  */
-const which = (command: string) => {
+const which = (command: string): string | null => {
   let result: string | null | undefined;
   try {
     result = execSync(`which ${command}`, {

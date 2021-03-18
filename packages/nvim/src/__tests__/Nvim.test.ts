@@ -10,7 +10,7 @@ describe('Nvim', () => {
   };
 
   let nvim: Nvim;
-  let simulateResponse: (...args: any[]) => void;
+  let simulateResponse: (...args: any[]) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   beforeEach(() => {
     nvim = new Nvim(transportMock);

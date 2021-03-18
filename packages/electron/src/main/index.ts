@@ -198,7 +198,7 @@ const openFile = () => {
   }
 };
 
-const gotTheLock = isDev(true, false) || app.requestSingleInstanceLock();
+const gotTheLock = isDev() || app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
   app.quit();

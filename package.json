@@ -22,6 +22,7 @@
     "build:nvim": "yarn workspace @vvim/nvim build",
     "build:browser-renderer": "yarn workspace @vvim/browser-renderer build",
     "build:electron": "yarn bootstrap; yarn workspace @vvim/electron build",
+    "dev:nvim": "yarn workspace @vvim/nvim dev",
     "dev:browser-renderer": "yarn workspace @vvim/browser-renderer dev",
     "dev:electron": "yarn workspace @vvim/electron dev",
     "dev:server": "yarn workspace @vvim/server dev",

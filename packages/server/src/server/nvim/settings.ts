@@ -90,7 +90,7 @@ const initSettings = ({
 
   const debouncedApplyAllSettings = debounce(applyAllSettings, 10);
 
-  const applySetting = ([option, props]: [keyof Settings, any]) => {
+  const applySetting = <K extends keyof Settings>([option, props]: [K, Settings[K]]) => {
     if (props !== null) {
       newSettings[option] = props;
       debouncedApplyAllSettings();

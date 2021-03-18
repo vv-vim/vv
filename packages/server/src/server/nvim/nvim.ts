@@ -28,8 +28,7 @@ const initNvim = ({
 
   nvim.on('data', (data) => transport.send('nvim-data', data));
 
-  transport.on('nvim-send', (payload) => {
-    // @ts-expect-error FIXME
+  transport.on('nvim-send', (payload: [number, string, any[]]) => {
     nvim.send(...payload);
   });
 

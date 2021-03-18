@@ -6,7 +6,7 @@ let env: NodeJS.ProcessEnv | undefined;
  * Find env variables if the app is started from Finder. We need a correct PATH variable to
  * start nvim.
  */
-const shellEnv = () => {
+const shellEnv = (): NodeJS.ProcessEnv => {
   if (!env) {
     env = process.env;
     // If we start app from terminal, it will have SHLVL variable. Then we already have correct
