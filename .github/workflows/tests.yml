@@ -1,6 +1,9 @@
-name: Tests, Lint, Type Check
+name: Tests
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -39,15 +42,10 @@ jobs:
     - name: Build Required Packages
       run: yarn bootstrap
 
-    - name: Run ESLint
-      run: yarn lint
-      if: always()
-
     - name: Run Tests
-      run: yarn test --reporters="default" --reporters="jest-github-actions-reporter"
+      run: yarn test --reporters="default" --reporters="jest-github-actions-reporter" --coverage
       if: always()
 
-    - name: Run TypeScript check
-      run: yarn typecheck
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
       if: always()
-
