@@ -9,6 +9,7 @@ const config = {
     path: buildPath,
     filename: 'index.js',
     libraryTarget: 'umd',
+    globalObject: 'this',
   },
   devtool: 'eval-cheap-source-map',
   resolve: {

@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron';
 
-import { Nvim } from 'src/main/nvim/api';
+import type Nvim from '@vvim/nvim';
 
 const nvimByWindowId: Record<number, Nvim> = [];
 

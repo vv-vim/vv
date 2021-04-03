@@ -1,4 +1,4 @@
-import { Transport, Listener } from 'src/transport/types';
+import type { Transport, Listener } from 'src/transport/types';
 
 /**
  * Init transport between main and renderer via WebSocket.
@@ -28,6 +28,7 @@ const transport = (): Transport => {
       socket.send(JSON.stringify([channel, ...args]));
     },
 
+    // TODO: Refactor to packages/browser-renderer/src/transport/transport.ts
     nvim: {
       write: (id: number, command: string, params: string[]) => {
         socket.send(JSON.stringify(['nvim-send', [id, command, params]]));
@@ -35,6 +36,10 @@ const transport = (): Transport => {
 
       read: (callback) => {
         addCallback('nvim-data', callback);
+      },
+
+      onClose: (callback) => {
+        addCallback('nvim-close', callback);
       },
     },
   };

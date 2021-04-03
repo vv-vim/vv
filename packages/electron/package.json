@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@vvim/browser-renderer": "0.0.1",
+    "@vvim/nvim": "0.0.1",
     "electron-store": "^7.0.2",
     "electron-updater": "^4.3.5",
     "html2plaintext": "^2.1.2",

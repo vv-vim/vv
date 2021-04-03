@@ -3,7 +3,9 @@
  */
 
 import { dialog, app, BrowserWindow } from 'electron';
-import { Nvim } from 'src/main/nvim/api';
+import { deleteNvimByWindow } from 'src/main/nvim/nvimByWindow';
+
+import type Nvim from '@vvim/nvim';
 
 /**
  * If we want to quit app after closing window, shouldQuit is true.
@@ -20,7 +22,7 @@ export const setShouldQuit = (newShouldQuit: boolean): void => {
  * Cancel quit on cancel.
  */
 const showCloseDialog = async ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }) => {
-  const unsavedBuffers: Array<{ name: string }> = await nvim.callFunction('VVunsavedBuffers', []);
+  const unsavedBuffers = await nvim.callFunction<Array<{ name: string }>>('VVunsavedBuffers', []);
   if (unsavedBuffers.length === 0) {
     nvim.command('qa');
   } else {
@@ -45,13 +47,14 @@ const initQuit = ({ win, nvim }: { nvim: Nvim; win: BrowserWindow }): void => {
   let isConnected = true;
 
   // Close window if nvim process is closed.
-  nvim.on('disconnect', () => {
+  nvim.on('close', () => {
     // Disable fullscreen before close, otherwise it it will keep menu bar hidden after window
     // is closed.
     win.hide();
     win.setSimpleFullScreen(false);
 
     isConnected = false;
+    deleteNvimByWindow(win);
     win.close();
   });
 

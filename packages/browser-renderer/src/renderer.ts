@@ -15,7 +15,7 @@ const renderer = (): void => {
   const transport = initTransport();
 
   const initRenderer = (settings: Settings) => {
-    const nvim = new Nvim(transport.nvim);
+    const nvim = new Nvim(transport.nvim, true);
     const screen = initScreen({ nvim, settings, transport });
     initKeyboard({ nvim, screen });
     initMouse({ nvim, screen });

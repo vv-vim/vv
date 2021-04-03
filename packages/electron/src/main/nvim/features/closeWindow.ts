@@ -6,7 +6,7 @@ export const closeWindowMenuItem: MenuItemConstructorOptions['click'] = async (_
   if (win) {
     const nvim = getNvimByWindow(win);
     if (nvim) {
-      const isNotLastWindow = await nvim.eval('tabpagenr("$") > 1 || winnr("$") > 1');
+      const isNotLastWindow = await nvim.eval<boolean>('tabpagenr("$") > 1 || winnr("$") > 1');
       if (isNotLastWindow) {
         nvim.command(`q`);
       } else {
