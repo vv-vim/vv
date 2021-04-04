@@ -10,6 +10,7 @@ const config = {
     filename: 'index.js',
     libraryTarget: 'umd',
   },
+  target: 'web',
   devtool: 'eval-cheap-source-map',
   resolve: {
     extensions: ['.ts', '.js'],

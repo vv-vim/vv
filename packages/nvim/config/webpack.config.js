@@ -1,13 +1,13 @@
 const path = require('path');
+const merge = require('webpack-merge');
 
 const buildPath = path.resolve(__dirname, './../dist');
 
-const config = {
+const commonConfig = {
   mode: 'development',
-  entry: './src/index.ts',
   output: {
     path: buildPath,
-    filename: 'index.js',
+    filename: '[name].js',
     libraryTarget: 'umd',
     globalObject: 'this',
   },
@@ -26,4 +26,18 @@ const config = {
   },
 };
 
-module.exports = config;
+const browserConfig = merge(commonConfig, {
+  target: 'web',
+  entry: {
+    browser: './src/browser.ts',
+  },
+});
+
+const nodeConfig = merge(commonConfig, {
+  target: 'node',
+  entry: {
+    index: './src/index.ts',
+  },
+});
+
+module.exports = [browserConfig, nodeConfig];

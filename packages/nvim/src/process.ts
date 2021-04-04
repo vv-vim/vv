@@ -3,9 +3,7 @@ import path from 'path';
 
 import debounce from 'lodash/debounce';
 
-import shellEnv from 'src/main/lib/shellEnv';
-import nvimCommand from 'src/main/lib/nvimCommand';
-import isDev from 'src/lib/isDev';
+import { shellEnv, isDev, nvimCommand } from 'src/utils';
 
 import type { ChildProcessWithoutNullStreams } from 'child_process';
 

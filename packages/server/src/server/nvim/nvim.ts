@@ -1,5 +1,3 @@
-import { Transport } from 'src/server/transport/types';
-
 // TODO
 // import quit from '@main/nvim/features/quit';
 // import windowTitle from '@main/nvim/features/windowTitle';
@@ -10,7 +8,9 @@ import { Transport } from 'src/server/transport/types';
 
 import initSettings from 'src/server/nvim/settings';
 
-import nvimApi from 'src/server/nvim/api';
+import Nvim, { startNvimProcess, ProcNvimTransport } from '@vvim/nvim';
+
+import type { Transport, Args } from 'src/server/transport/types';
 
 const initNvim = ({
   args,
@@ -21,16 +21,15 @@ const initNvim = ({
   cwd?: string;
   transport: Transport;
 }): void => {
-  const nvim = nvimApi({
-    args,
-    cwd,
-  });
+  const proc = startNvimProcess({ args, cwd });
+  const nvimTransport = new ProcNvimTransport(proc);
+  const nvim = new Nvim(nvimTransport);
 
-  nvim.on('data', (data) => transport.send('nvim-data', data));
-
-  transport.on('nvim-send', (payload: [number, string, any[]]) => {
-    nvim.send(...payload);
-  });
+  nvimTransport.read((data: Args) => transport.send('nvim-data', data));
+  nvimTransport.onClose(() => transport.send('nvim-close'));
+  transport.on('nvim-send', (payload: Parameters<ProcNvimTransport['write']>) =>
+    nvimTransport.write(...payload),
+  );
 
   initSettings({ nvim, args, transport });
 

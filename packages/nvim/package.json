@@ -12,6 +12,7 @@
   "homepage": "https://github.com/vv-vim/vv#readme",
   "license": "MIT",
   "main": "dist/index.js",
+  "browser": "dist/browser.js",
   "sideEffects": false,
   "scripts": {
     "test": "jest",
@@ -20,7 +21,7 @@
     "build:dev": "webpack --config ./config/webpack.config.js",
     "build:prod": "webpack --config ./config/webpack.prod.config.js",
     "build": "npm-run-all clean build:types build:prod",
-    "dev": "npm-run-all clean --parallel \"build:types --watch\" \"build:dev --watch\""
+    "dev": "npm-run-all --parallel \"build:types --watch\" \"build:dev --watch\""
   },
   "publishConfig": {
     "registry": "https://registry.yarnpkg.com"
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@types/express": "^4.17.11",
     "@types/lodash": "^4.14.168",
+    "@types/msgpack-lite": "^0.1.7",
     "@types/node": "^14.14.31",
     "@types/ws": "^7.4.0",
     "jsdom": "^16.4.0",
@@ -47,6 +49,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.21",
+    "msgpack-lite": "^0.1.26",
     "ws": "^7.4.3"
   }
 }
