@@ -1,8 +1,9 @@
 import { PassThrough } from 'stream';
 import { encode } from 'msgpack-lite';
+
 import type { ChildProcessWithoutNullStreams } from 'child_process';
 
-import ProcNvimTransport from 'src/main/nvim/ProcNvimTransport'; // eslint-disable-line
+import ProcNvimTransport from 'src/ProcNvimTransport';
 
 describe('ProcNvimTransport', () => {
   let stdout: PassThrough;

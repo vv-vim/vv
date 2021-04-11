@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 
-import { Nvim } from 'src/server/nvim/api';
-import { Transport } from 'src/server/transport/types';
+import type Nvim from '@vvim/nvim';
+import type { Transport } from 'src/server/transport/types';
 
 type BooleanSetting = 0 | 1;
 

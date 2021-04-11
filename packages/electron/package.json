@@ -40,7 +40,6 @@
   "devDependencies": {
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.168",
-    "@types/msgpack-lite": "^0.1.7",
     "@types/node": "^14.14.31",
     "chalk": "^4.1.0",
     "dotenv": "^8.2.0",
@@ -58,7 +57,6 @@
     "electron-updater": "^4.3.5",
     "html2plaintext": "^2.1.2",
     "lodash": "^4.17.21",
-    "msgpack-lite": "^0.1.26",
     "semver": "^7.3.4"
   }
 }

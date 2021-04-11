@@ -1,6 +1,6 @@
 import debounce from 'lodash/debounce';
-import { BrowserWindow } from 'electron';
 
+import type { BrowserWindow } from 'electron';
 import type Nvim from '@vvim/nvim';
 
 import store, { Settings } from 'src/main/lib/store';

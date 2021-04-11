@@ -2,7 +2,7 @@ import { createDecodeStream, encode } from 'msgpack-lite';
 
 import type { ChildProcessWithoutNullStreams } from 'child_process';
 import type { DecodeStream } from 'msgpack-lite';
-import type { NvimTransport, ReadCallback, OnCloseCallback } from '@vvim/nvim';
+import type { NvimTransport, ReadCallback, OnCloseCallback } from 'src/types';
 
 class ProcNvimTransport implements NvimTransport {
   private msgpackIn: DecodeStream;

@@ -23,7 +23,7 @@
     "build:dev": "webpack --config ./config/webpack.config.js",
     "build:prod": "webpack --config ./config/webpack.prod.config.js",
     "build": "npm-run-all clean build:types build:prod",
-    "dev": "npm-run-all clean --parallel \"build:types --watch\" \"build:dev --watch\""
+    "dev": "npm-run-all --parallel \"build:types --watch\" \"build:dev --watch\""
   },
   "publishConfig": {
     "registry": "https://registry.yarnpkg.com"

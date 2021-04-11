@@ -2,6 +2,14 @@
 
 import Nvim from './Nvim';
 
+import startNvimProcess from './process';
+
+import ProcNvimTransport from './ProcNvimTransport';
+
 export * from './types';
+
+export { shellEnv, nvimCommand, nvimVersion } from './utils';
+
+export { startNvimProcess, ProcNvimTransport };
 
 export default Nvim;
