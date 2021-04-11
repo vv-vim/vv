@@ -1,21 +1,78 @@
 // TODO: Refactor, Fix types.
-import debounce from 'lodash/debounce';
-import throttle from 'lodash/throttle';
-import isFinite from 'lodash/isFinite';
-import isEqual from 'lodash/isEqual';
+import { debounce, throttle, isFinite, isEqual } from 'lodash';
 
 import getColor from 'src/lib/getColor';
-import { Settings } from 'src/types';
 
 import * as PIXI from 'src/lib/pixi';
 
-import { Transport } from 'src/transport/types';
-
+import type { Settings } from 'src/types';
+import type { Transport } from 'src/transport/types';
 import type Nvim from '@vvim/nvim';
 
 export type Screen = {
   screenCoords: (width: number, height: number) => [number, number];
   getCursorElement: () => HTMLDivElement;
+};
+
+// TODO: autogenerate it
+type HighlightAttrs = {
+  foreground?: number;
+  background?: number;
+  special?: number;
+  reverse?: boolean;
+  standout?: boolean;
+  italic?: boolean;
+  bold?: boolean;
+  underline?: boolean;
+  undercurl?: boolean;
+  strikethrough?: boolean;
+  blend?: number;
+};
+
+type CalculatedProps = {
+  bgNum?: number;
+  bgColor: string;
+  fgColor: string;
+  spColor?: string;
+  hiItalic: boolean;
+  hiBold: boolean;
+  hiUnderline: boolean;
+  hiUndercurl: boolean;
+  hiStrikethrough: boolean;
+};
+
+type HighlightProps = {
+  calculated?: CalculatedProps;
+  value?: HighlightAttrs;
+};
+
+type HighlightTable = Record<number, HighlightProps>;
+
+// TODO: autogenerate it
+/* eslint-disable camelcase */
+type ModeInfo = {
+  cursor_shape: 'block' | 'horizontal' | 'vertical';
+  cell_percentage: number;
+  blinkwait: number;
+  blinkon: number;
+  blinkoff: number;
+  attr_id: number;
+  attr_id_lm: number;
+  short_name: string; // TODO: union
+  name: string; // TODO: union
+  mouse_shape: number;
+};
+/* eslint-enable camelcase */
+
+// TODO: autogenerate
+type Cell = [string, number?, number?];
+type GridLine = [number, number, number, Cell[]];
+
+type Char = {
+  sprite: PIXI.Sprite;
+  bg: PIXI.Graphics;
+  char?: string | null;
+  hlId?: number;
 };
 
 const screen = ({
@@ -55,8 +112,7 @@ const screen = ({
   let cols: number;
   let rows: number;
 
-  // TODO
-  let modeInfoSet: any;
+  let modeInfoSet: Record<string, ModeInfo>;
   let mode: string;
 
   let showBold = true;
@@ -68,34 +124,7 @@ const screen = ({
   const charCanvas = new OffscreenCanvas(1, 1);
   const charCtx = charCanvas.getContext('2d', { alpha: true }) as OffscreenCanvasRenderingContext2D;
 
-  type Char = {
-    sprite: PIXI.Sprite;
-    bg: PIXI.Graphics;
-    char?: string | null;
-    hlId?: number;
-  };
-
   const chars: Char[][] = [];
-
-  type CalculatedProps = {
-    bgNum?: number;
-    bgColor: string;
-    fgColor: string;
-    spColor?: string;
-    hiItalic: boolean;
-    hiBold: boolean;
-    hiUnderline: boolean;
-    hiUndercurl: boolean;
-    hiStrikethrough: boolean;
-  };
-
-  type HighlightProps = {
-    calculated?: CalculatedProps;
-    // TODO types
-    value?: any;
-  };
-
-  type HighlightTable = Record<number, HighlightProps>;
 
   const highlightTable: HighlightTable = {
     '0': {
@@ -463,8 +492,8 @@ const screen = ({
   }, 10);
 
   const recalculateHighlightTable = () => {
-    Object.keys(highlightTable).forEach((id) => {
-      if (((id as unknown) as number) > 0) {
+    ((Object.keys(highlightTable) as unknown) as number[]).forEach((id) => {
+      if (id > 0) {
         const {
           foreground,
           background,
@@ -476,7 +505,7 @@ const screen = ({
           underline,
           undercurl,
           strikethrough,
-        } = highlightTable[(id as unknown) as number].value;
+        } = highlightTable[id].value || {};
         const r = reverse || standout;
         const fg = getColor(foreground, highlightTable[0]?.calculated?.fgColor) as string;
         const bg = getColor(background, highlightTable[0]?.calculated?.bgColor) as string;
@@ -487,16 +516,23 @@ const screen = ({
           bgColor: r ? fg : bg,
           spColor: sp,
           bgNum: r ? foreground : background,
-          hiItalic: showItalic && italic,
-          hiBold: showBold && bold,
-          hiUnderline: showUnderline && underline,
-          hiUndercurl: showUndercurl && undercurl,
-          hiStrikethrough: showStrikethrough && strikethrough,
+          hiItalic: showItalic && !!italic,
+          hiBold: showBold && !!bold,
+          hiUnderline: showUnderline && !!underline,
+          hiUndercurl: showUndercurl && !!undercurl,
+          hiStrikethrough: showStrikethrough && !!strikethrough,
         };
       }
     });
     reprintAllChars();
   };
+
+  const rerenderIfNeeded = throttle(() => {
+    if (needRerender) {
+      needRerender = false;
+      renderer.render(stage);
+    }
+  }, 1000 / TARGET_FPS);
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
   const redrawCmd = {
@@ -507,8 +543,8 @@ const screen = ({
       /* empty */
     },
 
-    mode_info_set: (props: any) => {
-      modeInfoSet = props[0][1].reduce((r: any, o: any) => ({ ...r, [o.name]: o }), {});
+    mode_info_set: (props: [boolean, ModeInfo[]][]) => {
+      modeInfoSet = props[0][1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
       redrawCursor();
     },
 
@@ -524,7 +560,7 @@ const screen = ({
       });
     },
 
-    mode_change: (modes: any) => {
+    mode_change: (modes: string[][]) => {
       [mode] = modes[modes.length - 1];
       redrawCursor();
     },
@@ -562,12 +598,15 @@ const screen = ({
       /* empty */
     },
 
-    flush: throttle(() => {
-      if (needRerender) {
-        needRerender = false;
-        renderer.render(stage);
-      }
-    }, 1000 / TARGET_FPS),
+    flush: () => {
+      rerenderIfNeeded();
+
+      // Temporary workaround to fix cursor position in terminal mode. Nvim API does not send the very last cursor
+      // position in terminal on redraw, but when you send any command to nvim, it redraws it correctly. Need to
+      // investigate it and find a better permanent fix. Maybe this is a bug in nvim and then
+      // TODO: file a ticket to nvim.
+      nvim.getMode();
+    },
 
     // New api
     grid_resize: (props: number[][]) => {
@@ -589,7 +628,7 @@ const screen = ({
       }
     },
 
-    default_colors_set: (props: any) => {
+    default_colors_set: (props: number[][]) => {
       const [foreground, background, special] = props[props.length - 1];
 
       const calculated = {
@@ -616,7 +655,7 @@ const screen = ({
       }
     },
 
-    hl_attr_define: (props: Array<[number, any]>) => {
+    hl_attr_define: (props: Array<[number, HighlightAttrs]>) => {
       props.forEach(([id, value]) => {
         highlightTable[id] = {
           value,
@@ -626,18 +665,18 @@ const screen = ({
     },
 
     // TODO types
-    grid_line: (props: any) => {
+    grid_line: (props: GridLine[]) => {
       for (let gridKey = 0, gridLength = props.length; gridKey < gridLength; gridKey += 1) {
         const row = props[gridKey][1];
         const col = props[gridKey][2];
         const cells = props[gridKey][3];
 
         let lineLength = 0;
-        let currentHlId;
+        let currentHlId = 0;
 
         for (let cellKey = 0, cellsLength = cells.length; cellKey < cellsLength; cellKey += 1) {
           const [char, hlId, length = 1] = cells[cellKey];
-          if (isFinite(hlId)) {
+          if (hlId !== undefined && isFinite(hlId)) {
             currentHlId = hlId;
           }
           for (let j = 0; j < length; j += 1) {
@@ -760,7 +799,7 @@ const screen = ({
     },
   };
 
-  const redraw = (args: any[]) => {
+  const redraw = (args: [string, any[]]) => {
     for (let i = 0; i < args.length; i += 1) {
       const [cmd, ...props] = args[i];
       // @ts-expect-error TODO
