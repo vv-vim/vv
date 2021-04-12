@@ -82,7 +82,6 @@ describe('Nvim', () => {
     test('commands', () => {
       const commands = [
         ['subscribe', 'subscribe'],
-        ['eval', 'eval'],
         ['callFunction', 'call_function'],
         ['command', 'command'],
         ['input', 'input'],
@@ -99,6 +98,13 @@ describe('Nvim', () => {
         nvim[command]('param1', 'param2');
         expect(write).toHaveBeenCalledWith(3, `nvim_${request}`, ['param1', 'param2']);
       });
+    });
+
+    test('eval', () => {
+      write.mockClear();
+      nvim = new Nvim(transportMock);
+      nvim.eval('param1');
+      expect(write).toHaveBeenCalledWith(3, `nvim_eval`, ['param1']);
     });
 
     test('getShortMode returns mode', async () => {
