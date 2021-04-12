@@ -89,8 +89,7 @@ class Nvim {
 
   subscribe = this.commandFactory('subscribe');
 
-  eval = <Result = void>(command: string, params?: any[]): Promise<Result> =>
-    this.request('eval', [command, params]);
+  eval = <Result = void>(command: string): Promise<Result> => this.request('eval', [command]);
 
   callFunction = <Result = void>(name: string, params: any[]): Promise<Result> =>
     this.request('call_function', [name, params]);
