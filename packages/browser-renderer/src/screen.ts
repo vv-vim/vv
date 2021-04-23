@@ -75,6 +75,8 @@ type Char = {
   hlId?: number;
 };
 
+const DEFAULT_FONT_FAMILY = 'monospace';
+
 const screen = ({
   settings,
   transport,
@@ -100,7 +102,7 @@ const screen = ({
   let charWidth: number;
   let charHeight: number;
 
-  let fontFamily = 'monospace';
+  let fontFamily = DEFAULT_FONT_FAMILY;
   let fontSize = 12;
   let lineHeight = 1.25;
   let letterSpacing = 0;
@@ -464,7 +466,7 @@ const screen = ({
     guifont: (newFont: string) => {
       const [newFontFamily, newFontSize] = newFont.trim().split(':h');
       if (newFontFamily && newFontFamily !== '') {
-        nvim.command(`VVset fontfamily=${newFontFamily}`);
+        nvim.command(`VVset fontfamily=${newFontFamily.replace(/_/g, '\\ ')}`);
         if (newFontSize && newFontFamily !== '') {
           nvim.command(`VVset fontsize=${newFontSize}`);
         }
@@ -763,7 +765,7 @@ const screen = ({
 
   const handleSet = {
     fontfamily: (newFontFamily: string) => {
-      fontFamily = newFontFamily;
+      fontFamily = `${newFontFamily}, ${DEFAULT_FONT_FAMILY}`;
     },
 
     fontsize: (newFontSize: string) => {

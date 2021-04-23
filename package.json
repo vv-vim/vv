@@ -2,7 +2,7 @@
   "name": "vv",
   "description": "Neovim GUI Client",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "keywords": [
     "vim",
     "neovim",
