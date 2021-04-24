@@ -74,7 +74,7 @@ You can setup VV-specific options via the `:VVset` command. It works the same as
 - `underline`: Allow underline. Default: `1`.
 - `undercurl`: Allow undercurl. Default: `1`.
 - `strikethrough`: Allow strikethrough. Default: `1`.
-- `fontfamily`: Font family. Syntax is the same as CSS `font-family`. Default: `monospace`.
+- `fontfamily`: Font family. Syntax is the same as CSS [`font-family`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-family). You can use comma-separated list of fonts. It will use first installed font in the list and fallback to default monospace font if none of them installed. Spaces should be excaped by `\`. For example: `:VVset fontfamily=Menlo,\ Courier\ New`. Default: `monospace`.
 - `fontsize`: Font size in pixels. Default: `12`.
 - `lineheight`: Line height related to font size. Pixel value is `fontsize * lineheight`. Default: `1.25`.
 - `letterspacing`: Fine-tuning letter spacing in retina pixels. Can be a negative value. For retina screens the value is physical pixels. For non-retina screens it works differently: it divides the value by 2 and rounds it. For example, `:VVset letterspacing=1` will make characters 1 pixel wider on retina displays and will do nothing on non-retina displays. Value 2 is 2 physical pixels on retina and 1 physical pixel on non-retina. Default: `0`.
