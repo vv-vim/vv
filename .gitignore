@@ -9,4 +9,6 @@
 
 .DS_Store
 .env
+.nyc_output
 yarn-error.log
+__diff_output__

@@ -15,8 +15,11 @@ const server = http.createServer(app);
 app.use(express.static('build'));
 
 const onConnect = (transport: Transport) => {
+  const args = process.argv.slice(2);
+
   initNvim({
     transport,
+    args,
   });
   transport.send('initRenderer', getDefaultSettings());
 };

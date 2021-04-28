@@ -21,7 +21,8 @@
     "server:dev": "nodemon build/server.js",
     "server": "node build/server.js",
     "dev": "npm-run-all --parallel webpack:dev server:dev",
-    "start": "npm-run-all clean webpack:prod server"
+    "build": "npm-run-all clean webpack:prod",
+    "start": "yarn server"
   },
   "browserslist": [
     "maintained node versions"

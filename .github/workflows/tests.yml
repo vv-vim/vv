@@ -23,6 +23,9 @@ jobs:
       with:
         node-version: "${{ steps.nvm.outputs.NVMRC }}"
 
+    - name: Install Nvim
+      run: brew install nvim
+
     - name: Get Yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -44,8 +47,14 @@ jobs:
 
     - name: Run Tests
       run: yarn test --reporters="default" --reporters="jest-github-actions-reporter" --coverage
-      if: always()
+
+    - name: Upload snapshot diffs
+      uses: actions/upload-artifact@v2
+      with:
+        name: failed-image-snapshots
+        path: packages/**/__diff_output__/*
+        retention-days: 5
+      if: failure()
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
-      if: always()

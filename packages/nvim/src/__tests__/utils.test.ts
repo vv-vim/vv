@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 
-import { mocked } from 'ts-jest';
+import { mocked } from 'ts-jest/utils';
 
 import { shellEnv, nvimVersion, resetCache } from 'src/utils';
 

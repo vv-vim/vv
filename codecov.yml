@@ -1,3 +1,7 @@
 comment:
   layout: "reach, diff, flags, files"
   require_changes: false
+
+ignore:
+  - "packages/browser-renderer/src/screen.ts"  # Tested by Puppeteer
+
