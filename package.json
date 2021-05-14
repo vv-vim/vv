@@ -2,7 +2,7 @@
   "name": "vv",
   "description": "Neovim GUI Client",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "keywords": [
     "vim",
     "neovim",
@@ -18,16 +18,18 @@
     "packages/*"
   ],
   "scripts": {
-    "bootstrap": "yarn build:nvim; yarn build:browser-renderer",
+    "bootstrap": "yarn build:nvim; yarn build:browser-renderer; yarn build:server",
     "build:nvim": "yarn workspace @vvim/nvim build",
     "build:browser-renderer": "yarn workspace @vvim/browser-renderer build",
     "build:electron": "yarn bootstrap; yarn workspace @vvim/electron build",
+    "build:server": "yarn workspace @vvim/server build",
     "dev:nvim": "yarn workspace @vvim/nvim dev",
     "dev:browser-renderer": "yarn workspace @vvim/browser-renderer dev",
     "dev:electron": "yarn workspace @vvim/electron dev",
     "dev:server": "yarn workspace @vvim/server dev",
     "dev": "yarn bootstrap; npm-run-all --parallel dev:*",
     "start:electron": "yarn workspace @vvim/electron start",
+    "start:server": "yarn workspace @vvim/server start",
     "lint": "eslint . --ext .js,.ts",
     "test": "jest",
     "typecheck": "tsc -p packages/browser-renderer; tsc -p packages/electron; tsc -p packages/server",

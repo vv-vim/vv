@@ -41,21 +41,26 @@
   ],
   "devDependencies": {
     "@types/express": "^4.17.11",
+    "@types/jest-dev-server": "^4.2.0",
+    "@types/jest-image-snapshot": "^4.3.0",
     "@types/lodash": "^4.14.168",
     "@types/node": "^14.14.31",
+    "@types/puppeteer": "^5.4.3",
     "@types/ws": "^7.4.0",
+    "jest-dev-server": "^5.0.3",
+    "jest-image-snapshot": "^4.4.1",
     "jsdom": "^16.4.0",
-    "pixi.js": "^5.3.8"
+    "puppeteer": "^9.0.0"
   },
   "dependencies": {
+    "@pixi/app": "^6.0.2",
+    "@pixi/core": "^6.0.2",
+    "@pixi/display": "^6.0.2",
+    "@pixi/graphics": "^6.0.2",
+    "@pixi/sprite": "^6.0.2",
+    "@pixi/ticker": "^6.0.2",
+    "@pixi/utils": "^6.0.2",
     "@vvim/nvim": "0.0.1",
-    "@pixi/app": "^5.3.8",
-    "@pixi/core": "^5.3.8",
-    "@pixi/display": "^5.3.8",
-    "@pixi/graphics": "^5.3.8",
-    "@pixi/sprite": "^5.3.8",
-    "@pixi/ticker": "^5.3.8",
-    "@pixi/utils": "^5.3.8",
     "lodash": "^4.17.21",
     "ws": "^7.4.3"
   }

@@ -212,9 +212,9 @@ const screen = ({
 
     screenContainer.appendChild(screenEl);
 
-    ({ stage, renderer } = pixi);
+    stage = pixi.stage;
+    renderer = pixi.renderer as PIXI.Renderer;
     pixi.ticker.stop();
-    stage.interactiveChildren = false;
 
     charsContainer = new PIXI.Container();
     bgContainer = new PIXI.Container();
