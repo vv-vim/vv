@@ -11,6 +11,7 @@ import checkNeovim from 'src/main/checkNeovim';
 import { setShouldQuit } from 'src/main/nvim/features/quit';
 import { getSettings } from 'src/main/nvim/settings';
 import { getNvimByWindow } from 'src/main/nvim/nvimByWindow';
+import SimpleFullScreenStatusBarFix from 'src/main/lib/SimpleFullScreenStatusBarFix';
 
 import initAutoUpdate from 'src/main/autoUpdate';
 
@@ -20,6 +21,8 @@ import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from 'src/main/lib
 import initTransport from 'src/main/transport/ipc';
 
 let currentWindow: BrowserWindow | undefined | null;
+
+let simpleFullScreenStatusBarFix: SimpleFullScreenStatusBarFix;
 
 const windows: BrowserWindow[] = [];
 
@@ -72,6 +75,8 @@ const createEmptyWindow = (isDebug = false) => {
   win.loadURL(
     process.env.DEV_SERVER ? 'http://localhost:3000' : `file://${join(__dirname, './index.html')}`,
   );
+
+  simpleFullScreenStatusBarFix.addWindow(win);
 
   return win;
 };
@@ -224,6 +229,9 @@ if (!gotTheLock) {
       installCli: installCli(join(app.getAppPath(), '../bin/vv')),
     });
     app.on('open-file', (_e, file) => openFileOrDir(file));
+
+    simpleFullScreenStatusBarFix = new SimpleFullScreenStatusBarFix();
+
     app.focus();
   });
 
