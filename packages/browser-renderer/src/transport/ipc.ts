@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import { memoize } from 'lodash';
 
 import { ipcRenderer } from 'src/preloaded/electron';
+import type { PreloadedIpcRenderer } from 'src/preloaded/electron';
 
 import type { Transport, Args } from '@vvim/nvim';
 
@@ -9,9 +10,9 @@ import type { Transport, Args } from '@vvim/nvim';
  * Init transport between main and renderer via Electron ipcRenderer.
  */
 class IpcRendererTransport extends EventEmitter implements Transport {
-  private ipc: Electron.IpcRenderer;
+  private ipc: PreloadedIpcRenderer;
 
-  constructor(ipc: Electron.IpcRenderer = ipcRenderer) {
+  constructor(ipc = ipcRenderer) {
     super();
 
     this.ipc = ipc;
@@ -35,11 +36,9 @@ class IpcRendererTransport extends EventEmitter implements Transport {
     });
   }
 
-  handleEvent = memoize(
-    (eventName: string) => (_e: Electron.IpcRendererEvent, ...args: Args): void => {
-      this.emit(eventName, ...args);
-    },
-  );
+  handleEvent = memoize((eventName: string) => (...args: Args): void => {
+    this.emit(eventName, ...args);
+  });
 
   send(channel: string, ...params: Args): void {
     this.ipc.send(channel, ...params);

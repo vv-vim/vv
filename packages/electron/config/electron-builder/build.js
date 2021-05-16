@@ -12,6 +12,9 @@ const electronVersion = JSON.parse(data).version;
 const build = {
   appId: process.env.APPID || 'app.vvim.vv',
   productName: 'VV',
+  extraMetadata: {
+    name: 'VV',
+  },
   files: ['build/**/*'],
   extraResources: ['bin/**/*', 'src/main/preload.js'],
   electronVersion,

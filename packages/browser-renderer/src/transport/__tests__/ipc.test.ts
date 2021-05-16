@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { ipcRenderer } from 'src/preloaded/electron';
+import type { PreloadedIpcRenderer } from 'src/preloaded/electron';
 
 import IpcRendererTransport from 'src/transport/ipc';
 
@@ -12,14 +13,14 @@ jest.mock('src/preloaded/electron', () => ({
 
 describe('main transport', () => {
   let transport: IpcRendererTransport;
-  let ipcRendererMock: Electron.IpcRenderer;
+  let ipcRendererMock: NodeJS.EventEmitter;
   const send = jest.fn();
 
   beforeEach(() => {
-    ipcRendererMock = (Object.assign(new EventEmitter(), {
+    ipcRendererMock = Object.assign(new EventEmitter(), {
       send,
-    }) as unknown) as Electron.IpcRenderer;
-    transport = new IpcRendererTransport(ipcRendererMock);
+    });
+    transport = new IpcRendererTransport((ipcRendererMock as unknown) as PreloadedIpcRenderer);
   });
 
   describe('on', () => {
@@ -27,7 +28,7 @@ describe('main transport', () => {
 
     test('calls listener', () => {
       transport.on('test-event', listener);
-      ipcRendererMock.emit('test-event', new Event('test-event'), 'arg1', 'arg2');
+      ipcRendererMock.emit('test-event', 'arg1', 'arg2');
       expect(listener).toHaveBeenCalledWith('arg1', 'arg2');
     });
 
@@ -42,7 +43,7 @@ describe('main transport', () => {
 
     test('listener with no args', () => {
       transport.on('test-event', listener);
-      ipcRendererMock.emit('test-event', new Event('test-event'));
+      ipcRendererMock.emit('test-event');
       expect(listener).toHaveBeenCalledWith();
     });
 

@@ -20,7 +20,7 @@ const startNvimProcess = ({
   args?: string[];
   cwd?: string;
   appPath?: string;
-}): ChildProcessWithoutNullStreams => {
+} = {}): ChildProcessWithoutNullStreams => {
   const env = shellEnv();
 
   const nvimArgs = ['--embed', '--cmd', vvSourceCommand(appPath), ...args];

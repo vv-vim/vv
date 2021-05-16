@@ -2,7 +2,7 @@
   "name": "@vvim/electron",
   "description": "Neovim GUI Client",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
-  "version": "2.4.7",
+  "version": "2.4.8",
   "private": true,
   "keywords": [
     "vim",
@@ -43,7 +43,7 @@
     "@types/node": "^14.14.31",
     "chalk": "^4.1.0",
     "dotenv": "^8.2.0",
-    "electron": "^11.3.0",
+    "electron": "^13.1.2",
     "electron-builder": "^22.9.1",
     "electron-notarize": "^1.0.0",
     "html-webpack-plugin": "^4.3.0",
