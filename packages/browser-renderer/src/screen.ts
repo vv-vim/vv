@@ -7,26 +7,11 @@ import * as PIXI from 'src/lib/pixi';
 
 import type { Settings } from 'src/types';
 import type { Transport } from 'src/transport/types';
-import type Nvim from '@vvim/nvim';
+import type { Nvim, UiEventsHandlers, UiEventsArgs, ModeInfo, HighlightAttrs } from '@vvim/nvim';
 
 export type Screen = {
   screenCoords: (width: number, height: number) => [number, number];
   getCursorElement: () => HTMLDivElement;
-};
-
-// TODO: autogenerate it
-type HighlightAttrs = {
-  foreground?: number;
-  background?: number;
-  special?: number;
-  reverse?: boolean;
-  standout?: boolean;
-  italic?: boolean;
-  bold?: boolean;
-  underline?: boolean;
-  undercurl?: boolean;
-  strikethrough?: boolean;
-  blend?: number;
 };
 
 type CalculatedProps = {
@@ -47,26 +32,6 @@ type HighlightProps = {
 };
 
 type HighlightTable = Record<number, HighlightProps>;
-
-// TODO: autogenerate it
-/* eslint-disable camelcase */
-type ModeInfo = {
-  cursor_shape: 'block' | 'horizontal' | 'vertical';
-  cell_percentage: number;
-  blinkwait: number;
-  blinkon: number;
-  blinkoff: number;
-  attr_id: number;
-  attr_id_lm: number;
-  short_name: string; // TODO: union
-  name: string; // TODO: union
-  mouse_shape: number;
-};
-/* eslint-enable camelcase */
-
-// TODO: autogenerate
-type Cell = [string, number?, number?];
-type GridLine = [number, number, number, Cell[]];
 
 type Char = {
   sprite: PIXI.Sprite;
@@ -537,7 +502,7 @@ const screen = ({
   }, 1000 / TARGET_FPS);
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
-  const redrawCmd = {
+  const redrawCmd: Partial<UiEventsHandlers> = {
     set_title: () => {
       /* empty */
     },
@@ -545,12 +510,12 @@ const screen = ({
       /* empty */
     },
 
-    mode_info_set: (props: [boolean, ModeInfo[]][]) => {
-      modeInfoSet = props[0][1].reduce((r, o) => ({ ...r, [o.name]: o }), {});
+    mode_info_set: (props) => {
+      modeInfoSet = props[0][1].reduce((r, modeInfo) => ({ ...r, [modeInfo.name]: modeInfo }), {});
       redrawCursor();
     },
 
-    option_set: (options: Array<[string, string]>) => {
+    option_set: (options) => {
       options.forEach(([option, value]) => {
         // @ts-expect-error TODO
         if (optionSet[option]) {
@@ -562,7 +527,7 @@ const screen = ({
       });
     },
 
-    mode_change: (modes: string[][]) => {
+    mode_change: (modes) => {
       [mode] = modes[modes.length - 1];
       redrawCursor();
     },
@@ -610,8 +575,7 @@ const screen = ({
       nvim.getMode();
     },
 
-    // New api
-    grid_resize: (props: number[][]) => {
+    grid_resize: (props) => {
       /* eslint-disable prefer-destructuring */
       cols = props[0][1];
       rows = props[0][2];
@@ -630,7 +594,7 @@ const screen = ({
       }
     },
 
-    default_colors_set: (props: number[][]) => {
+    default_colors_set: (props) => {
       const [foreground, background, special] = props[props.length - 1];
 
       const calculated = {
@@ -657,7 +621,7 @@ const screen = ({
       }
     },
 
-    hl_attr_define: (props: Array<[number, HighlightAttrs]>) => {
+    hl_attr_define: (props) => {
       props.forEach(([id, value]) => {
         highlightTable[id] = {
           value,
@@ -666,8 +630,7 @@ const screen = ({
       recalculateHighlightTable();
     },
 
-    // TODO types
-    grid_line: (props: GridLine[]) => {
+    grid_line: (props) => {
       for (let gridKey = 0, gridLength = props.length; gridKey < gridLength; gridKey += 1) {
         const row = props[gridKey][1];
         const col = props[gridKey][2];
@@ -719,13 +682,11 @@ const screen = ({
       /* empty */
     },
 
-    grid_cursor_goto: ([[_, ...newCursor]]: Array<[string, number, number]>) => {
+    grid_cursor_goto: ([[_, ...newCursor]]) => {
       repositionCursor(newCursor);
     },
 
-    grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]: Array<
-      [string, number, number, number, number, number]
-    >) => {
+    grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]) => {
       for (
         let i = scrollCount > 0 ? top : bottom - 1;
         scrollCount > 0 ? i <= bottom - scrollCount - 1 : i >= top - scrollCount;
@@ -756,10 +717,6 @@ const screen = ({
         }
       }
       needRerender = true;
-    },
-
-    win_viewport: () => {
-      // Why nvim sending it without ext_multigrid enabled?
     },
   };
 
@@ -801,17 +758,16 @@ const screen = ({
     },
   };
 
-  const redraw = (args: [string, any[]]) => {
-    for (let i = 0; i < args.length; i += 1) {
-      const [cmd, ...props] = args[i];
-      // @ts-expect-error TODO
-      if (redrawCmd[cmd]) {
-        // @ts-expect-error TODO
-        redrawCmd[cmd](props);
+  const redraw = (args: UiEventsArgs) => {
+    args.forEach(([cmd, ...props]) => {
+      const command = redrawCmd[cmd];
+      if (command) {
+        // @ts-expect-error TODO: find the way to type it without errors
+        command(props);
       } else {
         console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
       }
-    }
+    });
   };
 
   const setScale = () => {

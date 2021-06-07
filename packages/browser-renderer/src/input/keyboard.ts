@@ -200,9 +200,10 @@ const initKeyboard = ({ nvim, screen }: { nvim: Nvim; screen: Screen }): void =>
   // Enable composition input only for insert and command-line modes. Enabling if for other modes
   // is tricky. `preventDefault` does not work for compositionstart, so we need to blur/focus input
   // element for this.
-  nvim.on('redraw', (args: Array<[string, string[]]>) => {
-    args.forEach(([cmd, [mode]]) => {
-      if (cmd === 'mode_change') {
+  nvim.on('redraw', (args) => {
+    args.forEach((arg) => {
+      if (arg[0] === 'mode_change') {
+        const [mode] = arg[1];
         // https://github.com/neovim/neovim/blob/master/src/nvim/cursor_shape.c#L18
         if (['insert', 'cmdline_normal'].includes(mode)) {
           insertMode = true;

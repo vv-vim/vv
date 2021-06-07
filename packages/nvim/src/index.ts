@@ -1,4 +1,5 @@
 // Only use relative imports here because https://github.com/microsoft/TypeScript/issues/32999#issuecomment-523558695
+// TODO: Bundle .d.ts or something
 
 import Nvim from './Nvim';
 
@@ -10,6 +11,6 @@ export * from './types';
 
 export { shellEnv, nvimCommand, nvimVersion } from './utils';
 
-export { startNvimProcess, ProcNvimTransport };
+export { startNvimProcess, ProcNvimTransport, Nvim };
 
 export default Nvim;

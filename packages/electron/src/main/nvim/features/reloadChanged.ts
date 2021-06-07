@@ -62,9 +62,8 @@ const initReloadChanged = ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }): v
     }
   };
 
-  nvim.on('vv:file_changed', (args: Buffer[]) => {
+  nvim.on<[Buffer]>('vv:file_changed', ([buffer]) => {
     if (enabled) {
-      const [buffer] = args;
       if (!changedBuffers[buffer.bufnr]) {
         changedBuffers[buffer.bufnr] = buffer;
       }
@@ -72,7 +71,7 @@ const initReloadChanged = ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }): v
     }
   });
 
-  nvim.on('vv:set', ([option, isEnabled]: [string, boolean]) => {
+  nvim.on<[string, boolean]>('vv:set', ([option, isEnabled]) => {
     if (option === 'reloadchanged') {
       enable(isEnabled);
     }
