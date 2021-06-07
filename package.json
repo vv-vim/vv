@@ -32,10 +32,12 @@
     "lint": "eslint . --ext .js,.ts",
     "test": "jest",
     "typecheck": "tsc -p packages/browser-renderer; tsc -p packages/electron; tsc -p packages/server",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "generate-types": "babel-node -x \".ts\" scripts/generateTypes.ts"
   },
   "devDependencies": {
     "@babel/core": "^7.13.8",
+    "@babel/node": "^7.14.2",
     "@babel/plugin-proposal-class-properties": "^7.13.0",
     "@babel/plugin-proposal-optional-chaining": "^7.13.8",
     "@babel/plugin-transform-runtime": "^7.13.10",

@@ -1,4 +1,4 @@
-import type { NvimTransport } from './types';
+import type { NvimTransport, UiEventsArgs } from './types';
 
 /**
  * Lightweight transport agnostic Neovim API client to be used in other @vvim packages.
@@ -68,7 +68,13 @@ class Nvim {
     }
   }
 
-  on(method: string, callback: (...p: any[]) => void): void {
+  on(method: 'redraw', callback: (args: UiEventsArgs) => void): void;
+
+  on(method: 'close', callback: () => void): void;
+
+  on<Args extends any[]>(method: string, callback: (...args: Args[]) => void): void;
+
+  on(method: string, callback: (...args: any[]) => void): void {
     if (method !== 'close') {
       this.subscribe(method);
     }

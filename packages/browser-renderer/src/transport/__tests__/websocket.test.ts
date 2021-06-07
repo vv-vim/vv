@@ -24,7 +24,7 @@ describe('websocket transport', () => {
   }
 
   beforeEach(() => {
-    // @ts-expect-error Mockinv WebSocket
+    // @ts-expect-error Mocking WebSocket
     global.WebSocket = MockWebSocket;
   });
 
