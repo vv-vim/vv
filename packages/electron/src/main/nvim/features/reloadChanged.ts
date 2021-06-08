@@ -3,7 +3,17 @@ import { dialog, BrowserWindow } from 'electron';
 import type Nvim from '@vvim/nvim';
 
 /**
- * Show "Reload changed" dialog when opened files changed ouside (ex. switch git branch).
+ * Show dialog when opened files are changed externally. For example, when you switch git branches. It
+ * will prompt you to keep your changes or reload the file.
+ * Controlled by `:VVset reloadchanged` setting, off by default.
+ *
+ * Deprecated because this could be done via plugins and it was buggy anyway.
+ * If you miss this feature, you can use https://github.com/igorgladkoborodov/load-all.vim plugin, that
+ * does the same.
+ *
+ * TODO: remove on the next major version
+ *
+ * @deprecated
  */
 const initReloadChanged = ({ nvim, win }: { nvim: Nvim; win: BrowserWindow }): void => {
   type Buffer = {
