@@ -1,3 +1,4 @@
+" TODO: Remove on the next major version
 " Iterate on buffers and reload them from disk. No questions asked.
 " Do it in temporary tab to keep the same windows layout.
 function! VVrefresh(...)

@@ -2,7 +2,6 @@
 // import quit from '@main/nvim/features/quit';
 // import windowTitle from '@main/nvim/features/windowTitle';
 // import zoom from '@main/nvim/features/zoom';
-// import reloadChanged from '@main/nvim/features/reloadChanged';
 // import windowSize from '@main/nvim/features/windowSize';
 // import focusAutocmd from '@main/nvim/features/focusAutocmd';
 
