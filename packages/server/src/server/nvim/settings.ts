@@ -1,7 +1,6 @@
 import debounce from 'lodash/debounce';
 
-import type Nvim from '@vvim/nvim';
-import type { Transport } from 'src/server/transport/types';
+import type { Nvim, RemoteTransport } from '@vvim/nvim';
 
 type BooleanSetting = 0 | 1;
 
@@ -52,7 +51,7 @@ const initSettings = ({
 }: {
   nvim: Nvim;
   args?: string[];
-  transport: Transport;
+  transport: RemoteTransport;
 }): void => {
   hasCustomConfig = args?.indexOf('-u') !== -1;
   let initialSettings: Settings | null = getDefaultSettings();

@@ -18,7 +18,7 @@ import initAutoUpdate from 'src/main/autoUpdate';
 import initNvim from 'src/main/nvim/nvim';
 import { parseArgs, joinArgs, filterArgs, cliArgs, argValue } from 'src/main/lib/args';
 
-import initTransport from 'src/main/transport/ipc';
+import IpcTransport from 'src/main/transport/ipc';
 
 let currentWindow: BrowserWindow | undefined | null;
 
@@ -155,7 +155,7 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
       win.setBounds({ x: x + 20, y: y + 20, width, height }, false);
     }
 
-    const transport = initTransport(win);
+    const transport = new IpcTransport(win);
 
     initNvim({
       args: joinArgs({ args, files: unopenedFiles }),

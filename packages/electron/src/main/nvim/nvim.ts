@@ -1,6 +1,6 @@
 import { app } from 'electron';
 
-import Nvim, { startNvimProcess, ProcNvimTransport } from '@vvim/nvim';
+import Nvim, { startNvimProcess, ProcNvimTransport, RemoteTransport } from '@vvim/nvim';
 
 import { setNvimByWindow } from 'src/main/nvim/nvimByWindow';
 
@@ -15,7 +15,6 @@ import backgroundColor from 'src/main/nvim/features/backrdoundColor';
 import initSettings from 'src/main/nvim/settings';
 
 import type { BrowserWindow } from 'electron';
-import type { Transport, Args } from 'src/main/transport/types';
 
 const initNvim = ({
   args,
@@ -26,17 +25,11 @@ const initNvim = ({
   args: string[];
   cwd: string;
   win: BrowserWindow;
-  transport: Transport;
+  transport: RemoteTransport;
 }): void => {
   const proc = startNvimProcess({ args, cwd, appPath: app.getAppPath() });
-  const nvimTransport = new ProcNvimTransport(proc);
+  const nvimTransport = new ProcNvimTransport(proc, transport);
   const nvim = new Nvim(nvimTransport);
-
-  nvimTransport.read((data: Args) => transport.send('nvim-data', data));
-  nvimTransport.onClose(() => transport.send('nvim-close'));
-  transport.on('nvim-send', (payload: Parameters<ProcNvimTransport['write']>) =>
-    nvimTransport.write(...payload),
-  );
 
   setNvimByWindow(win, nvim);
 

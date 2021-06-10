@@ -1,6 +1,6 @@
 import backgroundColor from 'src/main/nvim/features/backrdoundColor';
 
-import type { Transport } from 'src/main/transport/types';
+import type { RemoteTransport } from '@vvim/nvim';
 import type { BrowserWindow } from 'electron';
 
 describe('backrdoundColor', () => {
@@ -13,7 +13,7 @@ describe('backrdoundColor', () => {
         emitSetBackgroundColor = callback;
       }
     },
-  } as unknown) as Transport;
+  } as unknown) as RemoteTransport;
 
   const win = ({
     setBackgroundColor,

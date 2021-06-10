@@ -1,39 +1,47 @@
+import { EventEmitter } from 'events';
+
 import { ipcRenderer } from 'src/preloaded/electron';
 
-import { MessageType } from '@vvim/nvim';
+import type { RemoteTransport, Args } from '@vvim/nvim';
 
-import type { Transport } from 'src/transport/types';
+const addListenerMethods = [
+  'addListener',
+  'on',
+  'once',
+  'prependListener',
+  'prependOnceListener',
+] as const;
 
 /**
  * Init transport between main and renderer via Electron ipcRenderer.
  */
-const transport = (): Transport => ({
-  on: (channel, listener) => {
-    ipcRenderer.on(channel, (_e: Electron.IpcRendererEvent, ...args) => {
-      listener(...args);
-    });
-  },
+class IpcRendererTransport extends EventEmitter implements RemoteTransport {
+  ipc: Electron.IpcRenderer;
 
-  send: (channel, ...params) => {
-    ipcRenderer.send(channel, ...params);
-  },
+  registeredEvents: Record<string, any> = {};
 
-  // TODO: Refactor to packages/browser-renderer/src/transport/transport.ts
-  nvim: {
-    write: (id: number, command: string, params: any[]) => {
-      ipcRenderer.send('nvim-send', [id, command, params]);
-    },
+  constructor(ipc = ipcRenderer) {
+    super();
+    this.ipc = ipc;
 
-    read: (callback) => {
-      ipcRenderer.on('nvim-data', (_e: Electron.IpcRendererEvent, args: MessageType) => {
-        callback(args);
-      });
-    },
+    addListenerMethods.forEach((m) => this.patchAddListenerMethod(m));
+  }
 
-    onClose: (callback) => {
-      ipcRenderer.on('nvim-close', () => callback());
-    },
-  },
-});
+  private patchAddListenerMethod(methodName: typeof addListenerMethods[number]) {
+    this[methodName] = (eventName: string, listener: (...args: Args) => void) => {
+      if (!this.registeredEvents[eventName]) {
+        this.registeredEvents[eventName] = (_e: Electron.IpcRendererEvent, ...args: Args) => {
+          this.emit(eventName, ...args);
+        };
+        this.ipc.on(eventName, this.registeredEvents[eventName]);
+      }
+      return super[methodName](eventName, listener);
+    };
+  }
 
-export default transport;
+  send(channel: string, ...params: Args): void {
+    this.ipc.send(channel, ...params);
+  }
+}
+
+export default IpcRendererTransport;

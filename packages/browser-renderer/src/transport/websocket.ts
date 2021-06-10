@@ -1,48 +1,26 @@
-import type { Transport, Listener } from 'src/transport/types';
+import { EventEmitter } from 'events';
+import type { RemoteTransport, Args } from '@vvim/nvim';
 
 /**
  * Init transport between main and renderer via WebSocket.
  */
-const transport = (): Transport => {
-  const socket = new WebSocket(`ws://${window.location.host}`);
+class WebSocketTransport extends EventEmitter implements RemoteTransport {
+  socket: WebSocket;
 
-  const callbacks: Record<string, Listener[]> = {};
+  constructor() {
+    super();
 
-  const addCallback = (channel: string, listener: Listener) => {
-    callbacks[channel] = [...(callbacks[channel] || []), listener];
-  };
+    this.socket = new WebSocket(`ws://${window.location.host}`);
 
-  socket.onmessage = ({ data }) => {
-    const [channel, args] = JSON.parse(data);
-    if (callbacks[channel]) {
-      callbacks[channel].forEach((listener) => listener(args));
-    }
-  };
+    this.socket.onmessage = ({ data }) => {
+      const [channel, args] = JSON.parse(data);
+      this.emit(channel, args);
+    };
+  }
 
-  return {
-    on: (channel, listener) => {
-      addCallback(channel, listener);
-    },
+  send(channel: string, ...args: Args): void {
+    this.socket.send(JSON.stringify([channel, ...args]));
+  }
+}
 
-    send: (channel, ...args) => {
-      socket.send(JSON.stringify([channel, ...args]));
-    },
-
-    // TODO: Refactor to packages/browser-renderer/src/transport/transport.ts
-    nvim: {
-      write: (id: number, command: string, params: string[]) => {
-        socket.send(JSON.stringify(['nvim-send', [id, command, params]]));
-      },
-
-      read: (callback) => {
-        addCallback('nvim-data', callback);
-      },
-
-      onClose: (callback) => {
-        addCallback('nvim-close', callback);
-      },
-    },
-  };
-};
-
-export default transport;
+export default WebSocketTransport;

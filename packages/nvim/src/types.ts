@@ -1,5 +1,7 @@
 /* eslint-disable camelcase */
 
+import type { EventEmitter } from 'events';
+
 // Only use relative imports here because https://github.com/microsoft/TypeScript/issues/32999#issuecomment-523558695
 // TODO: Bundle .d.ts or something
 import type { UiEvents as UiEventsOriginal } from './__generated__/uiEventTypes';
@@ -11,6 +13,22 @@ export type NotificationMessage = [2, string, any[]];
 export type MessageType = RequestMessage | ResponseMessage | NotificationMessage;
 export type ReadCallback = (message: MessageType) => void;
 export type OnCloseCallback = () => void;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Args = any[];
+
+export type Listener = (...args: Args) => void;
+
+/**
+ * Remote transport between server or main and renderer.
+ * Use emitter events (`on`, `once` etc) for receiving message, and `send` to sent message to other side.
+ */
+export type RemoteTransport = EventEmitter & {
+  /**
+   * Send message to remote
+   */
+  send: (channel: string, ...args: Args) => void;
+};
 
 export type NvimTransport = {
   /**
