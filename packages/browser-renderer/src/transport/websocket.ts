@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events';
-import type { RemoteTransport, Args } from '@vvim/nvim';
+import type { Transport, Args } from '@vvim/nvim';
 
 /**
  * Init transport between main and renderer via WebSocket.
  */
-class WebSocketTransport extends EventEmitter implements RemoteTransport {
+class WebSocketTransport extends EventEmitter implements Transport {
   socket: WebSocket;
 
   constructor() {

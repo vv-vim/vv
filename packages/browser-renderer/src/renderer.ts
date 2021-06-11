@@ -1,4 +1,4 @@
-import Nvim, { RemoteNvimTransport } from '@vvim/nvim';
+import Nvim from '@vvim/nvim';
 
 import { Settings } from 'src/types';
 
@@ -15,8 +15,7 @@ const renderer = (): void => {
   const transport = new Transport();
 
   const initRenderer = (settings: Settings) => {
-    const nvimTransport = new RemoteNvimTransport(transport);
-    const nvim = new Nvim(nvimTransport, true);
+    const nvim = new Nvim(transport, true);
     const screen = initScreen({ nvim, settings, transport });
     initKeyboard({ nvim, screen });
     initMouse({ nvim, screen });

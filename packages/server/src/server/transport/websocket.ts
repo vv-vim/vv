@@ -1,11 +1,11 @@
 import WebSocket from 'ws';
 import { Server } from 'http';
 
-import { RemoteTransport, Args } from '@vvim/nvim';
+import { Transport, Args } from '@vvim/nvim';
 
 import { EventEmitter } from 'events';
 
-class WsTransport extends EventEmitter implements RemoteTransport {
+class WsTransport extends EventEmitter implements Transport {
   ws: WebSocket;
 
   constructor(ws: WebSocket) {
@@ -14,8 +14,8 @@ class WsTransport extends EventEmitter implements RemoteTransport {
     this.ws = ws;
 
     this.ws.on('message', (data: string) => {
-      const [channel, args] = JSON.parse(data);
-      this.emit(channel, args);
+      const [channel, ...args] = JSON.parse(data);
+      this.emit(channel, ...args);
     });
   }
 
@@ -32,7 +32,7 @@ const transport = ({
   onConnect,
 }: {
   server: Server;
-  onConnect: (t: RemoteTransport) => void;
+  onConnect: (t: Transport) => void;
 }): void => {
   const wss = new WebSocket.Server({ server });
 

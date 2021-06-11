@@ -21,32 +21,13 @@ export type Listener = (...args: Args) => void;
 
 /**
  * Remote transport between server or main and renderer.
- * Use emitter events (`on`, `once` etc) for receiving message, and `send` to sent message to other side.
+ * Use emitter events (`on`, `once` etc) for receiving message, and `send` to send message to other side.
  */
-export type RemoteTransport = EventEmitter & {
+export type Transport = EventEmitter & {
   /**
    * Send message to remote
    */
   send: (channel: string, ...args: Args) => void;
-};
-
-export type NvimTransport = {
-  /**
-   * Send message to nvim api.
-   * https://neovim.io/doc/user/api.html
-   */
-  write: (id: number, command: string, params: string[]) => void;
-
-  /**
-   * Add callback when data from nvim API received. Message should be in unpacked RPC format:
-   * https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md#messagepack-rpc-protocol-specification
-   */
-  read: (callback: ReadCallback) => void;
-
-  /**
-   * Add callback that will be called when transport is closed, i.e. nvim probably closed.
-   */
-  onClose: (callback: OnCloseCallback) => void;
 };
 
 // Manual refine of the auto-generated UiEvents

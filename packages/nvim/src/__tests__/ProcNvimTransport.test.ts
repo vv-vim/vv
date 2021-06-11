@@ -25,45 +25,52 @@ describe('ProcNvimTransport', () => {
     transport = new ProcNvimTransport(proc, remoteTransport);
   });
 
-  test('transport.read receives msgpack-encoded data from proc.stdout', () => {
+  test('transport receives `nvim:data` event with msgpack-encoded data from proc.stdout', () => {
     const readCallback = jest.fn();
-    transport.read(readCallback);
+    transport.on('nvim:data', readCallback);
     proc.stdout.push(encode('hello'));
     expect(readCallback).toHaveBeenCalledWith('hello');
   });
 
-  test('transport.onClose is called when proc is closed', () => {
+  test('transport emits nvim:close when proc is closed', () => {
     const handleClose = jest.fn();
-    transport.onClose(handleClose);
+    transport.on('nvim:close', handleClose);
     proc.emit('close');
     expect(handleClose).toHaveBeenCalled();
   });
 
-  test('write sends msgpack-encoded data to stdin', async () => {
-    transport.write(10, 'command', ['param1', 'param2']);
+  test('send to `nvim:write` writes msgpack-encoded data to stdin', async () => {
+    transport.send('nvim:write', 10, 'command', ['param1', 'param2']);
     expect(onData).toHaveBeenCalledWith(encode([0, 10, 'command', ['param1', 'param2']]));
   });
 
   test("don't write to stdin if it is not writable", async () => {
     proc.stdin.end();
-    transport.write(10, 'command', ['param1', 'param2']);
+    transport.send('nvim:write', 10, 'command', ['param1', 'param2']);
     expect(onData).not.toHaveBeenCalled();
   });
 
   describe('remoteTransport', () => {
     test('receives and relays to proc.stin `nvim-send` event from remoteTransport', () => {
-      remoteTransport.emit('nvim-send', [1, 'command', ['params']]);
+      remoteTransport.emit('nvim:write', 1, 'command', ['params']);
       expect(onData).toHaveBeenCalledWith(encode([0, 1, 'command', ['params']]));
     });
 
-    test('send `nvim-close` event to remoteTransport on close', () => {
+    test('send `nvim:close` event to remoteTransport on close', () => {
       proc.emit('close');
-      expect(remoteTransport.send).toHaveBeenCalledWith('nvim-close');
+      expect(remoteTransport.send).toHaveBeenCalledWith('nvim:close');
     });
 
     test('translate nvim proc stdout data to remoteTransport', () => {
       proc.stdout.push(encode('hello'));
-      expect(remoteTransport.send).toHaveBeenCalledWith('nvim-data', 'hello');
+      expect(remoteTransport.send).toHaveBeenCalledWith('nvim:data', 'hello');
+    });
+
+    test('has attachRemoteTransport method', () => {
+      transport = new ProcNvimTransport(proc);
+      transport.attachRemoteTransport(remoteTransport);
+      proc.stdout.push(encode('hello'));
+      expect(remoteTransport.send).toHaveBeenCalledWith('nvim:data', 'hello');
     });
   });
 });

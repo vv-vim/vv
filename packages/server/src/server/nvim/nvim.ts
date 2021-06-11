@@ -7,7 +7,7 @@
 
 import initSettings from 'src/server/nvim/settings';
 
-import Nvim, { startNvimProcess, ProcNvimTransport, RemoteTransport } from '@vvim/nvim';
+import Nvim, { startNvimProcess, ProcNvimTransport, Transport } from '@vvim/nvim';
 
 const initNvim = ({
   args,
@@ -16,7 +16,7 @@ const initNvim = ({
 }: {
   args?: string[];
   cwd?: string;
-  transport: RemoteTransport;
+  transport: Transport;
 }): void => {
   const proc = startNvimProcess({ args, cwd });
   const nvimTransport = new ProcNvimTransport(proc, transport);

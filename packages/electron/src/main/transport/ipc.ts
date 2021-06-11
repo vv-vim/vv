@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import { EventEmitter } from 'events';
 
-import { RemoteTransport, Args } from '@vvim/nvim';
+import { Transport, Args } from '@vvim/nvim';
 
 const addListenerMethods = [
   'addListener',
@@ -14,7 +14,7 @@ const addListenerMethods = [
 /**
  * Init transport between main and renderer to be used for main side.
  */
-class IpcTransport extends EventEmitter implements RemoteTransport {
+class IpcTransport extends EventEmitter implements Transport {
   win: Electron.BrowserWindow;
 
   registeredEvents: Record<string, any> = {};

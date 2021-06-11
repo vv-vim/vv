@@ -1,4 +1,4 @@
-import type { NvimTransport, UiEventsArgs } from './types';
+import type { Transport, UiEventsArgs, MessageType } from './types';
 
 /**
  * Lightweight transport agnostic Neovim API client to be used in other @vvim packages.
@@ -6,7 +6,7 @@ import type { NvimTransport, UiEventsArgs } from './types';
 class Nvim {
   private requestId = 0;
 
-  private transport: NvimTransport;
+  private transport: Transport;
 
   private subscriptions: Record<string, Array<(...params: any[]) => void>> = {};
 
@@ -17,11 +17,11 @@ class Nvim {
 
   private isRenderer: boolean;
 
-  constructor(transport: NvimTransport, isRenderer = false) {
+  constructor(transport: Transport, isRenderer = false) {
     this.transport = transport;
     this.isRenderer = isRenderer;
 
-    this.transport.read((params) => {
+    this.transport.on('nvim:data', (params: MessageType) => {
       if (params[0] === 0) {
         // eslint-disable-next-line no-console
         console.error('Unsupported request type', ...params);
@@ -32,7 +32,7 @@ class Nvim {
       }
     });
 
-    this.transport.onClose(() => {
+    this.transport.on('nvim:close', () => {
       this.handleNotification('close');
     });
   }
@@ -42,7 +42,7 @@ class Nvim {
     // Workaround to avoid request ids conflict vetween main and renderer. Renderer ids are even, main ids are odd.
     // TODO: sync request id between all instances.
     const id = this.requestId * 2 + (this.isRenderer ? 0 : 1);
-    this.transport.write(id, `nvim_${command}`, params);
+    this.transport.send('nvim:write', id, `nvim_${command}`, params);
     return new Promise((resolve, reject) => {
       this.requestPromises[id] = {
         resolve,

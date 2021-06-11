@@ -1,7 +1,7 @@
 import debounce from 'lodash/debounce';
 
 import type { BrowserWindow } from 'electron';
-import type { Nvim, RemoteTransport } from '@vvim/nvim';
+import type { Nvim, Transport } from '@vvim/nvim';
 
 import store, { Settings } from 'src/main/lib/store';
 
@@ -59,7 +59,7 @@ const initSettings = ({
   win: BrowserWindow;
   nvim: Nvim;
   args: string[];
-  transport: RemoteTransport;
+  transport: Transport;
 }): void => {
   hasCustomConfig = args.indexOf('-u') !== -1;
   let initialSettings: Settings | null = getSettings();
