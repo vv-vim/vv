@@ -1,8 +1,7 @@
-import ipcTransport from 'src/transport/ipc';
-import websocketTransport from 'src/transport/websocket';
+import IpcRendererTransport from 'src/transport/ipc';
+import WebSocketTransport from 'src/transport/websocket';
 import isWeb from 'src/lib/isWeb';
-import type { Transport } from 'src/transport/types';
 
-const transport = (): Transport => (isWeb() ? websocketTransport() : ipcTransport());
+const Transport = isWeb() ? WebSocketTransport : IpcRendererTransport;
 
-export default transport;
+export default Transport;

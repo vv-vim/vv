@@ -7,9 +7,7 @@
 
 import initSettings from 'src/server/nvim/settings';
 
-import Nvim, { startNvimProcess, ProcNvimTransport } from '@vvim/nvim';
-
-import type { Transport, Args } from 'src/server/transport/types';
+import Nvim, { startNvimProcess, ProcNvimTransport, RemoteTransport } from '@vvim/nvim';
 
 const initNvim = ({
   args,
@@ -18,17 +16,11 @@ const initNvim = ({
 }: {
   args?: string[];
   cwd?: string;
-  transport: Transport;
+  transport: RemoteTransport;
 }): void => {
   const proc = startNvimProcess({ args, cwd });
-  const nvimTransport = new ProcNvimTransport(proc);
+  const nvimTransport = new ProcNvimTransport(proc, transport);
   const nvim = new Nvim(nvimTransport);
-
-  nvimTransport.read((data: Args) => transport.send('nvim-data', data));
-  nvimTransport.onClose(() => transport.send('nvim-close'));
-  transport.on('nvim-send', (payload: Parameters<ProcNvimTransport['write']>) =>
-    nvimTransport.write(...payload),
-  );
 
   initSettings({ nvim, args, transport });
 

@@ -2,6 +2,8 @@
 
 import Nvim from './Nvim';
 
+export { default as RemoteNvimTransport } from './RemoteNvimTransport';
+
 export * from './types';
 
 export default Nvim;

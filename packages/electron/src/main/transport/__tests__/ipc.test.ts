@@ -1,63 +1,76 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { BrowserWindow, IpcMain } from 'electron';
+import { EventEmitter } from 'events';
 
-import initTransport from 'src/main/transport/ipc';
-
-jest.mock('electron', () => ({
-  ipcMain: {
-    on: jest.fn(),
-    removeListener: jest.fn(),
-  },
-}));
+import IpcTransport from 'src/main/transport/ipc';
 
 describe('main transport', () => {
-  const win = ({
+  const ipcMain = new EventEmitter() as IpcMain;
+
+  const win = (Object.assign(new EventEmitter(), {
     id: 'winId',
-    on: jest.fn(),
     webContents: {
       send: jest.fn(),
     },
-  } as unknown) as BrowserWindow;
+  }) as unknown) as BrowserWindow;
 
-  const transport = initTransport(win);
+  let transport: IpcTransport;
+
+  beforeEach(() => {
+    transport = new IpcTransport(win, ipcMain);
+  });
 
   describe('on', () => {
     const listener = jest.fn();
 
-    test('calls ipcMain.on with channel prop', () => {
-      transport.on('test-channel', listener);
-      expect((ipcMain.on as jest.Mock).mock.calls[0][0]).toBe('test-channel');
-    });
-
     test('calls listener if sender.id matches window id', () => {
       transport.on('test-channel', listener);
-      const ipcListener = (ipcMain.on as jest.Mock).mock.calls[0][1];
-      ipcListener({ sender: { id: 'winId' } }, 'arg1', 'arg2');
+      ipcMain.emit('test-channel', { sender: { id: 'winId' } }, 'arg1', 'arg2');
       expect(listener).toHaveBeenCalledWith('arg1', 'arg2');
     });
 
     test('does not call listener if sender.id does not match window id', () => {
-      transport.on('test-channel', listener);
-      const ipcListener = (ipcMain.on as jest.Mock).mock.calls[0][1];
-      ipcListener({ sender: { id: 'otherWinId' } }, 'arg1', 'arg2');
+      ipcMain.emit('test-channel', { sender: { id: 'otherWinId' } }, 'arg1', 'arg2');
       expect(listener).not.toHaveBeenCalled();
     });
 
     test('listener with not args', () => {
-      transport.on('test-channel', listener);
-      const ipcListener = (ipcMain.on as jest.Mock).mock.calls[0][1];
-      ipcListener({ sender: { id: 'winId' } });
+      ipcMain.emit('test-channel', { sender: { id: 'winId' } });
       expect(listener).toHaveBeenCalledWith();
-    });
-
-    test('subscribes to win `closed` event', () => {
-      transport.on('test-channel', listener);
-      expect(win.on).toHaveBeenCalledWith('closed', expect.any(Function));
     });
 
     test('removes event listener on win `closed` event', () => {
       transport.on('test-channel', listener);
-      (win.on as jest.Mock).mock.calls[0][1]();
+      jest.spyOn(ipcMain, 'removeListener');
+      win.emit('closed');
       expect(ipcMain.removeListener).toHaveBeenCalledWith('test-channel', expect.any(Function));
+    });
+
+    test('events order', () => {
+      const result: string[] = [];
+      transport.on('test-channel', () => {
+        result.push('event1');
+      });
+      transport.on('test-channel', () => {
+        result.push('event2');
+      });
+      transport.prependListener('test-channel', () => {
+        result.push('event3');
+      });
+      ipcMain.emit('test-channel', { sender: { id: 'winId' } });
+      expect(result).toEqual(['event3', 'event1', 'event2']);
+    });
+
+    test('once', () => {
+      const result: string[] = [];
+      transport.once('test-channel', () => {
+        result.push('event1');
+      });
+      transport.on('test-channel', () => {
+        result.push('event2');
+      });
+      ipcMain.emit('test-channel', { sender: { id: 'winId' } });
+      ipcMain.emit('test-channel', { sender: { id: 'winId' } });
+      expect(result).toEqual(['event1', 'event2', 'event2']);
     });
   });
 
@@ -73,9 +86,8 @@ describe('main transport', () => {
     });
 
     test('does not send anything if window is closed', () => {
-      const t = initTransport(win);
-      (win.on as jest.Mock).mock.calls[0][1]();
-      t.send('test-channel');
+      win.emit('closed');
+      transport.send('test-channel');
       expect(win.webContents.send).not.toHaveBeenCalled();
     });
   });

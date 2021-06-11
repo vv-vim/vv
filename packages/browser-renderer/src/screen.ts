@@ -6,8 +6,14 @@ import getColor from 'src/lib/getColor';
 import * as PIXI from 'src/lib/pixi';
 
 import type { Settings } from 'src/types';
-import type { Transport } from 'src/transport/types';
-import type { Nvim, UiEventsHandlers, UiEventsArgs, ModeInfo, HighlightAttrs } from '@vvim/nvim';
+import type {
+  Nvim,
+  RemoteTransport,
+  UiEventsHandlers,
+  UiEventsArgs,
+  ModeInfo,
+  HighlightAttrs,
+} from '@vvim/nvim';
 
 export type Screen = {
   screenCoords: (width: number, height: number) => [number, number];
@@ -48,7 +54,7 @@ const screen = ({
   nvim,
 }: {
   settings: Settings;
-  transport: Transport;
+  transport: RemoteTransport;
   nvim: Nvim;
 }): Screen => {
   let screenContainer: HTMLDivElement;
