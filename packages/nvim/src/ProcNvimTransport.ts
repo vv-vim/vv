@@ -1,52 +1,51 @@
 import { createDecodeStream, encode } from 'msgpack-lite';
+import { EventEmitter } from 'events';
 
 import type { ChildProcessWithoutNullStreams } from 'child_process';
 import type { DecodeStream } from 'msgpack-lite';
-import type { RemoteTransport, NvimTransport, ReadCallback, OnCloseCallback } from 'src/types';
+import type { Transport, MessageType } from 'src/types';
 
 /**
- * NvimTransport that communicates directly with nvim process.
+ * Transport that communicates directly with nvim process.
  * It also used as to communicate nvim api with remote transport.
  */
-class ProcNvimTransport implements NvimTransport {
+class ProcNvimTransport extends EventEmitter implements Transport {
   private msgpackIn: DecodeStream;
 
   private proc: ChildProcessWithoutNullStreams;
 
-  private remoteTransport: RemoteTransport;
+  constructor(proc: ChildProcessWithoutNullStreams, remoteTransport?: Transport) {
+    super();
 
-  constructor(proc: ChildProcessWithoutNullStreams, remoteTransport: RemoteTransport) {
     this.proc = proc;
-    this.remoteTransport = remoteTransport;
 
     const decodeStream = createDecodeStream();
     this.msgpackIn = this.proc.stdout.pipe(decodeStream);
 
-    this.initRemoteTransportEvents();
+    this.proc.on('close', () => this.emit('nvim:close'));
+    this.msgpackIn.on('data', (message: MessageType) => this.emit('nvim:data', message));
+
+    if (remoteTransport) {
+      this.attachRemoteTransport(remoteTransport);
+    }
   }
 
-  private initRemoteTransportEvents() {
-    this.remoteTransport.on('nvim-send', (payload: Parameters<ProcNvimTransport['write']>) =>
-      this.write(...payload),
-    );
-
-    this.onClose(() => this.remoteTransport.send('nvim-close'));
-
-    this.read((data) => this.remoteTransport.send('nvim-data', data));
+  attachRemoteTransport(remoteTransport: Transport): void {
+    remoteTransport.on('nvim:write', (...args: [number, string, string[]]) => this.write(...args));
+    this.on('nvim:close', () => remoteTransport.send('nvim:close'));
+    this.on('nvim:data', (data: MessageType) => remoteTransport.send('nvim:data', data));
   }
 
-  write(id: number, command: string, params: string[]): void {
+  private write(id: number, command: string, params: string[]): void {
     if (this.proc.stdin.writable) {
       this.proc.stdin.write(encode([0, id, command, params]));
     }
   }
 
-  read(callback: ReadCallback): void {
-    this.msgpackIn.on('data', callback);
-  }
-
-  onClose(callback: OnCloseCallback): void {
-    this.proc.on('close', callback);
+  send(channel: string, id: number, command: string, params: string[]): void {
+    if (channel === 'nvim:write') {
+      this.write(id, command, params);
+    }
   }
 }
 

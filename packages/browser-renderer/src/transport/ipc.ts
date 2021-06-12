@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 
 import { ipcRenderer } from 'src/preloaded/electron';
 
-import type { RemoteTransport, Args } from '@vvim/nvim';
+import type { Transport, Args } from '@vvim/nvim';
 
 const addListenerMethods = [
   'addListener',
@@ -15,7 +15,7 @@ const addListenerMethods = [
 /**
  * Init transport between main and renderer via Electron ipcRenderer.
  */
-class IpcRendererTransport extends EventEmitter implements RemoteTransport {
+class IpcRendererTransport extends EventEmitter implements Transport {
   ipc: Electron.IpcRenderer;
 
   registeredEvents: Record<string, any> = {};

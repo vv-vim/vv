@@ -1,6 +1,6 @@
 import { app } from 'electron';
 
-import Nvim, { startNvimProcess, ProcNvimTransport, RemoteTransport } from '@vvim/nvim';
+import Nvim, { startNvimProcess, ProcNvimTransport, Transport } from '@vvim/nvim';
 
 import { setNvimByWindow } from 'src/main/nvim/nvimByWindow';
 
@@ -25,7 +25,7 @@ const initNvim = ({
   args: string[];
   cwd: string;
   win: BrowserWindow;
-  transport: RemoteTransport;
+  transport: Transport;
 }): void => {
   const proc = startNvimProcess({ args, cwd, appPath: app.getAppPath() });
   const nvimTransport = new ProcNvimTransport(proc, transport);

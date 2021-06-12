@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import initRenderer from 'src/renderer';
 
-import Nvim, { RemoteNvimTransport } from '@vvim/nvim';
+import Nvim from '@vvim/nvim';
 import initScreen from 'src/screen';
 import initKeyboard from 'src/input/keyboard';
 import initMouse from 'src/input/mouse';
@@ -18,7 +18,6 @@ jest.mock('src/features/hideMouseCursor', () => jest.fn());
 
 describe('renderer', () => {
   const mockedNvim = Nvim as jest.Mock<Nvim>;
-  const mockedRemoteNvimTransport = RemoteNvimTransport as jest.Mock<RemoteNvimTransport>;
 
   beforeEach(() => {
     mockTransport.removeAllListeners();
@@ -36,8 +35,7 @@ describe('renderer', () => {
 
   test('init nvim', () => {
     mockTransport.emit('initRenderer', 'settings');
-    expect(mockedRemoteNvimTransport).toHaveBeenCalledWith(mockTransport);
-    expect(Nvim).toHaveBeenCalledWith(mockedRemoteNvimTransport.mock.instances[0], true);
+    expect(Nvim).toHaveBeenCalledWith(mockTransport, true);
   });
 
   test('init keyboard', () => {

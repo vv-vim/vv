@@ -8,7 +8,7 @@ import * as PIXI from 'src/lib/pixi';
 import type { Settings } from 'src/types';
 import type {
   Nvim,
-  RemoteTransport,
+  Transport,
   UiEventsHandlers,
   UiEventsArgs,
   ModeInfo,
@@ -54,7 +54,7 @@ const screen = ({
   nvim,
 }: {
   settings: Settings;
-  transport: RemoteTransport;
+  transport: Transport;
   nvim: Nvim;
 }): Screen => {
   let screenContainer: HTMLDivElement;

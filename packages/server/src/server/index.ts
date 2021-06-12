@@ -5,7 +5,7 @@ import initNvim from 'src/server/nvim/nvim';
 import { getDefaultSettings } from 'src/server/nvim/settings';
 import websocketTransport from 'src/server/transport/websocket';
 
-import { RemoteTransport } from '@vvim/nvim';
+import { Transport } from '@vvim/nvim';
 
 const { PORT = 3000 } = process.env;
 
@@ -14,7 +14,7 @@ const server = http.createServer(app);
 
 app.use(express.static('build'));
 
-const onConnect = (transport: RemoteTransport) => {
+const onConnect = (transport: Transport) => {
   const args = process.argv.slice(2);
 
   initNvim({

@@ -7,8 +7,6 @@ export { default as startNvimProcess } from './process';
 
 export { default as ProcNvimTransport } from './ProcNvimTransport';
 
-export { default as RemoteNvimTransport } from './RemoteNvimTransport';
-
 export * from './types';
 
 export { Nvim };

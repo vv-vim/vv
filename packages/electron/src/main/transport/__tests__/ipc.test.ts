@@ -16,6 +16,7 @@ describe('main transport', () => {
   let transport: IpcTransport;
 
   beforeEach(() => {
+    win.removeAllListeners();
     transport = new IpcTransport(win, ipcMain);
   });
 
