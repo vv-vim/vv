@@ -52,9 +52,32 @@ describe('Nvim', () => {
   });
 
   describe('notification', () => {
-    test('send `subscribe` when you subscribe', () => {
+    test('send `nvim_subscribe` when you subscribe', () => {
       nvim.on('onSomething', () => null);
       expect(send).toHaveBeenCalledWith('nvim:write', 3, 'nvim_subscribe', ['onSomething']);
+    });
+
+    test('does not subscribe twice on the same event', () => {
+      nvim.on('onSomething', () => null);
+      nvim.on('onSomething', () => null);
+      expect(send).toHaveBeenCalledWith('nvim:write', 3, 'nvim_subscribe', ['onSomething']);
+      expect(send).toHaveBeenCalledTimes(1);
+    });
+
+    test('send `nvim_unsubscribe` when you subscribe', () => {
+      const listener = () => null;
+      nvim.on('onSomething', listener);
+      nvim.removeListener('onSomething', listener);
+      expect(send).toHaveBeenCalledWith('nvim:write', 5, 'nvim_unsubscribe', ['onSomething']);
+    });
+
+    test('does not unsubscribe if you have events with that name', () => {
+      const listener = () => null;
+      const anotherListener = () => null;
+      nvim.on('onSomething', listener);
+      nvim.on('onSomething', anotherListener);
+      nvim.removeListener('onSomething', listener);
+      expect(send).not.toHaveBeenCalledWith('nvim:write', 5, 'nvim_unsubscribe', ['onSomething']);
     });
 
     test('receives notification for subscription', () => {
@@ -77,6 +100,7 @@ describe('Nvim', () => {
   describe('predefined commands', () => {
     const commands = [
       ['subscribe', 'subscribe'],
+      ['unsubscribe', 'unsubscribe'],
       ['callFunction', 'call_function'],
       ['command', 'command'],
       ['input', 'input'],

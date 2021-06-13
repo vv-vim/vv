@@ -1,14 +1,13 @@
-import type { Transport, UiEventsArgs, MessageType } from './types';
+import { EventEmitter } from 'events';
+import type { Transport, /* UiEventsArgs, */ MessageType } from './types';
 
 /**
  * Lightweight transport agnostic Neovim API client to be used in other @vvim packages.
  */
-class Nvim {
+class Nvim extends EventEmitter {
   private requestId = 0;
 
   private transport: Transport;
-
-  private subscriptions: Record<string, Array<(...params: any[]) => void>> = {};
 
   private requestPromises: Record<
     string,
@@ -18,6 +17,8 @@ class Nvim {
   private isRenderer: boolean;
 
   constructor(transport: Transport, isRenderer = false) {
+    super();
+
     this.transport = transport;
     this.isRenderer = isRenderer;
 
@@ -28,12 +29,32 @@ class Nvim {
       } else if (params[0] === 1) {
         this.handleResponse(params[1], params[2], params[3]);
       } else if (params[0] === 2) {
-        this.handleNotification(params[1], params[2]);
+        this.emit(params[1], params[2]);
       }
     });
 
     this.transport.on('nvim:close', () => {
-      this.handleNotification('close');
+      this.emit('close');
+    });
+
+    this.on('newListener', (eventName: string) => {
+      if (
+        !this.listenerCount(eventName) &&
+        !['close', 'newListener', 'removeListener'].includes(eventName) &&
+        !eventName.startsWith('nvim:')
+      ) {
+        this.subscribe(eventName);
+      }
+    });
+
+    this.on('removeListener', (eventName: string) => {
+      if (
+        !this.listenerCount(eventName) &&
+        !['close', 'newListener', 'removeListener'].includes(eventName) &&
+        !eventName.startsWith('nvim:')
+      ) {
+        this.unsubscribe(eventName);
+      }
     });
   }
 
@@ -51,12 +72,6 @@ class Nvim {
     });
   }
 
-  private handleNotification(command: string, params?: any[]) {
-    if (this.subscriptions[command]) {
-      this.subscriptions[command].forEach((c) => c(params));
-    }
-  }
-
   private handleResponse(id: number, error: Error, result?: any): void {
     if (this.requestPromises[id]) {
       if (error) {
@@ -68,32 +83,16 @@ class Nvim {
     }
   }
 
-  on(method: 'redraw', callback: (args: UiEventsArgs) => void): void;
-
-  on(method: 'close', callback: () => void): void;
-
-  on<Args extends any[]>(method: string, callback: (...args: Args[]) => void): void;
-
-  on(method: string, callback: (...args: any[]) => void): void {
-    if (method !== 'close') {
-      this.subscribe(method);
-    }
-
-    if (!this.subscriptions[method]) {
-      this.subscriptions[method] = [];
-    }
-    this.subscriptions[method].push(callback);
-  }
-
-  // eslint-disable-next-line
-  off(_method: string, _callback: () => void) {
-    // TODO: implement
-  }
+  // TODO: add types for specific events
+  // on(method: 'redraw', callback: (args: UiEventsArgs) => void): void;
+  // on(method: 'close', callback: () => void): void;
 
   private commandFactory = <R = void>(command: string) => (...params: any[]): Promise<R> =>
     this.request<R>(command, params);
 
   subscribe = this.commandFactory('subscribe');
+
+  unsubscribe = this.commandFactory('unsubscribe');
 
   eval = <Result = void>(command: string): Promise<Result> => this.request('eval', [command]);
 

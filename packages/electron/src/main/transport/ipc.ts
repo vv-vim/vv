@@ -3,21 +3,11 @@ import { EventEmitter } from 'events';
 
 import { Transport, Args } from '@vvim/nvim';
 
-const addListenerMethods = [
-  'addListener',
-  'on',
-  'once',
-  'prependListener',
-  'prependOnceListener',
-] as const;
-
 /**
  * Init transport between main and renderer to be used for main side.
  */
 class IpcTransport extends EventEmitter implements Transport {
   win: Electron.BrowserWindow;
-
-  registeredEvents: Record<string, any> = {};
 
   closed = false;
 
@@ -34,32 +24,31 @@ class IpcTransport extends EventEmitter implements Transport {
       this.closed = true;
     });
 
-    addListenerMethods.forEach((m) => this.patchAddListenerMethod(m));
+    this.on('newListener', (eventName: string) => {
+      if (!this.listenerCount(eventName)) {
+        this.ipc.on(eventName, this.handleEvent);
+        this.win.on('closed', () => {
+          this.ipc.removeListener(eventName, this.handleEvent);
+        });
+      }
+    });
+
+    this.on('removeListener', (eventName: string) => {
+      if (!this.listenerCount(eventName)) {
+        this.ipc.removeListener(eventName, this.handleEvent);
+      }
+    });
   }
 
-  private patchAddListenerMethod(methodName: typeof addListenerMethods[number]) {
-    this[methodName] = (eventName: string, listener: (...args: any[]) => void) => {
-      this.registerEvent(eventName);
-      return super[methodName](eventName, listener);
-    };
-  }
-
-  private registerEvent(eventName: string) {
-    if (!this.registeredEvents[eventName]) {
-      this.registeredEvents[eventName] = (
-        { sender: { id } }: Electron.IpcMainEvent,
-        ...args: Args
-      ) => {
-        if (id === this.win.id) {
-          this.emit(eventName, ...args);
-        }
-      };
-      this.ipc.on(eventName, this.registeredEvents[eventName]);
-      this.win.on('closed', () => {
-        this.ipc.removeListener(eventName, this.registeredEvents[eventName]);
-      });
+  handleEvent = (event: Electron.IpcMainEvent, ...args: Args): void => {
+    const {
+      type,
+      sender: { id },
+    } = event;
+    if (id === this.win.id) {
+      this.emit(type, ...args);
     }
-  }
+  };
 
   send(channel: string, ...args: any[]): void {
     if (!this.closed) {
