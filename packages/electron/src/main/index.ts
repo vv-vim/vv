@@ -114,7 +114,7 @@ const createWindow = async (originalArgs: string[] = [], newCwd?: string) => {
         const nvim = getNvimByWindow(win);
         if (nvim) {
           // @ts-expect-error TODO: don't add custom props to win
-          win.cwd = await nvim.callFunction('VVprojectRoot', []); // eslint-disable-line
+          win.cwd = await nvim.callFunction<string>('VVprojectRoot', []); // eslint-disable-line
         }
         return Promise.resolve();
       }),

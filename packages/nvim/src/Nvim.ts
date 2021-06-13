@@ -1,10 +1,15 @@
 import { EventEmitter } from 'events';
-import type { Transport, /* UiEventsArgs, */ MessageType } from './types';
+
+import { nvimCommandNames } from 'src/__generated__/constants';
+
+import type { Transport, MessageType, NvimInterface } from './types';
+
+const NvimEventEmitter = (EventEmitter as unknown) as { new (): NvimInterface };
 
 /**
  * Lightweight transport agnostic Neovim API client to be used in other @vvim packages.
  */
-class Nvim extends EventEmitter {
+class Nvim extends NvimEventEmitter {
   private requestId = 0;
 
   private transport: Transport;
@@ -37,6 +42,13 @@ class Nvim extends EventEmitter {
       this.emit('close');
     });
 
+    (Object.keys(nvimCommandNames) as Array<keyof typeof nvimCommandNames>).forEach(
+      (commandName) => {
+        (this as any)[commandName] = (...params: any[]) =>
+          this.request(nvimCommandNames[commandName], params);
+      },
+    );
+
     this.on('newListener', (eventName: string) => {
       if (
         !this.listenerCount(eventName) &&
@@ -63,7 +75,7 @@ class Nvim extends EventEmitter {
     // Workaround to avoid request ids conflict vetween main and renderer. Renderer ids are even, main ids are odd.
     // TODO: sync request id between all instances.
     const id = this.requestId * 2 + (this.isRenderer ? 0 : 1);
-    this.transport.send('nvim:write', id, `nvim_${command}`, params);
+    this.transport.send('nvim:write', id, command, params);
     return new Promise((resolve, reject) => {
       this.requestPromises[id] = {
         resolve,
@@ -82,38 +94,6 @@ class Nvim extends EventEmitter {
       delete this.requestPromises[id];
     }
   }
-
-  // TODO: add types for specific events
-  // on(method: 'redraw', callback: (args: UiEventsArgs) => void): void;
-  // on(method: 'close', callback: () => void): void;
-
-  private commandFactory = <R = void>(command: string) => (...params: any[]): Promise<R> =>
-    this.request<R>(command, params);
-
-  subscribe = this.commandFactory('subscribe');
-
-  unsubscribe = this.commandFactory('unsubscribe');
-
-  eval = <Result = void>(command: string): Promise<Result> => this.request('eval', [command]);
-
-  callFunction = <Result = void>(name: string, params: any[]): Promise<Result> =>
-    this.request('call_function', [name, params]);
-
-  command = this.commandFactory('command');
-
-  input = this.commandFactory('input');
-
-  inputMouse = this.commandFactory('input_mouse');
-
-  getMode = this.commandFactory<{ mode: string }>('get_mode');
-
-  uiTryResize = this.commandFactory('ui_try_resize');
-
-  uiAttach = this.commandFactory('ui_attach');
-
-  getHlByName = this.commandFactory('get_hl_by_name');
-
-  paste = this.commandFactory('paste');
 
   /**
    * Fetch current mode from nvim, leaves only first letter to match groups of modes.

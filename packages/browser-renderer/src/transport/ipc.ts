@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { memoize } from 'lodash';
 
 import { ipcRenderer } from 'src/preloaded/electron';
 
@@ -12,6 +13,7 @@ class IpcRendererTransport extends EventEmitter implements Transport {
 
   constructor(ipc: Electron.IpcRenderer = ipcRenderer) {
     super();
+
     this.ipc = ipc;
 
     this.on('newListener', (eventName: string) => {
@@ -19,7 +21,7 @@ class IpcRendererTransport extends EventEmitter implements Transport {
         !this.listenerCount(eventName) &&
         !['newListener', 'removeListener'].includes(eventName)
       ) {
-        this.ipc.on(eventName, this.handleEvent);
+        this.ipc.on(eventName, this.handleEvent(eventName));
       }
     });
 
@@ -28,14 +30,16 @@ class IpcRendererTransport extends EventEmitter implements Transport {
         !this.listenerCount(eventName) &&
         !['newListener', 'removeListener'].includes(eventName)
       ) {
-        this.ipc.removeListener(eventName, this.handleEvent);
+        this.ipc.removeListener(eventName, this.handleEvent(eventName));
       }
     });
   }
 
-  handleEvent = (e: Electron.IpcRendererEvent, ...args: Args): void => {
-    this.emit(e.type, ...args);
-  };
+  handleEvent = memoize(
+    (eventName: string) => (_e: Electron.IpcRendererEvent, ...args: Args): void => {
+      this.emit(eventName, ...args);
+    },
+  );
 
   send(channel: string, ...params: Args): void {
     this.ipc.send(channel, ...params);

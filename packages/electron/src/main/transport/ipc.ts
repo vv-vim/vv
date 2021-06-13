@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron';
 import { EventEmitter } from 'events';
+import { memoize } from 'lodash';
 
 import { Transport, Args } from '@vvim/nvim';
 
@@ -25,30 +26,37 @@ class IpcTransport extends EventEmitter implements Transport {
     });
 
     this.on('newListener', (eventName: string) => {
-      if (!this.listenerCount(eventName)) {
-        this.ipc.on(eventName, this.handleEvent);
+      if (
+        !this.listenerCount(eventName) &&
+        !['newListener', 'removeListener'].includes(eventName)
+      ) {
+        this.ipc.on(eventName, this.handleEvent(eventName));
         this.win.on('closed', () => {
-          this.ipc.removeListener(eventName, this.handleEvent);
+          this.ipc.removeListener(eventName, this.handleEvent(eventName));
         });
       }
     });
 
     this.on('removeListener', (eventName: string) => {
-      if (!this.listenerCount(eventName)) {
-        this.ipc.removeListener(eventName, this.handleEvent);
+      if (
+        !this.listenerCount(eventName) &&
+        !['newListener', 'removeListener'].includes(eventName)
+      ) {
+        this.ipc.removeListener(eventName, this.handleEvent(eventName));
       }
     });
   }
 
-  handleEvent = (event: Electron.IpcMainEvent, ...args: Args): void => {
-    const {
-      type,
-      sender: { id },
-    } = event;
-    if (id === this.win.id) {
-      this.emit(type, ...args);
-    }
-  };
+  handleEvent = memoize(
+    (eventName: string) => (event: Electron.IpcMainEvent, ...args: Args): void => {
+      const {
+        sender: { id },
+      } = event;
+      if (id === this.win.id) {
+        this.emit(eventName, ...args);
+      }
+    },
+  );
 
   send(channel: string, ...args: any[]): void {
     if (!this.closed) {

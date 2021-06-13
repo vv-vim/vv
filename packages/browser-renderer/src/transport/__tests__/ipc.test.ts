@@ -83,12 +83,13 @@ describe('main transport', () => {
       expect(listener).toHaveBeenCalled();
     });
 
-    test('unsubscribes from ipc event', () => {
+    test('unsubscribes from ipc event if there are not subscriptions left', () => {
+      const addListenerSpy = jest.spyOn(ipcRendererMock, 'on');
       const removeListenerSpy = jest.spyOn(ipcRendererMock, 'removeListener');
       transport.on('test-event', listener);
       transport.off('test-event', listener);
 
-      expect(removeListenerSpy).toHaveBeenCalledWith('test-event', transport.handleEvent);
+      expect(removeListenerSpy).toHaveBeenCalledWith('test-event', addListenerSpy.mock.calls[0][1]);
     });
   });
 

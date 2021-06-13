@@ -1,10 +1,10 @@
 import fs from 'fs';
 import { BrowserWindow } from 'electron';
 
-import type { Nvim, UiEventsArgs } from '@vvim/nvim';
+import type { Nvim } from '@vvim/nvim';
 
 const initWindowTitle = ({ nvim, win }: { win: BrowserWindow; nvim: Nvim }): void => {
-  nvim.on('redraw', (args: UiEventsArgs) => {
+  nvim.on('redraw', (args) => {
     args.forEach((arg) => {
       if (arg[0] === 'set_title') {
         win.setTitle(arg[1][0]);
