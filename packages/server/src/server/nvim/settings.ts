@@ -96,7 +96,7 @@ const initSettings = ({
     }
   };
 
-  nvim.on<[keyof Settings, Settings[keyof Settings]]>('vv:set', applySetting);
+  nvim.on('vv:set', applySetting);
 };
 
 export default initSettings;

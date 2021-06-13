@@ -17,7 +17,7 @@ jest.mock('src/input/mouse', () => jest.fn());
 jest.mock('src/features/hideMouseCursor', () => jest.fn());
 
 describe('renderer', () => {
-  const mockedNvim = Nvim as jest.Mock<Nvim>;
+  const mockedNvim = (Nvim as unknown) as jest.Mock<Nvim>;
 
   beforeEach(() => {
     mockTransport.removeAllListeners();

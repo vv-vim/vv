@@ -4,40 +4,38 @@ import { ipcRenderer } from 'src/preloaded/electron';
 
 import type { Transport, Args } from '@vvim/nvim';
 
-const addListenerMethods = [
-  'addListener',
-  'on',
-  'once',
-  'prependListener',
-  'prependOnceListener',
-] as const;
-
 /**
  * Init transport between main and renderer via Electron ipcRenderer.
  */
 class IpcRendererTransport extends EventEmitter implements Transport {
-  ipc: Electron.IpcRenderer;
+  private ipc: Electron.IpcRenderer;
 
-  registeredEvents: Record<string, any> = {};
-
-  constructor(ipc = ipcRenderer) {
+  constructor(ipc: Electron.IpcRenderer = ipcRenderer) {
     super();
     this.ipc = ipc;
 
-    addListenerMethods.forEach((m) => this.patchAddListenerMethod(m));
+    this.on('newListener', (eventName: string) => {
+      if (
+        !this.listenerCount(eventName) &&
+        !['newListener', 'removeListener'].includes(eventName)
+      ) {
+        this.ipc.on(eventName, this.handleEvent);
+      }
+    });
+
+    this.on('removeListener', (eventName: string) => {
+      if (
+        !this.listenerCount(eventName) &&
+        !['newListener', 'removeListener'].includes(eventName)
+      ) {
+        this.ipc.removeListener(eventName, this.handleEvent);
+      }
+    });
   }
 
-  private patchAddListenerMethod(methodName: typeof addListenerMethods[number]) {
-    this[methodName] = (eventName: string, listener: (...args: Args) => void) => {
-      if (!this.registeredEvents[eventName]) {
-        this.registeredEvents[eventName] = (_e: Electron.IpcRendererEvent, ...args: Args) => {
-          this.emit(eventName, ...args);
-        };
-        this.ipc.on(eventName, this.registeredEvents[eventName]);
-      }
-      return super[methodName](eventName, listener);
-    };
-  }
+  handleEvent = (e: Electron.IpcRendererEvent, ...args: Args): void => {
+    this.emit(e.type, ...args);
+  };
 
   send(channel: string, ...params: Args): void {
     this.ipc.send(channel, ...params);

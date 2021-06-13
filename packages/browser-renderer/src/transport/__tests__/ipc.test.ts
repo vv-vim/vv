@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { ipcRenderer } from 'src/preloaded/electron';
 
 import IpcRendererTransport from 'src/transport/ipc';
@@ -11,42 +12,95 @@ jest.mock('src/preloaded/electron', () => ({
 
 describe('main transport', () => {
   let transport: IpcRendererTransport;
-  const listener = jest.fn();
+  let ipcRendererMock: Electron.IpcRenderer;
+  const send = jest.fn();
 
   beforeEach(() => {
-    transport = new IpcRendererTransport();
+    ipcRendererMock = (Object.assign(new EventEmitter(), {
+      send,
+    }) as unknown) as Electron.IpcRenderer;
+    transport = new IpcRendererTransport(ipcRendererMock);
   });
 
   describe('on', () => {
-    test('calls ipcRenderer.on with channel prop', () => {
-      transport.on('test-channel', listener);
-      expect((ipcRenderer.on as jest.Mock).mock.calls[0][0]).toBe('test-channel');
-    });
+    const listener = jest.fn();
 
     test('calls listener', () => {
-      transport.on('test-channel', listener);
-      const ipcListener = (ipcRenderer.on as jest.Mock).mock.calls[0][1];
-      ipcListener('_event', 'arg1', 'arg2');
+      transport.on('test-event', listener);
+      ipcRendererMock.emit('test-event', new Event('test-event'), 'arg1', 'arg2');
       expect(listener).toHaveBeenCalledWith('arg1', 'arg2');
     });
 
+    test('does not call listener twice listener', () => {
+      const anotherListener = jest.fn();
+      transport.on('test-event', listener);
+      transport.on('test-event', anotherListener);
+      ipcRendererMock.emit('test-event', new Event('test-event'), 'arg1', 'arg2');
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(anotherListener).toHaveBeenCalledTimes(1);
+    });
+
     test('listener with no args', () => {
-      transport.on('test-channel', listener);
-      const ipcListener = (ipcRenderer.on as jest.Mock).mock.calls[0][1];
-      ipcListener('_event');
+      transport.on('test-event', listener);
+      ipcRendererMock.emit('test-event', new Event('test-event'));
       expect(listener).toHaveBeenCalledWith();
+    });
+
+    test('use preloaded ipcRenderer if it is not passed', () => {
+      transport = new IpcRendererTransport();
+      transport.on('test-event', listener);
+      expect(ipcRenderer.on).toHaveBeenCalledWith('test-event', expect.any(Function));
+    });
+  });
+
+  describe('once', () => {
+    const listener = jest.fn();
+
+    test('calls listener once', () => {
+      transport.once('test-event', listener);
+      ipcRendererMock.emit('test-event', new Event('test-event'), 'arg1', 'arg2');
+      ipcRendererMock.emit('test-event', new Event('test-event'), 'arg1', 'arg2');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('removeListener', () => {
+    const listener = jest.fn();
+
+    test('does not call listener after off', () => {
+      transport.on('test-event', listener);
+      transport.removeListener('test-event', listener);
+      ipcRendererMock.emit('test-event', new Event('test-event'), 'arg1', 'arg2');
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    test('other subscribed events work', () => {
+      const anotherListener = jest.fn();
+      transport.on('test-event', listener);
+      transport.on('test-event', anotherListener);
+      transport.removeListener('test-event', anotherListener);
+      ipcRendererMock.emit('test-event', new Event('test-event'), 'arg1', 'arg2');
+      expect(listener).toHaveBeenCalled();
+    });
+
+    test('unsubscribes from ipc event', () => {
+      const removeListenerSpy = jest.spyOn(ipcRendererMock, 'removeListener');
+      transport.on('test-event', listener);
+      transport.off('test-event', listener);
+
+      expect(removeListenerSpy).toHaveBeenCalledWith('test-event', transport.handleEvent);
     });
   });
 
   describe('send', () => {
     test('pass args to win.webContents', () => {
-      transport.send('test-channel', 'arg1', 'arg2');
-      expect(ipcRenderer.send).toHaveBeenCalledWith('test-channel', 'arg1', 'arg2');
+      transport.send('test-event', 'arg1', 'arg2');
+      expect(send).toHaveBeenCalledWith('test-event', 'arg1', 'arg2');
     });
 
     test('with no args', () => {
-      transport.send('test-channel');
-      expect(ipcRenderer.send).toHaveBeenCalledWith('test-channel');
+      transport.send('test-event');
+      expect(send).toHaveBeenCalledWith('test-event');
     });
   });
 });

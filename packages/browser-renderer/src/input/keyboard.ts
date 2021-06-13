@@ -1,4 +1,4 @@
-import type Nvim from '@vvim/nvim';
+import type { Nvim, UiEventsArgs } from '@vvim/nvim';
 import { Screen } from 'src/screen';
 
 // :help keyCode
@@ -200,7 +200,7 @@ const initKeyboard = ({ nvim, screen }: { nvim: Nvim; screen: Screen }): void =>
   // Enable composition input only for insert and command-line modes. Enabling if for other modes
   // is tricky. `preventDefault` does not work for compositionstart, so we need to blur/focus input
   // element for this.
-  nvim.on('redraw', (args) => {
+  nvim.on('redraw', (args: UiEventsArgs) => {
     args.forEach((arg) => {
       if (arg[0] === 'mode_change') {
         const [mode] = arg[1];
