@@ -19,33 +19,33 @@ describe('Nvim', () => {
 
   describe('request', () => {
     test('call send with `nvim:write` on request', () => {
-      nvim.request('command', ['param1', 'param2']);
+      nvim.request('nvim_command', ['param1', 'param2']);
       expect(send).toHaveBeenCalledWith('nvim:write', 3, 'nvim_command', ['param1', 'param2']);
     });
 
     test('increment request id on second call and it is always odd', () => {
-      nvim.request('command1');
+      nvim.request('nvim_command1');
       expect(send).toHaveBeenCalledWith('nvim:write', 3, 'nvim_command1', []);
-      nvim.request('command2');
+      nvim.request('nvim_command2');
       expect(send).toHaveBeenCalledWith('nvim:write', 5, 'nvim_command2', []);
     });
 
     test('in renderer mode request id is always even', () => {
       nvim = new Nvim(transportMock, true);
-      nvim.request('command1');
+      nvim.request('nvim_command1');
       expect(send).toHaveBeenCalledWith('nvim:write', 2, 'nvim_command1', []);
-      nvim.request('command2');
+      nvim.request('nvim_command2');
       expect(send).toHaveBeenCalledWith('nvim:write', 4, 'nvim_command2', []);
     });
 
     test('receives result of request', async () => {
-      const resultPromise = nvim.request('command', ['param1', 'param2']);
+      const resultPromise = nvim.request('nvim_command', ['param1', 'param2']);
       transportMock.emit('nvim:data', [1, 3, null, 'result']);
       expect(await resultPromise).toEqual('result');
     });
 
     test('reject on error returned', async () => {
-      const resultPromise = nvim.request('command', ['param1', 'param2']);
+      const resultPromise = nvim.request('nvim_command', ['param1', 'param2']);
       transportMock.emit('nvim:data', [1, 3, 'error']);
       await expect(resultPromise).rejects.toEqual('error');
     });
@@ -94,6 +94,16 @@ describe('Nvim', () => {
       nvim.on('onSomething', callback);
       transportMock.emit('nvim:data', [2, 'onSomethingElse', 'params1']);
       expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('request message type', () => {
+    test('receives result of request', async () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementationOnce(() => {
+        /* empty */
+      });
+      transportMock.emit('nvim:data', [0]);
+      expect(errorSpy).toHaveBeenCalled();
     });
   });
 

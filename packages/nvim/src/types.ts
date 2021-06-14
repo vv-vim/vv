@@ -1,10 +1,15 @@
 /* eslint-disable camelcase */
 
 import type { EventEmitter } from 'events';
+import type TypedEventEmitter from 'strict-event-emitter-types';
 
 // Only use relative imports here because https://github.com/microsoft/TypeScript/issues/32999#issuecomment-523558695
 // TODO: Bundle .d.ts or something
-import type { UiEvents as UiEventsOriginal } from './__generated__/uiEventTypes';
+import type {
+  UiEvents as UiEventsOriginal,
+  NvimCommands as NvimCommandsOriginal,
+} from './__generated__/types';
+import { nvimCommandNames } from './__generated__/constants';
 
 export type RequestMessage = [0, number, string, any[]];
 export type ResponseMessage = [1, number, any, any];
@@ -106,3 +111,26 @@ type UiEventsArgsByKey = {
 };
 
 export type UiEventsArgs = Array<UiEventsArgsByKey[keyof UiEventsArgsByKey]>;
+
+export interface NvimEvents {
+  redraw: (args: UiEventsArgs) => void;
+
+  close: () => void;
+
+  [x: string]: (...args: any[]) => void;
+}
+
+type NvimCommandsPatch = {
+  nvim_get_mode: () => { mode: string };
+};
+
+export type NvimCommands = Omit<NvimCommandsOriginal, keyof NvimCommandsPatch> & NvimCommandsPatch;
+
+type NvimCommandsMethods = {
+  [K in keyof typeof nvimCommandNames]: <
+    Return = ReturnType<NvimCommands[typeof nvimCommandNames[K]]>
+  >(
+    ...args: Parameters<NvimCommands[typeof nvimCommandNames[K]]>
+  ) => Promise<Return>;
+};
+export type NvimInterface = TypedEventEmitter<EventEmitter, NvimEvents> & NvimCommandsMethods;

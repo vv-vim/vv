@@ -55,6 +55,16 @@ describe('main transport', () => {
     });
   });
 
+  test('unsubscribes from ipc event if there are not subscriptions left', () => {
+    const listener = jest.fn();
+    const addListenerSpy = jest.spyOn(ipcMain, 'on');
+    const removeListenerSpy = jest.spyOn(ipcMain, 'removeListener');
+    transport.on('test-event', listener);
+    transport.off('test-event', listener);
+
+    expect(removeListenerSpy).toHaveBeenCalledWith('test-event', addListenerSpy.mock.calls[0][1]);
+  });
+
   describe('send', () => {
     test('pass args to win.webContents', () => {
       transport.send('test-event', 'arg1', 'arg2');
