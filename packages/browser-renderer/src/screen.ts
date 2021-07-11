@@ -255,6 +255,19 @@ const screen = ({
     );
 
   const getCharBitmap = (char: string, props: CalculatedProps) => {
+    if (props.hiUndercurl) {
+      charCtx.strokeStyle = props.spColor as string;
+      charCtx.lineWidth = scaledFontSize() * 0.08;
+      const x = charWidth;
+      const y = charHeight - (scaledFontSize() * 0.08) / 2;
+      const h = charHeight * 0.2; // Height of the wave
+      charCtx.beginPath();
+      charCtx.moveTo(x, y);
+      charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
+      charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
+      charCtx.stroke();
+    }
+
     charCtx.fillStyle = props.fgColor;
     charCtx.font = font(props);
     charCtx.textAlign = 'left';
@@ -273,19 +286,6 @@ const screen = ({
       charCtx.beginPath();
       charCtx.moveTo(charWidth, charHeight - scale);
       charCtx.lineTo(charWidth * 2, charHeight - scale);
-      charCtx.stroke();
-    }
-
-    if (props.hiUndercurl) {
-      charCtx.strokeStyle = props.spColor as string;
-      charCtx.lineWidth = scaledFontSize() * 0.08;
-      const x = charWidth;
-      const y = charHeight - (scaledFontSize() * 0.08) / 2;
-      const h = charHeight * 0.2; // Height of the wave
-      charCtx.beginPath();
-      charCtx.moveTo(x, y);
-      charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
-      charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
       charCtx.stroke();
     }
 

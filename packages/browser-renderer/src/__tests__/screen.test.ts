@@ -44,7 +44,23 @@ describe('Screen', () => {
     await page.keyboard.press('Escape');
 
     const image = await page.screenshot();
-
     expect(image).toMatchImageSnapshot();
+  });
+
+  describe('undercurl', () => {
+    test('show undercurl behind the text', async () => {
+      await page.keyboard.type(':set filetype=javascript');
+      await page.keyboard.press('Enter');
+      await page.keyboard.type(':VVset lineheight=1');
+      await page.keyboard.press('Enter');
+      await page.keyboard.type(':syntax on');
+      await page.keyboard.press('Enter');
+      await page.keyboard.type(':hi Comment gui=undercurl guifg=white guisp=red');
+      await page.keyboard.press('Enter');
+      await page.keyboard.type('i// Hey!');
+
+      const image = await page.screenshot();
+      expect(image).toMatchImageSnapshot();
+    });
   });
 });
