@@ -37,11 +37,16 @@ describe('Screen', () => {
   });
 
   it('match snapshot', async () => {
+    await page.keyboard.type('iHello');
+    await page.keyboard.press('Escape');
+
+    const image = await page.screenshot();
+    expect(image).toMatchImageSnapshot();
+  });
+
+  it('redraw screen on default_colors_set', async () => {
     await page.keyboard.type(':colorscheme desert');
     await page.keyboard.press('Enter');
-    await page.keyboard.type('i');
-    await page.keyboard.type('Hello');
-    await page.keyboard.press('Escape');
 
     const image = await page.screenshot();
     expect(image).toMatchImageSnapshot();

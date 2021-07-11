@@ -28,6 +28,7 @@ const replaceType = (originalType: string) => {
     Window: 'number',
     Buffer: 'number',
     Tabpage: 'number',
+    LuaRef: 'any',
     'ArrayOf(String)': 'string[]',
     'ArrayOf(Integer)': 'number[]',
     'ArrayOf(Integer, 2)': '[number, number]',

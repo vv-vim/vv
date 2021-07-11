@@ -1,7 +1,7 @@
-// TODO: Refactor, Fix types.
-import { debounce, throttle, isFinite, isEqual } from 'lodash';
+// TODO: Refactor
+import { throttle, isFinite, isEqual } from 'lodash';
 
-import getColor from 'src/lib/getColor';
+import { getColor, getColorNum } from 'src/lib/getColor';
 
 import * as PIXI from 'src/lib/pixi';
 
@@ -21,7 +21,6 @@ export type Screen = {
 };
 
 type CalculatedProps = {
-  bgNum?: number;
   bgColor: string;
   fgColor: string;
   spColor?: string;
@@ -41,7 +40,7 @@ type HighlightTable = Record<number, HighlightProps>;
 
 type Char = {
   sprite: PIXI.Sprite;
-  bg: PIXI.Graphics;
+  bg: PIXI.Sprite;
   char?: string | null;
   hlId?: number;
 };
@@ -102,7 +101,6 @@ const screen = ({
   const highlightTable: HighlightTable = {
     '0': {
       calculated: {
-        bgNum: 0x000000,
         bgColor: defaultBgColor,
         fgColor: defaultFgColor,
         spColor: defaultSpColor,
@@ -116,7 +114,6 @@ const screen = ({
     // Inverted default color for cursor
     '-1': {
       calculated: {
-        bgNum: 0xffffff,
         bgColor: defaultFgColor,
         fgColor: defaultBgColor,
         spColor: defaultSpColor,
@@ -311,12 +308,28 @@ const screen = ({
     return PIXI.Texture.from(key);
   };
 
+  const getBgTexture = (bgColor: string, j: number) => {
+    const isLastCol = j === cols - 1;
+    const key = `bg:${bgColor}:${isLastCol}`;
+    if (!PIXI.utils.TextureCache[key]) {
+      charCtx.fillStyle = bgColor;
+      if (isLastCol) {
+        charCtx.fillRect(0, 0, charWidth * 2, charHeight);
+      } else {
+        charCtx.fillRect(0, 0, charWidth, charHeight);
+      }
+
+      PIXI.Texture.addToCache(PIXI.Texture.from(charCanvas.transferToImageBitmap()), key);
+    }
+    return PIXI.Texture.from(key);
+  };
+
   const initChar = (i: number, j: number) => {
     if (!chars[i]) chars[i] = [];
     if (!chars[i][j]) {
       chars[i][j] = {
         sprite: new PIXI.Sprite(),
-        bg: new PIXI.Graphics(),
+        bg: new PIXI.Sprite(),
       };
       charsContainer.addChild(chars[i][j].sprite);
       bgContainer.addChild(chars[i][j].bg);
@@ -335,14 +348,9 @@ const screen = ({
 
     // Draw bg
     chars[i][j].bg.position.set(j * charWidth, i * charHeight);
-    if (hlId !== 0 && highlightTable[hlId]?.calculated?.bgNum) {
-      chars[i][j].bg.clear();
-      chars[i][j].bg.beginFill(highlightTable[hlId]?.calculated?.bgNum);
-      if (j === cols - 1) {
-        chars[i][j].bg.drawRect(0, 0, charWidth * 2, charHeight);
-      } else {
-        chars[i][j].bg.drawRect(0, 0, charWidth, charHeight);
-      }
+    const bgColor = highlightTable[hlId]?.calculated?.bgColor;
+    if (hlId !== 0 && bgColor && bgColor !== highlightTable[0]?.calculated?.bgColor) {
+      chars[i][j].bg.texture = getBgTexture(bgColor, j);
       chars[i][j].bg.visible = true;
     } else {
       chars[i][j].bg.visible = false;
@@ -403,7 +411,7 @@ const screen = ({
     clearCursor();
 
     const hlId = m.attr_id === 0 ? -1 : m.attr_id;
-    cursorBg.beginFill(highlightTable[hlId]?.calculated?.bgNum);
+    cursorBg.beginFill(getColorNum(highlightTable[hlId]?.calculated?.bgColor));
 
     if (m.cursor_shape === 'block') {
       cursorChar = chars[cursorPosition[0]][cursorPosition[1]].char || ' ';
@@ -445,7 +453,7 @@ const screen = ({
     },
   };
 
-  const reprintAllChars = debounce(() => {
+  const reprintAllChars = () => {
     if (highlightTable[0]?.calculated?.bgColor) {
       document.body.style.background = highlightTable[0].calculated.bgColor;
       transport.send('set-background-color', highlightTable[0].calculated.bgColor);
@@ -462,7 +470,7 @@ const screen = ({
       }
     }
     needRerender = true;
-  }, 10);
+  };
 
   const recalculateHighlightTable = () => {
     ((Object.keys(highlightTable) as unknown) as number[]).forEach((id) => {
@@ -488,7 +496,6 @@ const screen = ({
           fgColor: r ? bg : fg,
           bgColor: r ? fg : bg,
           spColor: sp,
-          bgNum: r ? foreground : background,
           hiItalic: showItalic && !!italic,
           hiBold: showBold && !!bold,
           hiUnderline: showUnderline && !!underline,
@@ -513,6 +520,10 @@ const screen = ({
       /* empty */
     },
     set_icon: () => {
+      /* empty */
+    },
+
+    win_viewport: () => {
       /* empty */
     },
 
@@ -618,7 +629,6 @@ const screen = ({
         highlightTable[-1] = {
           calculated: {
             ...calculated,
-            bgNum: foreground,
             bgColor: getColor(foreground, defaultFgColor) as string,
             fgColor: getColor(background, defaultBgColor) as string,
           },
