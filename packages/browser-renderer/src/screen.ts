@@ -589,7 +589,9 @@ const screen = ({
       // position in terminal on redraw, but when you send any command to nvim, it redraws it correctly. Need to
       // investigate it and find a better permanent fix. Maybe this is a bug in nvim and then
       // TODO: file a ticket to nvim.
-      nvim.getMode();
+      if (mode === 'normal') {
+        nvim.getMode();
+      }
     },
 
     grid_resize: (props) => {
