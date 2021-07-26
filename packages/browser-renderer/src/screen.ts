@@ -507,12 +507,16 @@ const screen = ({
     reprintAllChars();
   };
 
-  const rerenderIfNeeded = throttle(() => {
+  const rerender = throttle(() => {
+    renderer.render(stage);
+  }, 1000 / TARGET_FPS);
+
+  const rerenderIfNeeded = () => {
     if (needRerender) {
       needRerender = false;
-      renderer.render(stage);
+      rerender();
     }
-  }, 1000 / TARGET_FPS);
+  };
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
   const redrawCmd: Partial<UiEventsHandlers> = {
@@ -584,14 +588,6 @@ const screen = ({
 
     flush: () => {
       rerenderIfNeeded();
-
-      // Temporary workaround to fix cursor position in terminal mode. Nvim API does not send the very last cursor
-      // position in terminal on redraw, but when you send any command to nvim, it redraws it correctly. Need to
-      // investigate it and find a better permanent fix. Maybe this is a bug in nvim and then
-      // TODO: file a ticket to nvim.
-      if (mode === 'normal') {
-        nvim.getMode();
-      }
     },
 
     grid_resize: (props) => {
@@ -702,6 +698,12 @@ const screen = ({
 
     grid_cursor_goto: ([[_, ...newCursor]]) => {
       repositionCursor(newCursor);
+
+      // Temporary workaround to fix cursor position in terminal mode. Nvim API does not send the very last cursor
+      // position in terminal on redraw, but when you send any command to nvim, it redraws it correctly. Need to
+      // investigate it and find a better permanent fix. Maybe this is a bug in nvim and then
+      // TODO: file a ticket to nvim.
+      nvim.getMode();
     },
 
     grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]) => {
