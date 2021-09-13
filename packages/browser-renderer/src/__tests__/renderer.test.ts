@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import initRenderer from 'src/renderer';
 
 import Nvim from '@vvim/nvim';
-import initScreen from 'src/screen';
+import Screen from 'src/screen';
 import initKeyboard from 'src/input/keyboard';
 import initMouse from 'src/input/mouse';
 import hideMouseCursor from 'src/features/hideMouseCursor';
@@ -10,14 +10,15 @@ import hideMouseCursor from 'src/features/hideMouseCursor';
 const mockTransport = new EventEmitter();
 jest.mock('src/transport/transport', () => () => mockTransport);
 
-jest.mock('@vvim/nvim');
-jest.mock('src/screen', () => jest.fn(() => 'fakeScreen'));
+jest.mock('@vvim/nvim', () => jest.fn());
+jest.mock('src/screen', () => jest.fn());
 jest.mock('src/input/keyboard', () => jest.fn());
 jest.mock('src/input/mouse', () => jest.fn());
 jest.mock('src/features/hideMouseCursor', () => jest.fn());
 
 describe('renderer', () => {
   const mockedNvim = (Nvim as unknown) as jest.Mock<Nvim>;
+  const mockedScreen = (Screen as unknown) as jest.Mock<Screen>;
 
   beforeEach(() => {
     mockTransport.removeAllListeners();
@@ -26,7 +27,7 @@ describe('renderer', () => {
 
   test('init screen', () => {
     mockTransport.emit('initRenderer', 'settings');
-    expect(initScreen).toHaveBeenCalledWith({
+    expect(Screen).toHaveBeenCalledWith({
       nvim: mockedNvim.mock.instances[0],
       settings: 'settings',
       transport: mockTransport,
@@ -42,7 +43,7 @@ describe('renderer', () => {
     mockTransport.emit('initRenderer', 'settings');
     expect(initKeyboard).toHaveBeenCalledWith({
       nvim: mockedNvim.mock.instances[0],
-      screen: 'fakeScreen',
+      screen: mockedScreen.mock.instances[0],
     });
   });
 
@@ -50,7 +51,7 @@ describe('renderer', () => {
     mockTransport.emit('initRenderer', 'settings');
     expect(initMouse).toHaveBeenCalledWith({
       nvim: mockedNvim.mock.instances[0],
-      screen: 'fakeScreen',
+      screen: mockedScreen.mock.instances[0],
     });
   });
 

@@ -65,6 +65,7 @@ module.exports = {
             ts: 'never',
           },
         ],
+        'lines-between-class-members': 'off',
       },
     },
   ],
@@ -101,5 +102,6 @@ module.exports = {
         ts: 'never',
       },
     ],
+    'lines-between-class-members': 'off',
   },
 };

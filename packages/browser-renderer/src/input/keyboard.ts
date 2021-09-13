@@ -1,5 +1,5 @@
 import type { Nvim } from '@vvim/nvim';
-import { Screen } from 'src/screen';
+import type Screen from 'src/screen';
 
 // :help keyCode
 const specialKey = ({ key, code }: KeyboardEvent): string =>

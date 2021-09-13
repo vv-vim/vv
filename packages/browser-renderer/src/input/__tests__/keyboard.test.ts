@@ -1,7 +1,7 @@
 import initKeyboard from 'src/input/keyboard';
 
-import Nvim from '@vvim/nvim';
-import { Screen } from 'src/screen';
+import type { Nvim } from '@vvim/nvim';
+import type Screen from 'src/screen';
 
 describe('Keyboard input', () => {
   const nvimOn = jest.fn();

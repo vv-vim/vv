@@ -1,7 +1,7 @@
 import throttle from 'lodash/throttle';
 
 import { modifierPrefix } from 'src/input/keyboard';
-import { Screen } from 'src/screen';
+import type Screen from 'src/screen';
 import type Nvim from '@vvim/nvim';
 
 const GRID = 0;
@@ -27,7 +27,8 @@ const ACTION = {
 
 type Action = typeof ACTION[keyof typeof ACTION];
 
-// const initMouse = ({ screenCoords }: Screen, nvim: Nvim): void => {
+type MouseButton = 0 | 1 | 2;
+
 const initMouse = ({ screen, nvim }: { screen: Screen; nvim: Nvim }): void => {
   const { screenCoords } = screen;
   let scrollDeltaX = 0;
@@ -46,8 +47,7 @@ const initMouse = ({ screen, nvim }: { screen: Screen; nvim: Nvim }): void => {
   };
 
   const buttonName = (event: MouseEvent) =>
-    // @ts-expect-error TODO
-    event.type === 'wheel' ? MOUSE_BUTTON.WHEEL : MOUSE_BUTTON[event.button];
+    event.type === 'wheel' ? MOUSE_BUTTON.WHEEL : MOUSE_BUTTON[event.button as MouseButton];
 
   const mouseInput = (event: MouseEvent, action: Action) => {
     mouseCoordsChanged(event);

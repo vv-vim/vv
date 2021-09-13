@@ -15,11 +15,6 @@ import type {
   HighlightAttrs,
 } from '@vvim/nvim';
 
-export type Screen = {
-  screenCoords: (width: number, height: number) => [number, number];
-  getCursorElement: () => HTMLDivElement;
-};
-
 type CalculatedProps = {
   bgColor: string;
   fgColor: string;
@@ -47,63 +42,61 @@ type Char = {
 
 const DEFAULT_FONT_FAMILY = 'monospace';
 
-const screen = ({
-  settings,
-  transport,
-  nvim,
-}: {
-  settings: Settings;
-  transport: Transport;
-  nvim: Nvim;
-}): Screen => {
-  let screenContainer: HTMLDivElement;
-  let cursorEl: HTMLDivElement;
-  let screenEl: HTMLDivElement;
+export class Screen {
+  private nvim: Nvim;
+  private transport: Transport;
 
-  let cursorPosition: [number, number] = [0, 0];
-  let cursorChar: string;
+  private screenContainer!: HTMLDivElement;
+  private cursorEl!: HTMLDivElement;
+  private screenEl!: HTMLDivElement;
 
-  let startCursorBlinkOnTimeout: NodeJS.Timeout | null;
-  let startCursorBlinkOffTimeout: NodeJS.Timeout | null;
-  let blinkOnCursorBlinkInterval: NodeJS.Timeout | null;
-  let blinkOffCursorBlinkInterval: NodeJS.Timeout | null;
+  private cursorPosition: [number, number] = [0, 0];
+  private cursorChar?: string;
 
-  let scale: number;
-  let charWidth: number;
-  let charHeight: number;
+  private startCursorBlinkOnTimeout?: NodeJS.Timeout | null;
+  private startCursorBlinkOffTimeout?: NodeJS.Timeout | null;
+  private blinkOnCursorBlinkInterval?: NodeJS.Timeout | null;
+  private blinkOffCursorBlinkInterval?: NodeJS.Timeout | null;
 
-  let fontFamily = DEFAULT_FONT_FAMILY;
-  let fontSize = 12;
-  let lineHeight = 1.25;
-  let letterSpacing = 0;
+  private scale!: number;
+  private charWidth!: number;
+  private charHeight!: number;
 
-  const defaultFgColor = 'rgb(255,255,255)';
-  const defaultBgColor = 'rgb(0,0,0)';
-  const defaultSpColor = 'rgb(255,255,255)';
+  private fontFamily = DEFAULT_FONT_FAMILY;
+  private fontSize = 12;
+  private lineHeight = 1.25;
+  private letterSpacing = 0;
 
-  let cols: number;
-  let rows: number;
+  // TODO upper case
+  private defaultFgColor = 'rgb(255,255,255)' as const;
+  private defaultBgColor = 'rgb(0,0,0)' as const;
+  private defaultSpColor = 'rgb(255,255,255)' as const;
 
-  let modeInfoSet: Record<string, ModeInfo>;
-  let mode: string;
+  private cols = 0;
+  private rows = 0;
 
-  let showBold = true;
-  let showItalic = true;
-  let showUnderline = true;
-  let showUndercurl = true;
-  let showStrikethrough = true;
+  private modeInfoSet?: Record<string, ModeInfo>;
+  private mode?: string;
 
-  const charCanvas = new OffscreenCanvas(1, 1);
-  const charCtx = charCanvas.getContext('2d', { alpha: true }) as OffscreenCanvasRenderingContext2D;
+  private showBold = true;
+  private showItalic = true;
+  private showUnderline = true;
+  private showUndercurl = true;
+  private showStrikethrough = true;
 
-  const chars: Char[][] = [];
+  private charCanvas = new OffscreenCanvas(1, 1);
+  private charCtx = this.charCanvas.getContext('2d', {
+    alpha: true,
+  }) as OffscreenCanvasRenderingContext2D;
 
-  const highlightTable: HighlightTable = {
+  private chars: Char[][] = [];
+
+  private highlightTable: HighlightTable = {
     '0': {
       calculated: {
-        bgColor: defaultBgColor,
-        fgColor: defaultFgColor,
-        spColor: defaultSpColor,
+        bgColor: this.defaultBgColor,
+        fgColor: this.defaultFgColor,
+        spColor: this.defaultSpColor,
         hiItalic: false,
         hiBold: false,
         hiUnderline: false,
@@ -114,9 +107,9 @@ const screen = ({
     // Inverted default color for cursor
     '-1': {
       calculated: {
-        bgColor: defaultFgColor,
-        fgColor: defaultBgColor,
-        spColor: defaultSpColor,
+        bgColor: this.defaultFgColor,
+        fgColor: this.defaultBgColor,
+        spColor: this.defaultSpColor,
         hiItalic: false,
         hiBold: false,
         hiUnderline: false,
@@ -127,353 +120,365 @@ const screen = ({
   };
 
   // WebGL
-  let stage: PIXI.Container;
-  let renderer: PIXI.Renderer;
-  let charsContainer: PIXI.Container;
-  let bgContainer: PIXI.Container;
-  let cursorContainer: PIXI.Container;
-  let cursorSprite: PIXI.Sprite;
-  let cursorBg: PIXI.Graphics;
+  private stage!: PIXI.Container;
+  private renderer!: PIXI.Renderer;
+  private charsContainer!: PIXI.Container;
+  private bgContainer!: PIXI.Container;
+  private cursorContainer!: PIXI.Container;
+  private cursorSprite!: PIXI.Sprite;
+  private cursorBg!: PIXI.Graphics;
 
-  let needRerender = false;
-  const TARGET_FPS = 60;
+  private needRerender = false;
 
-  const getCursorElement = (): HTMLDivElement => cursorEl;
+  private TARGET_FPS = 60;
 
-  const windowPixelSize = () => ({
-    width: window.screen.width * window.devicePixelRatio,
-    height: window.screen.height * window.devicePixelRatio,
-  });
+  public getCursorElement = (): HTMLDivElement => this.cursorEl;
 
-  const initCursor = () => {
-    cursorEl = document.createElement('div');
-    cursorEl.style.position = 'absolute';
-    cursorEl.style.zIndex = '100';
-    cursorEl.style.top = '0';
-    cursorEl.style.left = '0';
-    screenEl.appendChild(cursorEl);
-  };
+  // eslint-disable-next-line class-methods-use-this
+  private windowPixelSize() {
+    return {
+      width: window.screen.width * window.devicePixelRatio,
+      height: window.screen.height * window.devicePixelRatio,
+    };
+  }
 
-  const initScreen = () => {
-    screenContainer = document.createElement('div');
-    document.body.appendChild(screenContainer);
+  private initCursor() {
+    this.cursorEl = document.createElement('div');
+    this.cursorEl.style.position = 'absolute';
+    this.cursorEl.style.zIndex = '100';
+    this.cursorEl.style.top = '0';
+    this.cursorEl.style.left = '0';
+    this.screenEl.appendChild(this.cursorEl);
+  }
 
-    screenContainer.style.position = 'absolute';
-    screenContainer.style.left = '0';
-    screenContainer.style.top = '0';
-    screenContainer.style.transformOrigin = '0 0';
+  private initScreen() {
+    this.screenContainer = document.createElement('div');
+    document.body.appendChild(this.screenContainer);
 
-    screenEl = document.createElement('div');
+    this.screenContainer.style.position = 'absolute';
+    this.screenContainer.style.left = '0';
+    this.screenContainer.style.top = '0';
+    this.screenContainer.style.transformOrigin = '0 0';
+
+    this.screenEl = document.createElement('div');
 
     // @ts-expect-error incomplete type declaration for style?
-    screenEl.style.contain = 'strict';
-    screenEl.style.overflow = 'hidden';
+    this.screenEl.style.contain = 'strict';
+    this.screenEl.style.overflow = 'hidden';
 
     // Init WebGL for text
     const pixi = new PIXI.Application({
       transparent: true,
       autoStart: false,
-      ...windowPixelSize(),
+      ...this.windowPixelSize(),
     });
 
-    screenEl.appendChild(pixi.view);
+    this.screenEl.appendChild(pixi.view);
 
-    screenContainer.appendChild(screenEl);
+    this.screenContainer.appendChild(this.screenEl);
 
-    stage = pixi.stage;
-    renderer = pixi.renderer as PIXI.Renderer;
+    this.stage = pixi.stage;
+    this.renderer = pixi.renderer as PIXI.Renderer;
     pixi.ticker.stop();
 
-    charsContainer = new PIXI.Container();
-    bgContainer = new PIXI.Container();
-    cursorContainer = new PIXI.Container();
-    cursorSprite = new PIXI.Sprite();
-    cursorBg = new PIXI.Graphics();
+    this.charsContainer = new PIXI.Container();
+    this.bgContainer = new PIXI.Container();
+    this.cursorContainer = new PIXI.Container();
+    this.cursorSprite = new PIXI.Sprite();
+    this.cursorBg = new PIXI.Graphics();
 
-    stage.addChild(bgContainer);
-    stage.addChild(charsContainer);
-    stage.addChild(cursorContainer);
-    cursorContainer.addChild(cursorBg);
-    cursorContainer.addChild(cursorSprite);
+    this.stage.addChild(this.bgContainer);
+    this.stage.addChild(this.charsContainer);
+    this.stage.addChild(this.cursorContainer);
+    this.cursorContainer.addChild(this.cursorBg);
+    this.cursorContainer.addChild(this.cursorSprite);
 
     // Init screen for background
-    screenEl.style.width = `${windowPixelSize().width}px`;
-    screenEl.style.height = `${windowPixelSize().width}px`;
-  };
+    this.screenEl.style.width = `${this.windowPixelSize().width}px`;
+    this.screenEl.style.height = `${this.windowPixelSize().width}px`;
+  }
 
-  const RETINA_SCALE = 2;
+  private RETINA_SCALE = 2;
 
-  const isRetina = () => window.devicePixelRatio === RETINA_SCALE;
+  private isRetina() {
+    return window.devicePixelRatio === this.RETINA_SCALE;
+  }
 
-  const scaledLetterSpacing = () => {
-    if (isRetina() || letterSpacing === 0) {
-      return letterSpacing;
+  private scaledLetterSpacing() {
+    if (this.isRetina() || this.letterSpacing === 0) {
+      return this.letterSpacing;
     }
-    return letterSpacing > 0
-      ? Math.floor(letterSpacing / RETINA_SCALE)
-      : Math.ceil(letterSpacing / RETINA_SCALE);
-  };
+    return this.letterSpacing > 0
+      ? Math.floor(this.letterSpacing / this.RETINA_SCALE)
+      : Math.ceil(this.letterSpacing / this.RETINA_SCALE);
+  }
 
-  const scaledFontSize = () => fontSize * scale;
+  private scaledFontSize() {
+    return this.fontSize * this.scale;
+  }
 
-  const measureCharSize = () => {
+  private measureCharSize() {
     const char = document.createElement('span');
     char.innerHTML = '0';
-    char.style.fontFamily = fontFamily;
-    char.style.fontSize = `${scaledFontSize()}px`;
-    char.style.lineHeight = `${Math.round(scaledFontSize() * lineHeight)}px`;
+    char.style.fontFamily = this.fontFamily;
+    char.style.fontSize = `${this.scaledFontSize()}px`;
+    char.style.lineHeight = `${Math.round(this.scaledFontSize() * this.lineHeight)}px`;
     char.style.position = 'absolute';
     char.style.left = '-1000px';
     char.style.top = '0';
-    screenEl.appendChild(char);
+    this.screenEl.appendChild(char);
 
-    const oldCharWidth = charWidth;
-    const oldCharHeight = charHeight;
-    charWidth = Math.max(char.offsetWidth + scaledLetterSpacing(), 1);
-    charHeight = char.offsetHeight;
-    if (oldCharWidth !== charWidth || oldCharHeight !== charHeight) {
-      cursorSprite.x = -charWidth;
-      cursorEl.style.width = `${charWidth}px`;
-      cursorEl.style.height = `${charHeight}px`;
+    const oldCharWidth = this.charWidth;
+    const oldCharHeight = this.charHeight;
+    this.charWidth = Math.max(char.offsetWidth + this.scaledLetterSpacing(), 1);
+    this.charHeight = char.offsetHeight;
+    if (oldCharWidth !== this.charWidth || oldCharHeight !== this.charHeight) {
+      this.cursorSprite.x = -this.charWidth;
+      this.cursorEl.style.width = `${this.charWidth}px`;
+      this.cursorEl.style.height = `${this.charHeight}px`;
 
-      if (charCanvas) {
-        charCanvas.width = charWidth * 3;
-        charCanvas.height = charHeight;
+      if (this.charCanvas) {
+        this.charCanvas.width = this.charWidth * 3;
+        this.charCanvas.height = this.charHeight;
       }
 
       PIXI.utils.clearTextureCache();
     }
-    screenEl.removeChild(char);
-  };
+    this.screenEl.removeChild(char);
+  }
 
-  const font = (p: CalculatedProps) =>
-    [p.hiItalic ? 'italic' : '', p.hiBold ? 'bold' : '', `${scaledFontSize()}px`, fontFamily].join(
-      ' ',
-    );
+  private font(p: CalculatedProps) {
+    return [
+      p.hiItalic ? 'italic' : '',
+      p.hiBold ? 'bold' : '',
+      `${this.scaledFontSize()}px`,
+      this.fontFamily,
+    ].join(' ');
+  }
 
-  const getCharBitmap = (char: string, props: CalculatedProps) => {
+  private getCharBitmap(char: string, props: CalculatedProps) {
     if (props.hiUndercurl) {
-      charCtx.strokeStyle = props.spColor as string;
-      charCtx.lineWidth = scaledFontSize() * 0.08;
-      const x = charWidth;
-      const y = charHeight - (scaledFontSize() * 0.08) / 2;
-      const h = charHeight * 0.2; // Height of the wave
-      charCtx.beginPath();
-      charCtx.moveTo(x, y);
-      charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
-      charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
-      charCtx.stroke();
+      this.charCtx.strokeStyle = props.spColor as string;
+      this.charCtx.lineWidth = this.scaledFontSize() * 0.08;
+      const x = this.charWidth;
+      const y = this.charHeight - (this.scaledFontSize() * 0.08) / 2;
+      const h = this.charHeight * 0.2; // Height of the wave
+      this.charCtx.beginPath();
+      this.charCtx.moveTo(x, y);
+      this.charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
+      this.charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
+      this.charCtx.stroke();
     }
 
-    charCtx.fillStyle = props.fgColor;
-    charCtx.font = font(props);
-    charCtx.textAlign = 'left';
-    charCtx.textBaseline = 'middle';
+    this.charCtx.fillStyle = props.fgColor;
+    this.charCtx.font = this.font(props);
+    this.charCtx.textAlign = 'left';
+    this.charCtx.textBaseline = 'middle';
     if (char) {
-      charCtx.fillText(
+      this.charCtx.fillText(
         char,
-        Math.round(scaledLetterSpacing() / 2) + charWidth,
-        Math.round(charHeight / 2),
+        Math.round(this.scaledLetterSpacing() / 2) + this.charWidth,
+        Math.round(this.charHeight / 2),
       );
     }
 
     if (props.hiUnderline) {
-      charCtx.strokeStyle = props.fgColor;
-      charCtx.lineWidth = scale;
-      charCtx.beginPath();
-      charCtx.moveTo(charWidth, charHeight - scale);
-      charCtx.lineTo(charWidth * 2, charHeight - scale);
-      charCtx.stroke();
+      this.charCtx.strokeStyle = props.fgColor;
+      this.charCtx.lineWidth = this.scale;
+      this.charCtx.beginPath();
+      this.charCtx.moveTo(this.charWidth, this.charHeight - this.scale);
+      this.charCtx.lineTo(this.charWidth * 2, this.charHeight - this.scale);
+      this.charCtx.stroke();
     }
 
     if (props.hiStrikethrough) {
-      charCtx.strokeStyle = props.fgColor;
-      charCtx.lineWidth = scale;
-      charCtx.beginPath();
-      charCtx.moveTo(charWidth, charHeight * 0.5);
-      charCtx.lineTo(charWidth * 2, charHeight * 0.5);
-      charCtx.stroke();
+      this.charCtx.strokeStyle = props.fgColor;
+      this.charCtx.lineWidth = this.scale;
+      this.charCtx.beginPath();
+      this.charCtx.moveTo(this.charWidth, this.charHeight * 0.5);
+      this.charCtx.lineTo(this.charWidth * 2, this.charHeight * 0.5);
+      this.charCtx.stroke();
     }
 
-    return charCanvas.transferToImageBitmap();
-  };
+    return this.charCanvas.transferToImageBitmap();
+  }
 
-  const getCharTexture = (char: string, hlId: number) => {
+  private getCharTexture(char: string, hlId: number) {
     const key = `${char}:${hlId}`;
     if (!PIXI.utils.TextureCache[key]) {
-      const props = highlightTable[hlId].calculated;
+      const props = this.highlightTable[hlId].calculated;
       // @ts-expect-error getCharBitmap returns ImageBitmap that can be used as texture
-      PIXI.Texture.addToCache(PIXI.Texture.from(getCharBitmap(char, props)), key);
+      PIXI.Texture.addToCache(PIXI.Texture.from(this.getCharBitmap(char, props)), key);
     }
     return PIXI.Texture.from(key);
-  };
+  }
 
-  const getBgTexture = (bgColor: string, j: number) => {
-    const isLastCol = j === cols - 1;
+  private getBgTexture(bgColor: string, j: number) {
+    const isLastCol = j === this.cols - 1;
     const key = `bg:${bgColor}:${isLastCol}`;
     if (!PIXI.utils.TextureCache[key]) {
-      charCtx.fillStyle = bgColor;
+      this.charCtx.fillStyle = bgColor;
       if (isLastCol) {
-        charCtx.fillRect(0, 0, charWidth * 2, charHeight);
+        this.charCtx.fillRect(0, 0, this.charWidth * 2, this.charHeight);
       } else {
-        charCtx.fillRect(0, 0, charWidth, charHeight);
+        this.charCtx.fillRect(0, 0, this.charWidth, this.charHeight);
       }
 
-      PIXI.Texture.addToCache(PIXI.Texture.from(charCanvas.transferToImageBitmap()), key);
+      PIXI.Texture.addToCache(PIXI.Texture.from(this.charCanvas.transferToImageBitmap()), key);
     }
     return PIXI.Texture.from(key);
-  };
+  }
 
-  const initChar = (i: number, j: number) => {
-    if (!chars[i]) chars[i] = [];
-    if (!chars[i][j]) {
-      chars[i][j] = {
+  private initChar(i: number, j: number) {
+    if (!this.chars[i]) this.chars[i] = [];
+    if (!this.chars[i][j]) {
+      this.chars[i][j] = {
         sprite: new PIXI.Sprite(),
         bg: new PIXI.Sprite(),
       };
-      charsContainer.addChild(chars[i][j].sprite);
-      bgContainer.addChild(chars[i][j].bg);
+      this.charsContainer.addChild(this.chars[i][j].sprite);
+      this.bgContainer.addChild(this.chars[i][j].bg);
     }
-  };
+  }
 
-  const printChar = (i: number, j: number, char: string, hlId: number) => {
-    initChar(i, j);
+  private printChar(i: number, j: number, char: string, hlId: number) {
+    this.initChar(i, j);
 
     // Print char
-    chars[i][j].char = char;
-    chars[i][j].hlId = hlId;
-    chars[i][j].sprite.texture = getCharTexture(char, hlId);
-    chars[i][j].sprite.position.set((j - 1) * charWidth, i * charHeight);
-    chars[i][j].sprite.visible = true;
+    this.chars[i][j].char = char;
+    this.chars[i][j].hlId = hlId;
+    this.chars[i][j].sprite.texture = this.getCharTexture(char, hlId);
+    this.chars[i][j].sprite.position.set((j - 1) * this.charWidth, i * this.charHeight);
+    this.chars[i][j].sprite.visible = true;
 
     // Draw bg
-    chars[i][j].bg.position.set(j * charWidth, i * charHeight);
-    const bgColor = highlightTable[hlId]?.calculated?.bgColor;
-    if (hlId !== 0 && bgColor && bgColor !== highlightTable[0]?.calculated?.bgColor) {
-      chars[i][j].bg.texture = getBgTexture(bgColor, j);
-      chars[i][j].bg.visible = true;
+    this.chars[i][j].bg.position.set(j * this.charWidth, i * this.charHeight);
+    const bgColor = this.highlightTable[hlId]?.calculated?.bgColor;
+    if (hlId !== 0 && bgColor && bgColor !== this.highlightTable[0]?.calculated?.bgColor) {
+      this.chars[i][j].bg.texture = this.getBgTexture(bgColor, j);
+      this.chars[i][j].bg.visible = true;
     } else {
-      chars[i][j].bg.visible = false;
+      this.chars[i][j].bg.visible = false;
     }
-  };
+  }
 
-  const cursorBlinkOn = () => {
-    cursorContainer.visible = true;
-    renderer.render(stage);
-  };
+  private cursorBlinkOn() {
+    this.cursorContainer.visible = true;
+    this.renderer.render(this.stage);
+  }
 
-  const cursorBlinkOff = () => {
-    cursorContainer.visible = false;
-    renderer.render(stage);
-  };
+  private cursorBlinkOff() {
+    this.cursorContainer.visible = false;
+    this.renderer.render(this.stage);
+  }
 
-  const cursorBlink = ({
+  private cursorBlink({
     blinkon,
     blinkoff,
     blinkwait,
-  }: { blinkon?: number; blinkoff?: number; blinkwait?: number } = {}) => {
-    cursorContainer.visible = true;
+  }: { blinkon?: number; blinkoff?: number; blinkwait?: number } = {}) {
+    this.cursorContainer.visible = true;
 
-    if (startCursorBlinkOnTimeout) clearTimeout(startCursorBlinkOnTimeout);
-    if (startCursorBlinkOffTimeout) clearTimeout(startCursorBlinkOffTimeout);
-    if (blinkOnCursorBlinkInterval) clearInterval(blinkOnCursorBlinkInterval);
-    if (blinkOffCursorBlinkInterval) clearInterval(blinkOffCursorBlinkInterval);
+    if (this.startCursorBlinkOnTimeout) clearTimeout(this.startCursorBlinkOnTimeout);
+    if (this.startCursorBlinkOffTimeout) clearTimeout(this.startCursorBlinkOffTimeout);
+    if (this.blinkOnCursorBlinkInterval) clearInterval(this.blinkOnCursorBlinkInterval);
+    if (this.blinkOffCursorBlinkInterval) clearInterval(this.blinkOffCursorBlinkInterval);
 
-    startCursorBlinkOnTimeout = null;
-    startCursorBlinkOffTimeout = null;
-    blinkOnCursorBlinkInterval = null;
-    blinkOffCursorBlinkInterval = null;
+    this.startCursorBlinkOnTimeout = null;
+    this.startCursorBlinkOffTimeout = null;
+    this.blinkOnCursorBlinkInterval = null;
+    this.blinkOffCursorBlinkInterval = null;
 
     if (blinkoff && blinkon) {
-      startCursorBlinkOffTimeout = setTimeout(() => {
-        cursorBlinkOff();
-        blinkOffCursorBlinkInterval = setInterval(cursorBlinkOff, blinkoff + blinkon);
+      this.startCursorBlinkOffTimeout = setTimeout(() => {
+        this.cursorBlinkOff();
+        this.blinkOffCursorBlinkInterval = setInterval(this.cursorBlinkOff, blinkoff + blinkon);
 
-        startCursorBlinkOnTimeout = setTimeout(() => {
-          cursorBlinkOn();
-          blinkOnCursorBlinkInterval = setInterval(cursorBlinkOn, blinkoff + blinkon);
+        this.startCursorBlinkOnTimeout = setTimeout(() => {
+          this.cursorBlinkOn();
+          this.blinkOnCursorBlinkInterval = setInterval(this.cursorBlinkOn, blinkoff + blinkon);
         }, blinkoff);
       }, blinkwait);
     }
-  };
+  }
 
-  const clearCursor = () => {
-    cursorBg.clear();
-    cursorSprite.visible = false;
-  };
+  private clearCursor() {
+    this.cursorBg.clear();
+    this.cursorSprite.visible = false;
+  }
 
-  const redrawCursor = () => {
-    const m = modeInfoSet && modeInfoSet[mode];
-    cursorBlink(m);
+  private redrawCursor() {
+    const m = this.modeInfoSet && this.mode ? this.modeInfoSet[this.mode] : undefined;
+    this.cursorBlink(m);
 
     if (!m) return;
     // TODO: check if cursor changed (char, hlId, etc)
-    clearCursor();
+    this.clearCursor();
 
     const hlId = m.attr_id === 0 ? -1 : m.attr_id;
-    cursorBg.beginFill(getColorNum(highlightTable[hlId]?.calculated?.bgColor));
+    this.cursorBg.beginFill(getColorNum(this.highlightTable[hlId]?.calculated?.bgColor));
 
     if (m.cursor_shape === 'block') {
-      cursorChar = chars[cursorPosition[0]][cursorPosition[1]].char || ' ';
-      cursorSprite.texture = getCharTexture(cursorChar, hlId);
-      cursorBg.drawRect(0, 0, charWidth, charHeight);
-      cursorSprite.visible = true;
+      this.cursorChar = this.chars[this.cursorPosition[0]][this.cursorPosition[1]].char || ' ';
+      this.cursorSprite.texture = this.getCharTexture(this.cursorChar, hlId);
+      this.cursorBg.drawRect(0, 0, this.charWidth, this.charHeight);
+      this.cursorSprite.visible = true;
     } else if (m.cursor_shape === 'vertical') {
       const curWidth = m.cell_percentage
-        ? Math.max(scale, Math.round((charWidth / 100) * m.cell_percentage))
-        : scale;
-      cursorBg.drawRect(0, 0, curWidth, charHeight);
+        ? Math.max(this.scale, Math.round((this.charWidth / 100) * m.cell_percentage))
+        : this.scale;
+      this.cursorBg.drawRect(0, 0, curWidth, this.charHeight);
     } else if (m.cursor_shape === 'horizontal') {
       const curHeight = m.cell_percentage
-        ? Math.max(scale, Math.round((charHeight / 100) * m.cell_percentage))
-        : scale;
-      cursorBg.drawRect(0, charHeight - curHeight, charWidth, curHeight);
+        ? Math.max(this.scale, Math.round((this.charHeight / 100) * m.cell_percentage))
+        : this.scale;
+      this.cursorBg.drawRect(0, this.charHeight - curHeight, this.charWidth, curHeight);
     }
-    needRerender = true;
-  };
+    this.needRerender = true;
+  }
 
-  const repositionCursor = (newCursor: [number, number]): void => {
-    if (newCursor) cursorPosition = newCursor;
-    const left = cursorPosition[1] * charWidth;
-    const top = cursorPosition[0] * charHeight;
-    cursorContainer.position.set(left, top);
-    cursorEl.style.transform = `translate(${left}px, ${top}px)`;
-    redrawCursor();
-  };
+  private repositionCursor(newCursor: [number, number]) {
+    if (newCursor) this.cursorPosition = newCursor;
+    const left = this.cursorPosition[1] * this.charWidth;
+    const top = this.cursorPosition[0] * this.charHeight;
+    this.cursorContainer.position.set(left, top);
+    this.cursorEl.style.transform = `translate(${left}px, ${top}px)`;
+    this.redrawCursor();
+  }
 
-  const optionSet = {
+  private optionSet = {
     guifont: (newFont: string) => {
       const [newFontFamily, newFontSize] = newFont.trim().split(':h');
       if (newFontFamily && newFontFamily !== '') {
-        nvim.command(`VVset fontfamily=${newFontFamily.replace(/_/g, '\\ ')}`);
+        this.nvim.command(`VVset fontfamily=${newFontFamily.replace(/_/g, '\\ ')}`);
         if (newFontSize && newFontFamily !== '') {
-          nvim.command(`VVset fontsize=${newFontSize}`);
+          this.nvim.command(`VVset fontsize=${newFontSize}`);
         }
       }
     },
   };
 
-  const reprintAllChars = () => {
-    if (highlightTable[0]?.calculated?.bgColor) {
-      document.body.style.background = highlightTable[0].calculated.bgColor;
-      transport.send('set-background-color', highlightTable[0].calculated.bgColor);
+  private reprintAllChars() {
+    if (this.highlightTable[0]?.calculated?.bgColor) {
+      document.body.style.background = this.highlightTable[0].calculated.bgColor;
+      this.transport.send('set-background-color', this.highlightTable[0].calculated.bgColor);
     }
 
     PIXI.utils.clearTextureCache();
-    for (let i = 0; i <= rows; i += 1) {
-      for (let j = 0; j <= cols; j += 1) {
-        initChar(i, j);
-        const { char, hlId } = chars[i][j];
+    for (let i = 0; i <= this.rows; i += 1) {
+      for (let j = 0; j <= this.cols; j += 1) {
+        this.initChar(i, j);
+        const { char, hlId } = this.chars[i][j];
         if (char && isFinite(hlId)) {
-          printChar(i, j, char, hlId as number);
+          this.printChar(i, j, char, hlId as number);
         }
       }
     }
-    needRerender = true;
-  };
+    this.needRerender = true;
+  }
 
-  const recalculateHighlightTable = () => {
-    ((Object.keys(highlightTable) as unknown) as number[]).forEach((id) => {
+  private recalculateHighlightTable() {
+    ((Object.keys(this.highlightTable) as unknown) as number[]).forEach((id) => {
       if (id > 0) {
         const {
           foreground,
@@ -486,40 +491,40 @@ const screen = ({
           underline,
           undercurl,
           strikethrough,
-        } = highlightTable[id].value || {};
+        } = this.highlightTable[id].value || {};
         const r = reverse || standout;
-        const fg = getColor(foreground, highlightTable[0]?.calculated?.fgColor) as string;
-        const bg = getColor(background, highlightTable[0]?.calculated?.bgColor) as string;
-        const sp = getColor(special, highlightTable[0]?.calculated?.spColor) as string;
+        const fg = getColor(foreground, this.highlightTable[0]?.calculated?.fgColor) as string;
+        const bg = getColor(background, this.highlightTable[0]?.calculated?.bgColor) as string;
+        const sp = getColor(special, this.highlightTable[0]?.calculated?.spColor) as string;
 
-        highlightTable[(id as unknown) as number].calculated = {
+        this.highlightTable[(id as unknown) as number].calculated = {
           fgColor: r ? bg : fg,
           bgColor: r ? fg : bg,
           spColor: sp,
-          hiItalic: showItalic && !!italic,
-          hiBold: showBold && !!bold,
-          hiUnderline: showUnderline && !!underline,
-          hiUndercurl: showUndercurl && !!undercurl,
-          hiStrikethrough: showStrikethrough && !!strikethrough,
+          hiItalic: this.showItalic && !!italic,
+          hiBold: this.showBold && !!bold,
+          hiUnderline: this.showUnderline && !!underline,
+          hiUndercurl: this.showUndercurl && !!undercurl,
+          hiStrikethrough: this.showStrikethrough && !!strikethrough,
         };
       }
     });
-    reprintAllChars();
-  };
+    this.reprintAllChars();
+  }
 
-  const rerender = throttle(() => {
-    renderer.render(stage);
-  }, 1000 / TARGET_FPS);
+  private rerender = throttle(() => {
+    this.renderer.render(this.stage);
+  }, 1000 / this.TARGET_FPS);
 
-  const rerenderIfNeeded = () => {
-    if (needRerender) {
-      needRerender = false;
-      rerender();
+  private rerenderIfNeeded() {
+    if (this.needRerender) {
+      this.needRerender = false;
+      this.rerender();
     }
-  };
+  }
 
   // https://github.com/neovim/neovim/blob/master/runtime/doc/ui.txt
-  const redrawCmd: Partial<UiEventsHandlers> = {
+  private redrawCmd: Partial<UiEventsHandlers> = {
     set_title: () => {
       /* empty */
     },
@@ -532,16 +537,19 @@ const screen = ({
     },
 
     mode_info_set: (props) => {
-      modeInfoSet = props[0][1].reduce((r, modeInfo) => ({ ...r, [modeInfo.name]: modeInfo }), {});
-      redrawCursor();
+      this.modeInfoSet = props[0][1].reduce(
+        (r, modeInfo) => ({ ...r, [modeInfo.name]: modeInfo }),
+        {},
+      );
+      this.redrawCursor();
     },
 
     option_set: (options) => {
       options.forEach(([option, value]) => {
         // @ts-expect-error TODO
-        if (optionSet[option]) {
+        if (this.optionSet[option]) {
           // @ts-expect-error TODO
-          optionSet[option](value);
+          this.optionSet[option](value);
         } else {
           // console.warn('Unknown option', option, value); // eslint-disable-line no-console
         }
@@ -549,8 +557,8 @@ const screen = ({
     },
 
     mode_change: (modes) => {
-      [mode] = modes[modes.length - 1];
-      redrawCursor();
+      [this.mode] = modes[modes.length - 1];
+      this.redrawCursor();
     },
 
     mouse_on: () => {
@@ -587,25 +595,28 @@ const screen = ({
     },
 
     flush: () => {
-      rerenderIfNeeded();
+      this.rerenderIfNeeded();
     },
 
     grid_resize: (props) => {
       /* eslint-disable prefer-destructuring */
-      cols = props[0][1];
-      rows = props[0][2];
+      this.cols = props[0][1];
+      this.rows = props[0][2];
       /* eslint-enable prefer-destructuring */
 
-      if (cols * charWidth > renderer.width || rows * charHeight > renderer.height) {
+      if (
+        this.cols * this.charWidth > this.renderer.width ||
+        this.rows * this.charHeight > this.renderer.height
+      ) {
         // Add extra column on the right to fill it with adjacent color to have a nice right border
-        const width = (cols + 1) * charWidth;
-        const height = rows * charHeight;
+        const width = (this.cols + 1) * this.charWidth;
+        const height = this.rows * this.charHeight;
 
-        screenEl.style.width = `${width}px`;
-        screenEl.style.height = `${height}px`;
+        this.screenEl.style.width = `${width}px`;
+        this.screenEl.style.height = `${height}px`;
 
-        renderer.resize(width, height);
-        needRerender = true;
+        this.renderer.resize(width, height);
+        this.needRerender = true;
       }
     },
 
@@ -613,35 +624,35 @@ const screen = ({
       const [foreground, background, special] = props[props.length - 1];
 
       const calculated = {
-        bgColor: getColor(background, defaultBgColor) as string,
-        fgColor: getColor(foreground, defaultFgColor) as string,
-        spColor: getColor(special, defaultSpColor),
+        bgColor: getColor(background, this.defaultBgColor) as string,
+        fgColor: getColor(foreground, this.defaultFgColor) as string,
+        spColor: getColor(special, this.defaultSpColor),
         hiItalic: false,
         hiBold: false,
         hiUnderline: false,
         hiUndercurl: false,
         hiStrikethrough: false,
       };
-      if (!highlightTable[0] || !isEqual(highlightTable[0].calculated, calculated)) {
-        highlightTable[0] = { calculated };
-        highlightTable[-1] = {
+      if (!this.highlightTable[0] || !isEqual(this.highlightTable[0].calculated, calculated)) {
+        this.highlightTable[0] = { calculated };
+        this.highlightTable[-1] = {
           calculated: {
             ...calculated,
-            bgColor: getColor(foreground, defaultFgColor) as string,
-            fgColor: getColor(background, defaultBgColor) as string,
+            bgColor: getColor(foreground, this.defaultFgColor) as string,
+            fgColor: getColor(background, this.defaultBgColor) as string,
           },
         };
-        recalculateHighlightTable();
+        this.recalculateHighlightTable();
       }
     },
 
     hl_attr_define: (props) => {
       props.forEach(([id, value]) => {
-        highlightTable[id] = {
+        this.highlightTable[id] = {
           value,
         };
       });
-      recalculateHighlightTable();
+      this.recalculateHighlightTable();
     },
 
     grid_line: (props) => {
@@ -659,37 +670,37 @@ const screen = ({
             currentHlId = hlId;
           }
           for (let j = 0; j < length; j += 1) {
-            printChar(row, col + lineLength + j, char, currentHlId);
+            this.printChar(row, col + lineLength + j, char, currentHlId);
           }
           lineLength += length;
         }
       }
-      needRerender = true;
+      this.needRerender = true;
       if (
-        chars[cursorPosition[0]] &&
-        chars[cursorPosition[0]][cursorPosition[1]] &&
-        cursorChar !== chars[cursorPosition[0]][cursorPosition[1]].char
+        this.chars[this.cursorPosition[0]] &&
+        this.chars[this.cursorPosition[0]][this.cursorPosition[1]] &&
+        this.cursorChar !== this.chars[this.cursorPosition[0]][this.cursorPosition[1]].char
       ) {
-        redrawCursor();
+        this.redrawCursor();
       }
     },
 
     grid_clear: () => {
-      cursorPosition = [0, 0];
-      charsContainer.children.forEach((c) => {
+      this.cursorPosition = [0, 0];
+      this.charsContainer.children.forEach((c) => {
         c.visible = false; // eslint-disable-line no-param-reassign
       });
-      bgContainer.children.forEach((c) => {
+      this.bgContainer.children.forEach((c) => {
         c.visible = false; // eslint-disable-line no-param-reassign
       });
-      for (let i = 0; i <= rows; i += 1) {
-        if (!chars[i]) chars[i] = [];
-        for (let j = 0; j <= cols; j += 1) {
-          initChar(i, j);
-          chars[i][j].char = null;
+      for (let i = 0; i <= this.rows; i += 1) {
+        if (!this.chars[i]) this.chars[i] = [];
+        for (let j = 0; j <= this.cols; j += 1) {
+          this.initChar(i, j);
+          this.chars[i][j].char = null;
         }
       }
-      needRerender = true;
+      this.needRerender = true;
     },
 
     grid_destroy: () => {
@@ -697,13 +708,13 @@ const screen = ({
     },
 
     grid_cursor_goto: ([[_, ...newCursor]]) => {
-      repositionCursor(newCursor);
+      this.repositionCursor(newCursor);
 
       // Temporary workaround to fix cursor position in terminal mode. Nvim API does not send the very last cursor
       // position in terminal on redraw, but when you send any command to nvim, it redraws it correctly. Need to
       // investigate it and find a better permanent fix. Maybe this is a bug in nvim and then
       // TODO: file a ticket to nvim.
-      nvim.getMode();
+      this.nvim.getMode();
     },
 
     grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]) => {
@@ -715,72 +726,72 @@ const screen = ({
         for (let j = left; j <= right - 1; j += 1) {
           const sourceI = i + scrollCount;
 
-          initChar(i, j);
-          initChar(sourceI, j);
+          this.initChar(i, j);
+          this.initChar(sourceI, j);
 
           // Swap char to scroll to destination
-          [chars[i][j], chars[sourceI][j]] = [chars[sourceI][j], chars[i][j]];
+          [this.chars[i][j], this.chars[sourceI][j]] = [this.chars[sourceI][j], this.chars[i][j]];
 
           // Update scrolled char sprite position
-          if (chars[i][j].sprite) {
-            chars[i][j].sprite.y = i * charHeight;
-            chars[i][j].bg.y = i * charHeight;
+          if (this.chars[i][j].sprite) {
+            this.chars[i][j].sprite.y = i * this.charHeight;
+            this.chars[i][j].bg.y = i * this.charHeight;
           }
 
           // Clear and reposition old char
-          if (chars[sourceI][j].sprite) {
-            chars[sourceI][j].sprite.visible = false;
-            chars[sourceI][j].bg.visible = false;
-            chars[sourceI][j].sprite.y = sourceI * charHeight;
-            chars[sourceI][j].bg.y = sourceI * charHeight;
+          if (this.chars[sourceI][j].sprite) {
+            this.chars[sourceI][j].sprite.visible = false;
+            this.chars[sourceI][j].bg.visible = false;
+            this.chars[sourceI][j].sprite.y = sourceI * this.charHeight;
+            this.chars[sourceI][j].bg.y = sourceI * this.charHeight;
           }
         }
       }
-      needRerender = true;
+      this.needRerender = true;
     },
   };
 
-  const handleSet = {
+  private handleSet = {
     fontfamily: (newFontFamily: string) => {
-      fontFamily = `${newFontFamily}, ${DEFAULT_FONT_FAMILY}`;
+      this.fontFamily = `${newFontFamily}, ${DEFAULT_FONT_FAMILY}`;
     },
 
     fontsize: (newFontSize: string) => {
-      fontSize = parseInt(newFontSize, 10);
+      this.fontSize = parseInt(newFontSize, 10);
     },
 
     letterspacing: (newLetterSpacing: string) => {
-      letterSpacing = parseInt(newLetterSpacing, 10);
+      this.letterSpacing = parseInt(newLetterSpacing, 10);
     },
 
     lineheight: (newLineHeight: string) => {
-      lineHeight = parseFloat(newLineHeight);
+      this.lineHeight = parseFloat(newLineHeight);
     },
 
     bold: (value: boolean) => {
-      showBold = value;
+      this.showBold = value;
     },
 
     italic: (value: boolean) => {
-      showItalic = value;
+      this.showItalic = value;
     },
 
     underline: (value: boolean) => {
-      showUnderline = value;
+      this.showUnderline = value;
     },
 
     undercurl: (value: boolean) => {
-      showUndercurl = value;
+      this.showUndercurl = value;
     },
 
     strikethrough: (value: boolean) => {
-      showStrikethrough = value;
+      this.showStrikethrough = value;
     },
   };
 
-  const redraw = (args: UiEventsArgs) => {
+  private redraw = (args: UiEventsArgs) => {
     args.forEach(([cmd, ...props]) => {
-      const command = redrawCmd[cmd];
+      const command = this.redrawCmd[cmd];
       if (command) {
         // @ts-expect-error TODO: find the way to type it without errors
         command(props);
@@ -790,46 +801,49 @@ const screen = ({
     });
   };
 
-  const setScale = () => {
-    scale = isRetina() ? RETINA_SCALE : 1;
-    screenContainer.style.transform = `scale(${1 / scale})`;
-    screenContainer.style.width = `${scale * 100}%`;
-    screenContainer.style.height = `${scale * 100}%`;
+  private setScale() {
+    this.scale = this.isRetina() ? this.RETINA_SCALE : 1;
+    this.screenContainer.style.transform = `scale(${1 / this.scale})`;
+    this.screenContainer.style.width = `${this.scale * 100}%`;
+    this.screenContainer.style.height = `${this.scale * 100}%`;
 
     // Detect when you drag between retina/non-retina displays
     window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
-      setScale();
-      measureCharSize();
-      await nvim.uiTryResize(cols, rows);
+      this.setScale();
+      this.measureCharSize();
+      await this.nvim.uiTryResize(this.cols, this.rows);
     });
-  };
+  }
 
   /**
    * Return grid [col, row] coordinates by pixel coordinates.
    */
-  const screenCoords = (width: number, height: number): [number, number] => {
-    return [Math.floor((width * scale) / charWidth), Math.floor((height * scale) / charHeight)];
-  };
+  public screenCoords(width: number, height: number): [col: number, row: number] {
+    return [
+      Math.floor((width * this.scale) / this.charWidth),
+      Math.floor((height * this.scale) / this.charHeight),
+    ];
+  }
 
-  const resize = (forceRedraw = false) => {
-    const [newCols, newRows] = screenCoords(window.innerWidth, window.innerHeight);
-    if (newCols !== cols || newRows !== rows || forceRedraw) {
-      cols = newCols;
-      rows = newRows;
-      nvim.uiTryResize(cols, rows);
+  private resize(forceRedraw = false) {
+    const [newCols, newRows] = this.screenCoords(window.innerWidth, window.innerHeight);
+    if (newCols !== this.cols || newRows !== this.rows || forceRedraw) {
+      this.cols = newCols;
+      this.rows = newRows;
+      this.nvim.uiTryResize(this.cols, this.rows);
     }
-  };
+  }
 
-  const uiAttach = () => {
-    [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
-    nvim.uiAttach(cols, rows, { ext_linegrid: true });
+  private uiAttach() {
+    [this.cols, this.rows] = this.screenCoords(window.innerWidth, window.innerHeight);
+    this.nvim.uiAttach(this.cols, this.rows, { ext_linegrid: true });
     window.addEventListener(
       'resize',
-      throttle(() => resize(), 1000 / TARGET_FPS),
+      throttle(() => this.resize(), 1000 / this.TARGET_FPS),
     );
-  };
+  }
 
-  const updateSettings = (newSettings: Settings, isInitial = false) => {
+  private updateSettings(newSettings: Settings, isInitial = false) {
     let requireRedraw = isInitial;
     let requireRecalculateHighlight = false;
     const requireRedrawProps = [
@@ -854,43 +868,51 @@ const screen = ({
 
     Object.keys(newSettings).forEach((key) => {
       // @ts-expect-error TODO
-      if (handleSet[key]) {
+      if (this.handleSet[key]) {
         requireRedraw = requireRedraw || requireRedrawProps.includes(key);
         requireRecalculateHighlight =
           requireRecalculateHighlight || requireRecalculateHighlightProps.includes(key);
         // @ts-expect-error TODO
-        handleSet[key](newSettings[key]);
+        this.handleSet[key](newSettings[key]);
       }
     });
 
     if (requireRecalculateHighlight && !isInitial) {
-      recalculateHighlightTable();
+      this.recalculateHighlightTable();
     }
 
     if (requireRedraw) {
-      measureCharSize();
+      this.measureCharSize();
       PIXI.utils.clearTextureCache();
       if (!isInitial) {
-        resize(true);
+        this.resize(true);
       }
     }
-  };
+  }
 
-  initScreen();
-  initCursor();
-  setScale();
+  constructor({
+    settings,
+    transport,
+    nvim,
+  }: {
+    settings: Settings;
+    transport: Transport;
+    nvim: Nvim;
+  }) {
+    this.nvim = nvim;
+    this.transport = transport;
 
-  nvim.on('redraw', redraw);
+    this.initScreen();
+    this.initCursor();
+    this.setScale();
 
-  transport.on('updateSettings', (s) => updateSettings(s));
-  updateSettings(settings, true);
+    this.nvim.on('redraw', this.redraw);
 
-  uiAttach();
+    this.transport.on('updateSettings', (s) => this.updateSettings(s));
+    this.updateSettings(settings, true);
 
-  return {
-    screenCoords,
-    getCursorElement,
-  };
-};
+    this.uiAttach();
+  }
+}
 
-export default screen;
+export default Screen;
