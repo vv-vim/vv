@@ -16,9 +16,15 @@ const ARGS_WITH_PARAM = [
 ];
 
 /**
- * Args specific to VV
+ * Args specific to VV.
  */
 const VV_ARGS = ['--debug', '--inspect', '--open-in-project'];
+
+/**
+ * Chromium args added by electron.
+ * TODO: find more reliable way to filter them.
+ */
+const CHROMIUM_ARGS = ['--allow-file-access-from-files', '--enable-avfoundation'];
 
 /**
  * Parse CLI args and return the list of files and arguments.
@@ -85,7 +91,7 @@ export const argValue = (originalArgs: string[], argName: string): string | true
  */
 export const filterArgs = (args: string[]): string[] =>
   args.reduce<string[]>((result, a, i) => {
-    if (VV_ARGS.includes(a)) {
+    if (VV_ARGS.includes(a) || CHROMIUM_ARGS.includes(a)) {
       return result;
     }
     if (args[i - 1] && VV_ARGS.includes(args[i - 1]) && ARGS_WITH_PARAM.includes(args[i - 1])) {
