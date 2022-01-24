@@ -41,7 +41,7 @@ export const shellEnv = (proc = process): NodeJS.ProcessEnv => {
           }, {});
       } catch (e) {
         // Most likely nvim is here.
-        env.PATH = `/usr/local/bin:${env.PATH}`;
+        env.PATH = `/usr/local/bin:/opt/homebrew/bin:${env.PATH}`;
       }
     }
   }
