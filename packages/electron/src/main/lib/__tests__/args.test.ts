@@ -84,6 +84,12 @@ describe('filterArgs', () => {
     expect(filterArgs(['--open-in-project'])).toEqual([]);
     expect(filterArgs(['--open-in-project', 'value'])).toEqual([]);
   });
+
+  test('filters out chromium flags', () => {
+    expect(
+      filterArgs(['arg1', '--allow-file-access-from-files', '--enable-avfoundation', 'arg2']),
+    ).toEqual(['arg1', 'arg2']);
+  });
 });
 
 describe('argValue', () => {
