@@ -2,7 +2,7 @@
   "name": "@vvim/electron",
   "description": "Neovim GUI Client",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
-  "version": "2.4.9",
+  "version": "2.4.10",
   "private": true,
   "keywords": [
     "vim",
