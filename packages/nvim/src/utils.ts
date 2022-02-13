@@ -40,8 +40,10 @@ export const shellEnv = (proc = process): NodeJS.ProcessEnv => {
             };
           }, {});
       } catch (e) {
-        // Most likely nvim is here.
-        env.PATH = `/usr/local/bin:${env.PATH}`;
+        // Most likely nvim is here:
+        // * `/usr/local/bin` Homebrew default bin path
+        // * `/opt/homebrew/bin` Homebrew bin path for Apple Silicon (https://docs.brew.sh/Installation)
+        env.PATH = `/usr/local/bin:/opt/homebrew/bin:${env.PATH}`;
       }
     }
   }

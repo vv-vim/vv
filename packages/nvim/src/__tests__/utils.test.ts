@@ -38,7 +38,7 @@ describe('utils', () => {
         throw new Error();
       });
       expect(shellEnv(fakeProc({ PATH: 'some/path', key: 'val' }))).toEqual({
-        PATH: '/usr/local/bin:some/path',
+        PATH: '/usr/local/bin:/opt/homebrew/bin:some/path',
         key: 'val',
       });
     });
