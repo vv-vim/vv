@@ -1,4 +1,5 @@
 import { screen, MenuItemConstructorOptions, BrowserWindow } from 'electron';
+import type { Transport } from '@vvim/nvim';
 
 import { getSettings, onChangeSettings, SettingsCallback } from 'src/main/nvim/settings';
 import { getNvimByWindow } from 'src/main/nvim/nvimByWindow';
@@ -10,7 +11,7 @@ export const toggleFullScreenMenuItem: MenuItemConstructorOptions['click'] = (_i
   }
 };
 
-const initWindowSize = ({ win }: { win: BrowserWindow }): void => {
+const initWindowSize = ({ transport, win }: { transport: Transport; win: BrowserWindow }): void => {
   const initialBounds = win.getBounds();
   let bounds = win.getBounds();
   let simpleFullScreen = false;
@@ -116,6 +117,20 @@ const initWindowSize = ({ win }: { win: BrowserWindow }): void => {
   isInitial = true;
 
   onChangeSettings(win, updateWindowSize);
+
+  transport.on('set-screen-width', (width: number) => {
+    const height = win.getContentSize()[1];
+    win.setContentSize(width, height);
+  });
+
+  transport.on('set-screen-height', (height: number) => {
+    const [width, oldHeight] = win.getContentSize();
+    win.setContentSize(width, height);
+    // The new height is more than screen height.
+    if (win.getContentSize()[1] === oldHeight) {
+      transport.send('force-resize');
+    }
+  });
 };
 
 export default initWindowSize;
