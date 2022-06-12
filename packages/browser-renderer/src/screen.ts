@@ -47,6 +47,15 @@ type Char = {
 
 const DEFAULT_FONT_FAMILY = 'monospace';
 
+const TARGET_FPS = 60;
+
+const DEFAULT_FG_COLOR = 'rgb(255,255,255)';
+const DEFAULT_BG_COLOR = 'rgb(0,0,0)';
+const DEFAULT_SP_COLOR = 'rgb(255,255,255)';
+const DEFAULT_FONT_SIZE = 12;
+const DEFAULT_LINE_HEIGHT = 1.25;
+const DEFAULT_LETTER_SPACING = 0;
+
 const screen = ({
   settings,
   transport,
@@ -73,13 +82,9 @@ const screen = ({
   let charHeight: number;
 
   let fontFamily = DEFAULT_FONT_FAMILY;
-  let fontSize = 12;
-  let lineHeight = 1.25;
-  let letterSpacing = 0;
-
-  const defaultFgColor = 'rgb(255,255,255)';
-  const defaultBgColor = 'rgb(0,0,0)';
-  const defaultSpColor = 'rgb(255,255,255)';
+  let fontSize = DEFAULT_FONT_SIZE;
+  let lineHeight = DEFAULT_LINE_HEIGHT;
+  let letterSpacing = DEFAULT_LETTER_SPACING;
 
   let cols: number;
   let rows: number;
@@ -101,9 +106,9 @@ const screen = ({
   const highlightTable: HighlightTable = {
     '0': {
       calculated: {
-        bgColor: defaultBgColor,
-        fgColor: defaultFgColor,
-        spColor: defaultSpColor,
+        bgColor: DEFAULT_BG_COLOR,
+        fgColor: DEFAULT_FG_COLOR,
+        spColor: DEFAULT_SP_COLOR,
         hiItalic: false,
         hiBold: false,
         hiUnderline: false,
@@ -114,9 +119,9 @@ const screen = ({
     // Inverted default color for cursor
     '-1': {
       calculated: {
-        bgColor: defaultFgColor,
-        fgColor: defaultBgColor,
-        spColor: defaultSpColor,
+        bgColor: DEFAULT_FG_COLOR,
+        fgColor: DEFAULT_BG_COLOR,
+        spColor: DEFAULT_SP_COLOR,
         hiItalic: false,
         hiBold: false,
         hiUnderline: false,
@@ -136,7 +141,20 @@ const screen = ({
   let cursorBg: PIXI.Graphics;
 
   let needRerender = false;
-  const TARGET_FPS = 60;
+
+  let isResizing = false;
+  let isResizingTimeout: NodeJS.Timeout | undefined;
+
+  const setResizing = () => {
+    isResizing = true;
+    if (isResizingTimeout) {
+      clearTimeout(isResizingTimeout);
+      isResizingTimeout = undefined;
+    }
+    isResizingTimeout = setTimeout(() => {
+      isResizing = false;
+    }, 300);
+  };
 
   const getCursorElement = (): HTMLDivElement => cursorEl;
 
@@ -591,13 +609,16 @@ const screen = ({
     },
 
     grid_resize: (props) => {
+      const oldCols = cols;
+      const oldRows = rows;
+
       /* eslint-disable prefer-destructuring */
       cols = props[0][1];
       rows = props[0][2];
       /* eslint-enable prefer-destructuring */
 
+      // Add extra column on the right to fill it with adjacent color to have a nice right border
       if (cols * charWidth > renderer.width || rows * charHeight > renderer.height) {
-        // Add extra column on the right to fill it with adjacent color to have a nice right border
         const width = (cols + 1) * charWidth;
         const height = rows * charHeight;
 
@@ -607,15 +628,28 @@ const screen = ({
         renderer.resize(width, height);
         needRerender = true;
       }
+
+      // If we are not resizing the window, then we triggered resize from vim using `:set columns` or `:set lines`.
+      // We need to send message to the main to resize the window.
+      if (!isResizing) {
+        if (oldCols !== cols) {
+          const width = Math.ceil((cols * charWidth) / scale);
+          transport.send('set-screen-width', width);
+        }
+        if (oldRows !== rows) {
+          const height = Math.ceil((rows * charHeight) / scale);
+          transport.send('set-screen-height', height);
+        }
+      }
     },
 
     default_colors_set: (props) => {
       const [foreground, background, special] = props[props.length - 1];
 
       const calculated = {
-        bgColor: getColor(background, defaultBgColor) as string,
-        fgColor: getColor(foreground, defaultFgColor) as string,
-        spColor: getColor(special, defaultSpColor),
+        bgColor: getColor(background, DEFAULT_BG_COLOR) as string,
+        fgColor: getColor(foreground, DEFAULT_FG_COLOR) as string,
+        spColor: getColor(special, DEFAULT_SP_COLOR),
         hiItalic: false,
         hiBold: false,
         hiUnderline: false,
@@ -627,8 +661,8 @@ const screen = ({
         highlightTable[-1] = {
           calculated: {
             ...calculated,
-            bgColor: getColor(foreground, defaultFgColor) as string,
-            fgColor: getColor(background, defaultBgColor) as string,
+            bgColor: getColor(foreground, DEFAULT_FG_COLOR) as string,
+            fgColor: getColor(background, DEFAULT_BG_COLOR) as string,
           },
         };
         recalculateHighlightTable();
@@ -797,10 +831,11 @@ const screen = ({
     screenContainer.style.height = `${scale * 100}%`;
 
     // Detect when you drag between retina/non-retina displays
-    window.matchMedia('screen and (min-resolution: 2dppx)').addListener(async () => {
+    window.matchMedia('screen and (min-resolution: 2dppx)').addListener(() => {
       setScale();
       measureCharSize();
-      await nvim.uiTryResize(cols, rows);
+      setResizing();
+      nvim.uiTryResize(cols, rows);
     });
   };
 
@@ -816,6 +851,7 @@ const screen = ({
     if (newCols !== cols || newRows !== rows || forceRedraw) {
       cols = newCols;
       rows = newRows;
+      setResizing();
       nvim.uiTryResize(cols, rows);
     }
   };
@@ -884,6 +920,10 @@ const screen = ({
 
   transport.on('updateSettings', (s) => updateSettings(s));
   updateSettings(settings, true);
+
+  transport.on('force-resize', () => {
+    resize();
+  });
 
   uiAttach();
 

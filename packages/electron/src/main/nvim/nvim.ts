@@ -34,7 +34,7 @@ const initNvim = ({
   setNvimByWindow(win, nvim);
 
   initSettings({ win, nvim, args, transport });
-  windowSize({ win });
+  windowSize({ win, transport });
   quit({ win, nvim });
   windowTitle({ win, nvim });
   zoom({ win });
