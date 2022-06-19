@@ -44,7 +44,7 @@
     "@types/jest-dev-server": "^4.2.0",
     "@types/jest-image-snapshot": "^4.3.0",
     "@types/lodash": "^4.14.168",
-    "@types/node": "^14.14.31",
+    "@types/node": "^16.0.0",
     "@types/puppeteer": "^5.4.3",
     "@types/ws": "^7.4.0",
     "jest-dev-server": "^5.0.3",
