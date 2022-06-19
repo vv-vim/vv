@@ -34,7 +34,7 @@
     "start": "electron ."
   },
   "browserslist": [
-    "chrome 101",
+    "chrome 98",
     "node 16"
   ],
   "devDependencies": {
@@ -43,7 +43,7 @@
     "@types/node": "^16.0.0",
     "chalk": "^4.1.0",
     "dotenv": "^8.2.0",
-    "electron": "19.0.0",
+    "electron": "^17",
     "electron-builder": "^22.9.1",
     "electron-notarize": "^1.0.0",
     "html-webpack-plugin": "^4.3.0",
