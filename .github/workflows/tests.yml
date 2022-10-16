@@ -49,7 +49,7 @@ jobs:
       run: yarn test --reporters="default" --reporters="jest-github-actions-reporter" --coverage
 
     - name: Upload snapshot diffs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: failed-image-snapshots
         path: packages/**/__diff_output__/*
@@ -57,4 +57,4 @@ jobs:
       if: failure()
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3

@@ -1,9 +1,8 @@
-// TODO: Refactor
-import { throttle, isFinite, isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 
-import { getColor, getColorNum } from 'src/lib/getColor';
+import emojiRegex from 'emoji-regex';
 
-import * as PIXI from 'src/lib/pixi';
+import { getColor } from 'src/lib/getColor';
 
 import type { Settings } from 'src/types';
 import type {
@@ -39,15 +38,12 @@ type HighlightProps = {
 type HighlightTable = Record<number, HighlightProps>;
 
 type Char = {
-  sprite: PIXI.Sprite;
-  bg: PIXI.Sprite;
+  bitmap?: HTMLCanvasElement;
   char?: string | null;
   hlId?: number;
 };
 
 const DEFAULT_FONT_FAMILY = 'monospace';
-
-const TARGET_FPS = 60;
 
 const DEFAULT_FG_COLOR = 'rgb(255,255,255)';
 const DEFAULT_BG_COLOR = 'rgb(0,0,0)';
@@ -55,6 +51,13 @@ const DEFAULT_SP_COLOR = 'rgb(255,255,255)';
 const DEFAULT_FONT_SIZE = 12;
 const DEFAULT_LINE_HEIGHT = 1.25;
 const DEFAULT_LETTER_SPACING = 0;
+
+let cursorAnimation: Animation;
+
+const isEmoji = (char: string): boolean => {
+  const regex = emojiRegex();
+  return !!char.match(regex);
+};
 
 const screen = ({
   settings,
@@ -67,15 +70,15 @@ const screen = ({
 }): Screen => {
   let screenContainer: HTMLDivElement;
   let cursorEl: HTMLDivElement;
-  let screenEl: HTMLDivElement;
+
+  let canvasEl: HTMLCanvasElement;
+  let context: CanvasRenderingContext2D;
+
+  let cursorCanvasEl: HTMLCanvasElement;
+  let cursorContext: CanvasRenderingContext2D;
 
   let cursorPosition: [number, number] = [0, 0];
   let cursorChar: string;
-
-  let startCursorBlinkOnTimeout: NodeJS.Timeout | null;
-  let startCursorBlinkOffTimeout: NodeJS.Timeout | null;
-  let blinkOnCursorBlinkInterval: NodeJS.Timeout | null;
-  let blinkOffCursorBlinkInterval: NodeJS.Timeout | null;
 
   let scale: number;
   let charWidth: number;
@@ -98,10 +101,7 @@ const screen = ({
   let showUndercurl = true;
   let showStrikethrough = true;
 
-  const charCanvas = new OffscreenCanvas(1, 1);
-  const charCtx = charCanvas.getContext('2d', { alpha: true }) as OffscreenCanvasRenderingContext2D;
-
-  const chars: Char[][] = [];
+  let chars: Char[][] = [];
 
   const highlightTable: HighlightTable = {
     '0': {
@@ -131,17 +131,6 @@ const screen = ({
     },
   };
 
-  // WebGL
-  let stage: PIXI.Container;
-  let renderer: PIXI.Renderer;
-  let charsContainer: PIXI.Container;
-  let bgContainer: PIXI.Container;
-  let cursorContainer: PIXI.Container;
-  let cursorSprite: PIXI.Sprite;
-  let cursorBg: PIXI.Graphics;
-
-  let needRerender = false;
-
   let isResizing = false;
   let isResizingTimeout: NodeJS.Timeout | undefined;
 
@@ -158,18 +147,24 @@ const screen = ({
 
   const getCursorElement = (): HTMLDivElement => cursorEl;
 
-  const windowPixelSize = () => ({
-    width: window.screen.width * window.devicePixelRatio,
-    height: window.screen.height * window.devicePixelRatio,
-  });
-
   const initCursor = () => {
     cursorEl = document.createElement('div');
     cursorEl.style.position = 'absolute';
     cursorEl.style.zIndex = '100';
     cursorEl.style.top = '0';
     cursorEl.style.left = '0';
-    screenEl.appendChild(cursorEl);
+
+    screenContainer.appendChild(cursorEl);
+
+    cursorCanvasEl = document.createElement('canvas');
+
+    cursorCanvasEl.style.position = 'absolute';
+    cursorCanvasEl.style.top = '0px';
+    cursorCanvasEl.style.left = '0px';
+
+    cursorContext = cursorCanvasEl.getContext('2d', { alpha: true }) as CanvasRenderingContext2D;
+
+    cursorEl.appendChild(cursorCanvasEl);
   };
 
   const initScreen = () => {
@@ -181,45 +176,20 @@ const screen = ({
     screenContainer.style.top = '0';
     screenContainer.style.transformOrigin = '0 0';
 
-    screenEl = document.createElement('div');
+    canvasEl = document.createElement('canvas');
 
-    // @ts-expect-error incomplete type declaration for style?
-    screenEl.style.contain = 'strict';
-    screenEl.style.overflow = 'hidden';
+    canvasEl.style.position = 'absolute';
+    canvasEl.style.top = '0px';
+    canvasEl.style.left = '0px';
 
-    // Init WebGL for text
-    const pixi = new PIXI.Application({
-      transparent: true,
-      autoStart: false,
-      ...windowPixelSize(),
-    });
+    context = canvasEl.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
 
-    screenEl.appendChild(pixi.view);
-
-    screenContainer.appendChild(screenEl);
-
-    stage = pixi.stage;
-    renderer = pixi.renderer as PIXI.Renderer;
-    pixi.ticker.stop();
-
-    charsContainer = new PIXI.Container();
-    bgContainer = new PIXI.Container();
-    cursorContainer = new PIXI.Container();
-    cursorSprite = new PIXI.Sprite();
-    cursorBg = new PIXI.Graphics();
-
-    stage.addChild(bgContainer);
-    stage.addChild(charsContainer);
-    stage.addChild(cursorContainer);
-    cursorContainer.addChild(cursorBg);
-    cursorContainer.addChild(cursorSprite);
-
-    // Init screen for background
-    screenEl.style.width = `${windowPixelSize().width}px`;
-    screenEl.style.height = `${windowPixelSize().width}px`;
+    screenContainer.appendChild(canvasEl);
   };
 
   const RETINA_SCALE = 2;
+
+  const charsCache: Map<string, HTMLCanvasElement> = new Map();
 
   const isRetina = () => window.devicePixelRatio === RETINA_SCALE;
 
@@ -243,220 +213,234 @@ const screen = ({
     char.style.position = 'absolute';
     char.style.left = '-1000px';
     char.style.top = '0';
-    screenEl.appendChild(char);
+    screenContainer.appendChild(char);
 
     const oldCharWidth = charWidth;
     const oldCharHeight = charHeight;
     charWidth = Math.max(char.offsetWidth + scaledLetterSpacing(), 1);
     charHeight = char.offsetHeight;
     if (oldCharWidth !== charWidth || oldCharHeight !== charHeight) {
-      cursorSprite.x = -charWidth;
       cursorEl.style.width = `${charWidth}px`;
       cursorEl.style.height = `${charHeight}px`;
+      cursorCanvasEl.width = charWidth;
+      cursorCanvasEl.height = charHeight;
 
-      if (charCanvas) {
-        charCanvas.width = charWidth * 3;
-        charCanvas.height = charHeight;
+      charsCache.clear();
+    }
+    screenContainer.removeChild(char);
+  };
+
+  const font = (p: CalculatedProps, isEmojiFont?: boolean) =>
+    [
+      p.hiItalic ? 'italic' : '',
+      p.hiBold ? 'bold' : '',
+      `${scaledFontSize()}px`,
+      isEmojiFont ? 'Apple Color Emoji' : fontFamily,
+    ].join(' ');
+
+  const getCharBitmap = (char: string, hlId: number) => {
+    // eslint-disable-next-line
+    const p = highlightTable[hlId].calculated!;
+    const key = `${char}:${p.bgColor}:${p.fgColor}:${
+      p.hiUndercurl || p.hiUnderline ? p.spColor : '-'
+    }:${p.hiItalic}:${p.hiBold}:${p.hiUndercurl}:${p.hiStrikethrough}`;
+    if (!charsCache.has(key)) {
+      // TODO: worker maybe?
+      // const charCanvas = new OffscreenCanvas(charWidth * 3, charHeight);
+      const charCanvas = document.createElement('canvas');
+      charCanvas.width = charWidth * 3;
+      charCanvas.height = charHeight;
+
+      // eslint-disable-next-line
+      const charCtx = charCanvas.getContext('2d', {
+        alpha: true,
+      }) as CanvasRenderingContext2D;
+
+      if (p.hiUndercurl) {
+        charCtx.strokeStyle = p.spColor as string;
+        charCtx.lineWidth = scaledFontSize() * 0.08;
+        const x = charWidth;
+        const y = charHeight - (scaledFontSize() * 0.08) / 2;
+        const h = charHeight * 0.2; // Height of the wave
+        charCtx.beginPath();
+        charCtx.moveTo(x, y);
+        charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
+        charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
+        charCtx.stroke();
       }
 
-      PIXI.utils.clearTextureCache();
-    }
-    screenEl.removeChild(char);
-  };
-
-  const font = (p: CalculatedProps) =>
-    [p.hiItalic ? 'italic' : '', p.hiBold ? 'bold' : '', `${scaledFontSize()}px`, fontFamily].join(
-      ' ',
-    );
-
-  const getCharBitmap = (char: string, props: CalculatedProps) => {
-    if (props.hiUndercurl) {
-      charCtx.strokeStyle = props.spColor as string;
-      charCtx.lineWidth = scaledFontSize() * 0.08;
-      const x = charWidth;
-      const y = charHeight - (scaledFontSize() * 0.08) / 2;
-      const h = charHeight * 0.2; // Height of the wave
-      charCtx.beginPath();
-      charCtx.moveTo(x, y);
-      charCtx.bezierCurveTo(x + x / 4, y, x + x / 4, y - h / 2, x + x / 2, y - h / 2);
-      charCtx.bezierCurveTo(x + (x / 4) * 3, y - h / 2, x + (x / 4) * 3, y, x + x, y);
-      charCtx.stroke();
-    }
-
-    charCtx.fillStyle = props.fgColor;
-    charCtx.font = font(props);
-    charCtx.textAlign = 'left';
-    charCtx.textBaseline = 'middle';
-    if (char) {
-      charCtx.fillText(
-        char,
-        Math.round(scaledLetterSpacing() / 2) + charWidth,
-        Math.round(charHeight / 2),
-      );
-    }
-
-    if (props.hiUnderline) {
-      charCtx.strokeStyle = props.fgColor;
-      charCtx.lineWidth = scale;
-      charCtx.beginPath();
-      charCtx.moveTo(charWidth, charHeight - scale);
-      charCtx.lineTo(charWidth * 2, charHeight - scale);
-      charCtx.stroke();
-    }
-
-    if (props.hiStrikethrough) {
-      charCtx.strokeStyle = props.fgColor;
-      charCtx.lineWidth = scale;
-      charCtx.beginPath();
-      charCtx.moveTo(charWidth, charHeight * 0.5);
-      charCtx.lineTo(charWidth * 2, charHeight * 0.5);
-      charCtx.stroke();
-    }
-
-    return charCanvas.transferToImageBitmap();
-  };
-
-  const getCharTexture = (char: string, hlId: number) => {
-    const key = `${char}:${hlId}`;
-    if (!PIXI.utils.TextureCache[key]) {
-      const props = highlightTable[hlId].calculated;
-      // @ts-expect-error getCharBitmap returns ImageBitmap that can be used as texture
-      PIXI.Texture.addToCache(PIXI.Texture.from(getCharBitmap(char, props)), key);
-    }
-    return PIXI.Texture.from(key);
-  };
-
-  const getBgTexture = (bgColor: string, j: number) => {
-    const isLastCol = j === cols - 1;
-    const key = `bg:${bgColor}:${isLastCol}`;
-    if (!PIXI.utils.TextureCache[key]) {
-      charCtx.fillStyle = bgColor;
-      if (isLastCol) {
-        charCtx.fillRect(0, 0, charWidth * 2, charHeight);
-      } else {
-        charCtx.fillRect(0, 0, charWidth, charHeight);
+      charCtx.fillStyle = p.fgColor;
+      charCtx.font = font(p, isEmoji(char));
+      charCtx.textAlign = 'left';
+      charCtx.textBaseline = 'middle';
+      if (char) {
+        charCtx.fillText(
+          char,
+          Math.round(scaledLetterSpacing() / 2) + charWidth,
+          Math.round(charHeight / 2),
+        );
       }
 
-      PIXI.Texture.addToCache(PIXI.Texture.from(charCanvas.transferToImageBitmap()), key);
+      if (p.hiUnderline) {
+        charCtx.strokeStyle = p.fgColor;
+        charCtx.lineWidth = scale;
+        charCtx.beginPath();
+        charCtx.moveTo(charWidth, charHeight - scale);
+        charCtx.lineTo(charWidth * 2, charHeight - scale);
+        charCtx.stroke();
+      }
+
+      if (p.hiStrikethrough) {
+        charCtx.strokeStyle = p.fgColor;
+        charCtx.lineWidth = scale;
+        charCtx.beginPath();
+        charCtx.moveTo(charWidth, charHeight * 0.5);
+        charCtx.lineTo(charWidth * 2, charHeight * 0.5);
+        charCtx.stroke();
+      }
+      charsCache.set(key, charCanvas);
     }
-    return PIXI.Texture.from(key);
+    // eslint-disable-next-line
+    return charsCache.get(key)!;
   };
 
   const initChar = (i: number, j: number) => {
     if (!chars[i]) chars[i] = [];
-    if (!chars[i][j]) {
-      chars[i][j] = {
-        sprite: new PIXI.Sprite(),
-        bg: new PIXI.Sprite(),
-      };
-      charsContainer.addChild(chars[i][j].sprite);
-      bgContainer.addChild(chars[i][j].bg);
+    if (!chars[i][j]) chars[i][j] = {};
+  };
+
+  const printBackground = (hlId: number, i: number, j: number, length: number) => {
+    const fillStyle = highlightTable[hlId]?.calculated?.bgColor;
+    if (fillStyle) {
+      context.fillStyle = fillStyle;
+      // Add an extra BG if this is the edge of the screen to make it look nicer
+      const isEndOfLine = j + length === cols;
+      const bgWidth = isEndOfLine ? (length + 1) * charWidth : length * charWidth;
+      context.fillRect(j * charWidth, i * charHeight, bgWidth, charHeight);
     }
   };
 
   const printChar = (i: number, j: number, char: string, hlId: number) => {
     initChar(i, j);
-
-    // Print char
     chars[i][j].char = char;
     chars[i][j].hlId = hlId;
-    chars[i][j].sprite.texture = getCharTexture(char, hlId);
-    chars[i][j].sprite.position.set((j - 1) * charWidth, i * charHeight);
-    chars[i][j].sprite.visible = true;
+    chars[i][j].bitmap = getCharBitmap(char, hlId);
 
-    // Draw bg
-    chars[i][j].bg.position.set(j * charWidth, i * charHeight);
-    const bgColor = highlightTable[hlId]?.calculated?.bgColor;
-    if (hlId !== 0 && bgColor && bgColor !== highlightTable[0]?.calculated?.bgColor) {
-      chars[i][j].bg.texture = getBgTexture(bgColor, j);
-      chars[i][j].bg.visible = true;
-    } else {
-      chars[i][j].bg.visible = false;
+    context.drawImage(
+      chars[i][j].bitmap as HTMLCanvasElement,
+      0,
+      0,
+      charWidth * 3,
+      charHeight,
+      (j - 1) * charWidth,
+      i * charHeight,
+      charWidth * 3,
+      charHeight,
+    );
+  };
+
+  // https://github.com/neovim/neovim/blob/5a11e55/runtime/doc/ui.txt#L237
+  const redrawDefaultColors = () => {
+    context.fillStyle = highlightTable[0]?.calculated?.bgColor || DEFAULT_BG_COLOR;
+    context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+    for (let i = 0; i <= rows; i += 1) {
+      if (chars[i]) {
+        for (let j = 0; j <= cols; j += 1) {
+          const redrawChar = chars[i][j];
+          if (redrawChar) {
+            const { hlId } = redrawChar;
+            if (hlId !== undefined && hlId > 0) {
+              const { foreground, background, special } = highlightTable[hlId].value || {};
+              if (!foreground || !background || !special) {
+                printBackground(hlId, i, j, 1);
+              }
+            }
+          }
+        }
+      }
     }
-  };
-
-  const cursorBlinkOn = () => {
-    cursorContainer.visible = true;
-    renderer.render(stage);
-  };
-
-  const cursorBlinkOff = () => {
-    cursorContainer.visible = false;
-    renderer.render(stage);
-  };
-
-  const cursorBlink = ({
-    blinkon,
-    blinkoff,
-    blinkwait,
-  }: { blinkon?: number; blinkoff?: number; blinkwait?: number } = {}) => {
-    cursorContainer.visible = true;
-
-    if (startCursorBlinkOnTimeout) clearTimeout(startCursorBlinkOnTimeout);
-    if (startCursorBlinkOffTimeout) clearTimeout(startCursorBlinkOffTimeout);
-    if (blinkOnCursorBlinkInterval) clearInterval(blinkOnCursorBlinkInterval);
-    if (blinkOffCursorBlinkInterval) clearInterval(blinkOffCursorBlinkInterval);
-
-    startCursorBlinkOnTimeout = null;
-    startCursorBlinkOffTimeout = null;
-    blinkOnCursorBlinkInterval = null;
-    blinkOffCursorBlinkInterval = null;
-
-    if (blinkoff && blinkon) {
-      startCursorBlinkOffTimeout = setTimeout(() => {
-        cursorBlinkOff();
-        blinkOffCursorBlinkInterval = setInterval(cursorBlinkOff, blinkoff + blinkon);
-
-        startCursorBlinkOnTimeout = setTimeout(() => {
-          cursorBlinkOn();
-          blinkOnCursorBlinkInterval = setInterval(cursorBlinkOn, blinkoff + blinkon);
-        }, blinkoff);
-      }, blinkwait);
+    for (let i = 0; i <= rows; i += 1) {
+      if (chars[i]) {
+        for (let j = 0; j <= cols; j += 1) {
+          const redrawChar = chars[i][j];
+          if (redrawChar) {
+            const { hlId, char } = redrawChar;
+            if (hlId !== undefined && typeof char === 'string' && char !== ' ') {
+              const { foreground, background, special } = highlightTable[hlId].value || {};
+              if (!foreground || !background || !special) {
+                chars[i][j].bitmap = undefined;
+                printChar(i, j, char, hlId);
+              }
+            }
+          }
+        }
+      }
     }
-  };
-
-  const clearCursor = () => {
-    cursorBg.clear();
-    cursorSprite.visible = false;
   };
 
   const redrawCursor = () => {
     const m = modeInfoSet && modeInfoSet[mode];
-    cursorBlink(m);
 
-    if (!m) return;
     // TODO: check if cursor changed (char, hlId, etc)
-    clearCursor();
+    if (!m) return;
 
     const hlId = m.attr_id === 0 ? -1 : m.attr_id;
-    cursorBg.beginFill(getColorNum(highlightTable[hlId]?.calculated?.bgColor));
+
+    const { width, height } = cursorCanvasEl;
+    const fillStyle = highlightTable[hlId]?.calculated?.bgColor;
+    if (fillStyle) {
+      cursorContext.fillStyle = fillStyle;
+    }
 
     if (m.cursor_shape === 'block') {
-      cursorChar = chars[cursorPosition[0]][cursorPosition[1]].char || ' ';
-      cursorSprite.texture = getCharTexture(cursorChar, hlId);
-      cursorBg.drawRect(0, 0, charWidth, charHeight);
-      cursorSprite.visible = true;
+      cursorChar = chars?.[cursorPosition[0]]?.[cursorPosition[1]]?.char || ' ';
+      cursorContext.fillRect(0, 0, charWidth, charHeight);
+      const cursorBitmap = getCharBitmap(cursorChar, hlId);
+      cursorContext.drawImage(cursorBitmap, -charWidth, 0);
     } else if (m.cursor_shape === 'vertical') {
       const curWidth = m.cell_percentage
         ? Math.max(scale, Math.round((charWidth / 100) * m.cell_percentage))
         : scale;
-      cursorBg.drawRect(0, 0, curWidth, charHeight);
+      cursorContext.clearRect(0, 0, width, height);
+      cursorContext.fillRect(0, 0, curWidth, charHeight);
     } else if (m.cursor_shape === 'horizontal') {
       const curHeight = m.cell_percentage
         ? Math.max(scale, Math.round((charHeight / 100) * m.cell_percentage))
         : scale;
-      cursorBg.drawRect(0, charHeight - curHeight, charWidth, curHeight);
+
+      // TODO: test
+      cursorContext.clearRect(0, 0, width, height);
+      cursorContext.fillRect(0, charHeight - curHeight, charWidth, curHeight);
     }
-    needRerender = true;
+
+    // Cursor blink
+    if (cursorAnimation) {
+      cursorAnimation.cancel();
+    }
+    if (m.blinkoff && m.blinkon) {
+      const offset = m.blinkon / (m.blinkon + m.blinkoff);
+      cursorAnimation = cursorEl.animate(
+        [
+          { opacity: 1, offset: 0 },
+          { opacity: 1, offset },
+          { opacity: 0, offset },
+          { opacity: 0, offset: 1 },
+          { opacity: 1, offset: 1 },
+        ],
+        {
+          duration: m.blinkoff + m.blinkon,
+          iterations: Infinity,
+          delay: m.blinkwait || 0,
+        },
+      );
+    }
   };
 
   const repositionCursor = (newCursor: [number, number]): void => {
     if (newCursor) cursorPosition = newCursor;
     const left = cursorPosition[1] * charWidth;
     const top = cursorPosition[0] * charHeight;
-    cursorContainer.position.set(left, top);
     cursorEl.style.transform = `translate(${left}px, ${top}px)`;
-    redrawCursor();
   };
 
   const optionSet = {
@@ -469,25 +453,6 @@ const screen = ({
         }
       }
     },
-  };
-
-  const reprintAllChars = () => {
-    if (highlightTable[0]?.calculated?.bgColor) {
-      document.body.style.background = highlightTable[0].calculated.bgColor;
-      transport.send('set-background-color', highlightTable[0].calculated.bgColor);
-    }
-
-    PIXI.utils.clearTextureCache();
-    for (let i = 0; i <= rows; i += 1) {
-      for (let j = 0; j <= cols; j += 1) {
-        initChar(i, j);
-        const { char, hlId } = chars[i][j];
-        if (char && isFinite(hlId)) {
-          printChar(i, j, char, hlId as number);
-        }
-      }
-    }
-    needRerender = true;
   };
 
   const recalculateHighlightTable = () => {
@@ -522,17 +487,72 @@ const screen = ({
         };
       }
     });
-    reprintAllChars();
   };
 
-  const rerender = throttle(() => {
-    renderer.render(stage);
-  }, 1000 / TARGET_FPS);
+  /**
+   * If char previous to the current cell is wider that char width, we need to draw that part
+   * of it that overlaps the current cell when we redraw it.
+   */
+  const overlapPrev = (i: number, j: number) => {
+    if (chars[i] && chars[i][j - 1] && chars[i][j - 1].bitmap) {
+      context.drawImage(
+        chars[i][j - 1].bitmap as HTMLCanvasElement,
+        charWidth * 2,
+        0,
+        charWidth,
+        charHeight,
+        j * charWidth,
+        i * charHeight,
+        charWidth,
+        charHeight,
+      );
+    }
+  };
 
-  const rerenderIfNeeded = () => {
-    if (needRerender) {
-      needRerender = false;
-      rerender();
+  /**
+   * If char next to the cell is wider that char width, we need to draw that part
+   * of it that overlaps the current cell when we redraw it.
+   */
+  const overlapNext = (i: number, j: number) => {
+    if (chars[i] && chars[i][j + 1] && chars[i][j + 1].bitmap) {
+      context.drawImage(
+        chars[i][j + 1].bitmap as HTMLCanvasElement,
+        0,
+        0,
+        charWidth,
+        charHeight,
+        j * charWidth,
+        i * charHeight,
+        charWidth,
+        charHeight,
+      );
+    }
+  };
+
+  /** Clean char from previous overlapping left and right symbols. */
+  const cleanOverlap = (i: number, j: number) => {
+    if (chars[i] && chars[i][j]) {
+      const { hlId } = chars[i][j];
+      if (hlId !== undefined) {
+        const fillStyle = highlightTable[hlId]?.calculated?.bgColor;
+        if (fillStyle) {
+          context.fillStyle = fillStyle;
+          context.fillRect(j * charWidth, i * charHeight, charWidth, charHeight);
+          context.drawImage(
+            chars[i][j].bitmap as HTMLCanvasElement,
+            charWidth,
+            0,
+            charWidth,
+            charHeight,
+            j * charWidth,
+            i * charHeight,
+            charWidth,
+            charHeight,
+          );
+          overlapPrev(i, j);
+          overlapNext(i, j);
+        }
+      }
     }
   };
 
@@ -551,7 +571,6 @@ const screen = ({
 
     mode_info_set: (props) => {
       modeInfoSet = props[0][1].reduce((r, modeInfo) => ({ ...r, [modeInfo.name]: modeInfo }), {});
-      redrawCursor();
     },
 
     option_set: (options) => {
@@ -567,8 +586,7 @@ const screen = ({
     },
 
     mode_change: (modes) => {
-      [mode] = modes[modes.length - 1];
-      redrawCursor();
+      mode = modes[modes.length - 1][0];
     },
 
     mouse_on: () => {
@@ -605,28 +623,28 @@ const screen = ({
     },
 
     flush: () => {
-      rerenderIfNeeded();
+      redrawCursor();
     },
 
-    grid_resize: (props) => {
+    grid_resize: ([[, newCols, newRows]]) => {
       const oldCols = cols;
       const oldRows = rows;
 
-      /* eslint-disable prefer-destructuring */
-      cols = props[0][1];
-      rows = props[0][2];
-      /* eslint-enable prefer-destructuring */
+      cols = newCols;
+      rows = newRows;
 
       // Add extra column on the right to fill it with adjacent color to have a nice right border
-      if (cols * charWidth > renderer.width || rows * charHeight > renderer.height) {
+      if ((cols + 1) * charWidth > canvasEl.width || rows * charHeight > canvasEl.height) {
         const width = (cols + 1) * charWidth;
         const height = rows * charHeight;
 
-        screenEl.style.width = `${width}px`;
-        screenEl.style.height = `${height}px`;
+        screenContainer.style.width = `${width}px`;
+        screenContainer.style.height = `${height}px`;
 
-        renderer.resize(width, height);
-        needRerender = true;
+        canvasEl.width = (cols + 1) * charWidth;
+        canvasEl.height = rows * charHeight;
+        context.fillStyle = highlightTable[0]?.calculated?.bgColor || DEFAULT_BG_COLOR;
+        context.fillRect(0, 0, canvasEl.width, canvasEl.height);
       }
 
       // If we are not resizing the window, then we triggered resize from vim using `:set columns` or `:set lines`.
@@ -666,6 +684,11 @@ const screen = ({
           },
         };
         recalculateHighlightTable();
+        if (highlightTable[0]?.calculated?.bgColor) {
+          document.body.style.background = highlightTable[0].calculated.bgColor;
+          transport.send('set-background-color', highlightTable[0].calculated.bgColor);
+        }
+        redrawDefaultColors();
       }
     },
 
@@ -679,17 +702,29 @@ const screen = ({
     },
 
     grid_line: (props) => {
-      for (let gridKey = 0, gridLength = props.length; gridKey < gridLength; gridKey += 1) {
-        const row = props[gridKey][1];
-        const col = props[gridKey][2];
-        const cells = props[gridKey][3];
-
+      // eslint-disable-next-line
+      for (const [, row, col, cells] of props) {
         let lineLength = 0;
         let currentHlId = 0;
 
-        for (let cellKey = 0, cellsLength = cells.length; cellKey < cellsLength; cellKey += 1) {
-          const [char, hlId, length = 1] = cells[cellKey];
-          if (hlId !== undefined && isFinite(hlId)) {
+        // eslint-disable-next-line
+        for (const [_char, hlId, length = 1] of cells) {
+          if (hlId !== undefined) {
+            currentHlId = hlId;
+          }
+
+          if (length > 0) {
+            printBackground(currentHlId, row, col + lineLength, length);
+
+            lineLength += length;
+          }
+        }
+
+        currentHlId = 0;
+        lineLength = 0;
+        // eslint-disable-next-line
+        for (const [char, hlId, length = 1] of cells) {
+          if (hlId !== undefined) {
             currentHlId = hlId;
           }
           for (let j = 0; j < length; j += 1) {
@@ -697,33 +732,18 @@ const screen = ({
           }
           lineLength += length;
         }
-      }
-      needRerender = true;
-      if (
-        chars[cursorPosition[0]] &&
-        chars[cursorPosition[0]][cursorPosition[1]] &&
-        cursorChar !== chars[cursorPosition[0]][cursorPosition[1]].char
-      ) {
-        redrawCursor();
+        cleanOverlap(row, col - 1);
+        cleanOverlap(row, col + lineLength);
+        overlapPrev(row, col);
+        overlapNext(row, col + lineLength - 1);
       }
     },
 
     grid_clear: () => {
       cursorPosition = [0, 0];
-      charsContainer.children.forEach((c) => {
-        c.visible = false; // eslint-disable-line no-param-reassign
-      });
-      bgContainer.children.forEach((c) => {
-        c.visible = false; // eslint-disable-line no-param-reassign
-      });
-      for (let i = 0; i <= rows; i += 1) {
-        if (!chars[i]) chars[i] = [];
-        for (let j = 0; j <= cols; j += 1) {
-          initChar(i, j);
-          chars[i][j].char = null;
-        }
-      }
-      needRerender = true;
+      context.fillStyle = highlightTable[0]?.calculated?.bgColor || DEFAULT_BG_COLOR;
+      context.fillRect(0, 0, canvasEl.width, canvasEl.height);
+      chars = [];
     },
 
     grid_destroy: () => {
@@ -741,6 +761,32 @@ const screen = ({
     },
 
     grid_scroll: ([[_grid, top, bottom, left, right, scrollCount]]) => {
+      const x = left * charWidth; // region left
+      let y; // region top
+      let w = (right - left) * charWidth; // clipped part width
+      const h = (bottom - top - Math.abs(scrollCount)) * charHeight; // clipped part height
+      const X = x; // destination left
+      let Y; // destination top
+
+      if (right === cols) {
+        // Add extra char if it is far right rect
+        w += charWidth;
+      }
+
+      if (scrollCount > 0) {
+        // scroll down
+        y = (top + scrollCount) * charHeight;
+        Y = top * charHeight;
+      } else {
+        // scroll up
+        y = top * charHeight;
+        Y = (top - scrollCount) * charHeight;
+      }
+
+      // Copy scrolled lines
+      // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+      context.drawImage(canvasEl, x, y, w, h, X, Y, w, h);
+
       for (
         let i = scrollCount > 0 ? top : bottom - 1;
         scrollCount > 0 ? i <= bottom - scrollCount - 1 : i >= top - scrollCount;
@@ -754,23 +800,13 @@ const screen = ({
 
           // Swap char to scroll to destination
           [chars[i][j], chars[sourceI][j]] = [chars[sourceI][j], chars[i][j]];
-
-          // Update scrolled char sprite position
-          if (chars[i][j].sprite) {
-            chars[i][j].sprite.y = i * charHeight;
-            chars[i][j].bg.y = i * charHeight;
-          }
-
-          // Clear and reposition old char
-          if (chars[sourceI][j].sprite) {
-            chars[sourceI][j].sprite.visible = false;
-            chars[sourceI][j].bg.visible = false;
-            chars[sourceI][j].sprite.y = sourceI * charHeight;
-            chars[sourceI][j].bg.y = sourceI * charHeight;
-          }
         }
       }
-      needRerender = true;
+
+      for (let i = top; i <= bottom; i += 1) {
+        cleanOverlap(i, left - 1);
+        cleanOverlap(i, right);
+      }
     },
   };
 
@@ -813,15 +849,21 @@ const screen = ({
   };
 
   const redraw = (args: UiEventsArgs) => {
-    args.forEach(([cmd, ...props]) => {
-      const command = redrawCmd[cmd];
-      if (command) {
-        // @ts-expect-error TODO: find the way to type it without errors
-        command(props);
-      } else {
-        console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
-      }
-    });
+    try {
+      args.forEach(([cmd, ...props]) => {
+        const command = redrawCmd[cmd];
+        if (command) {
+          // console.log('hey', cmd, props);
+          // @ts-expect-error TODO: find the way to type it without errors
+          command(props);
+        } else {
+          console.warn('Unknown redraw command', cmd, props); // eslint-disable-line no-console
+        }
+      });
+    } catch (e) {
+      // eslint-disable-next-line
+      console.error(e);
+    }
   };
 
   const setScale = () => {
@@ -859,10 +901,7 @@ const screen = ({
   const uiAttach = () => {
     [cols, rows] = screenCoords(window.innerWidth, window.innerHeight);
     nvim.uiAttach(cols, rows, { ext_linegrid: true });
-    window.addEventListener(
-      'resize',
-      throttle(() => resize(), 1000 / TARGET_FPS),
-    );
+    window.addEventListener('resize', () => resize());
   };
 
   const updateSettings = (newSettings: Settings, isInitial = false) => {
@@ -905,7 +944,7 @@ const screen = ({
 
     if (requireRedraw) {
       measureCharSize();
-      PIXI.utils.clearTextureCache();
+      charsCache.clear();
       if (!isInitial) {
         resize(true);
       }

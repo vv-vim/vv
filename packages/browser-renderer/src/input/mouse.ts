@@ -109,7 +109,7 @@ const initMouse = ({ screen, nvim }: { screen: Screen; nvim: Nvim }): void => {
   document.addEventListener('mousedown', handleMousedown);
   document.addEventListener('mouseup', handleMouseup);
   document.addEventListener('mousemove', throttle(handleMousemove, 50));
-  document.addEventListener('wheel', throttle(handleMousewheel, 10));
+  document.addEventListener('wheel', handleMousewheel);
 };
 
 export default initMouse;

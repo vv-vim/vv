@@ -52,20 +52,46 @@ describe('Screen', () => {
     expect(image).toMatchImageSnapshot();
   });
 
-  describe('undercurl', () => {
-    test('show undercurl behind the text', async () => {
-      await page.keyboard.type(':set filetype=javascript');
-      await page.keyboard.press('Enter');
-      await page.keyboard.type(':VVset lineheight=1');
-      await page.keyboard.press('Enter');
-      await page.keyboard.type(':syntax on');
-      await page.keyboard.press('Enter');
-      await page.keyboard.type(':hi Comment gui=undercurl guifg=white guisp=red');
-      await page.keyboard.press('Enter');
-      await page.keyboard.type('i// Hey!');
+  test('show undercurl behind the text', async () => {
+    await page.keyboard.type(':set filetype=javascript');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(':VVset lineheight=1');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(':syntax on');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(':hi Comment gui=undercurl guifg=white guisp=red');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('i// Hey!');
 
-      const image = await page.screenshot();
-      expect(image).toMatchImageSnapshot();
-    });
+    const image = await page.screenshot();
+    expect(image).toMatchImageSnapshot();
+  });
+
+  test('overlap chars', async () => {
+    await page.keyboard.type(':VVset letterspacing=-8');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(
+      'i\n\n\nO   O  O O O O O O O O O OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO',
+    );
+    await page.keyboard.press('Escape');
+
+    await page.keyboard.type('hhhi ');
+    await page.keyboard.press('Escape');
+    await page.keyboard.type('hhh');
+    const image = await page.screenshot();
+    expect(image).toMatchImageSnapshot();
+
+    await page.keyboard.type(':vs');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type(':vs');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('i');
+    await page.keyboard.press('Escape');
+
+    await page.mouse.move(150, 100);
+    await page.mouse.wheel({ deltaY: 100 });
+
+    const image1 = await page.screenshot();
+    expect(image1).toMatchImageSnapshot();
   });
 });

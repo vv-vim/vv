@@ -26,6 +26,8 @@ const windows: BrowserWindow[] = [];
 /** Empty windows created in advance to make windows creation faster */
 const emptyWindows: BrowserWindow[] = [];
 
+app.commandLine.appendSwitch('force_high_performance_gpu');
+
 const openDeveloperTools = (win: BrowserWindow) => {
   win.webContents.openDevTools({ mode: 'detach' });
   win.webContents.on('devtools-opened', () => {
@@ -46,6 +48,8 @@ const createEmptyWindow = (isDebug = false) => {
     height: 600,
     show: isDebug,
     fullscreenable: false,
+    // frame: false,
+    // roundCornders: false,
     webPreferences: {
       preload: join(app.getAppPath(), isDev('./', '../'), 'src/main/preload.js'),
     },

@@ -53,17 +53,6 @@
     "puppeteer": "^9.0.0"
   },
   "dependencies": {
-    "@pixi/app": "^6.4.2",
-    "@pixi/core": "^6.4.2",
-    "@pixi/constants": "^6.4.2",
-    "@pixi/display": "^6.4.2",
-    "@pixi/graphics": "^6.4.2",
-    "@pixi/sprite": "^6.4.2",
-    "@pixi/ticker": "^6.4.2",
-    "@pixi/utils": "^6.4.2",
-    "@pixi/math": "^6.4.2",
-    "@pixi/runner": "^6.4.2",
-    "@pixi/settings": "^6.4.2",
     "@vvim/nvim": "0.0.1",
     "lodash": "^4.17.21",
     "ws": "^7.4.6"

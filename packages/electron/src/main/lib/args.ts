@@ -24,7 +24,11 @@ const VV_ARGS = ['--debug', '--inspect', '--open-in-project'];
  * Chromium args added by electron.
  * TODO: find more reliable way to filter them.
  */
-const CHROMIUM_ARGS = ['--allow-file-access-from-files', '--enable-avfoundation'];
+const CHROMIUM_ARGS = [
+  '--allow-file-access-from-files',
+  '--enable-avfoundation',
+  '--force_high_performance_gpu',
+];
 
 /**
  * Parse CLI args and return the list of files and arguments.
