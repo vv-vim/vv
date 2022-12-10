@@ -39,7 +39,7 @@
   "dependencies": {
     "@vvim/browser-renderer": "0.0.1",
     "@vvim/nvim": "0.0.1",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "lodash": "^4.17.21",
     "semver": "^7.3.4",
     "ws": "^7.4.6"
