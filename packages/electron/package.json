@@ -34,16 +34,16 @@
     "start": "electron ."
   },
   "browserslist": [
-    "chrome 98",
-    "node 16"
+    "chrome 114",
+    "node 18"
   ],
   "devDependencies": {
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.168",
-    "@types/node": "^16.0.0",
+    "@types/node": "^18.0.0",
     "chalk": "^4.1.0",
     "dotenv": "^8.2.0",
-    "electron": "^17",
+    "electron": "^25.4.0",
     "electron-builder": "^22.9.1",
     "electron-notarize": "^1.0.0",
     "html-webpack-plugin": "^4.3.0",

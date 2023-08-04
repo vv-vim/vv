@@ -17,7 +17,7 @@
     "packages/*"
   ],
   "scripts": {
-    "bootstrap": "yarn build:nvim; yarn build:browser-renderer; yarn build:server",
+    "bootstrap": "NODE_OPTIONS=--openssl-legacy-provider yarn build:nvim; yarn build:browser-renderer; yarn build:server",
     "build:nvim": "yarn workspace @vvim/nvim build",
     "build:browser-renderer": "yarn workspace @vvim/browser-renderer build",
     "build:electron": "yarn bootstrap; yarn workspace @vvim/electron build",
