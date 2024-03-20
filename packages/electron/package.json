@@ -58,6 +58,6 @@
     "emoji-regex": "^10.3.0",
     "html2plaintext": "^2.1.2",
     "lodash": "^4.17.21",
-    "semver": "^7.3.4"
+    "semver": "^7.5.2"
   }
 }
