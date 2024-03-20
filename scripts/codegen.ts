@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 import { createDecodeStream, encode } from 'msgpack-lite';
 import { writeFileSync } from 'fs';
 import prettier from 'prettier';
-import { camelCase } from 'lodash';
+import camelCase from 'lodash/camelCase';
 
 const TYPES_FILE_NAME = 'packages/nvim/src/__generated__/types.ts';
 const CONST_FILE_NAME = 'packages/nvim/src/__generated__/constants.ts';
