@@ -4,7 +4,10 @@ const publish = {
   ...build,
   mac: {
     category: 'public.app-category.developer-tools',
-    target: 'default',
+    target: {
+      target: 'default',
+      arch: 'universal',
+    },
     hardenedRuntime: true,
     gatekeeperAssess: false,
     entitlements: 'config/electron-builder/entitlements.mac.plist',

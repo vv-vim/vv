@@ -14,8 +14,12 @@ class WsTransport extends EventEmitter implements Transport {
     this.ws = ws;
 
     this.ws.on('message', (data: string) => {
-      const [channel, ...args] = JSON.parse(data);
-      this.emit(channel, ...args);
+      try {
+        const [channel, ...args] = JSON.parse(data);
+        this.emit(channel, ...args);
+      } catch (e) {
+        /* empty */
+      }
     });
   }
 

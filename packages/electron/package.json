@@ -2,7 +2,7 @@
   "name": "@vvim/electron",
   "description": "Neovim GUI Client",
   "author": "Igor Gladkoborodov <igor.gladkoborodov@gmail.com>",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "private": true,
   "keywords": [
     "vim",
@@ -25,7 +25,7 @@
     "webpack:prod": "webpack --config ./config/webpack.prod.config.js",
     "build:local": "yarn webpack:prod; electron-builder -c.mac.identity=null -c.extraMetadata.main=build/main.js --config config/electron-builder/build.js",
     "build:release": "electron-builder -c.extraMetadata.main=build/main.js --config config/electron-builder/release.js --publish always",
-    "build:link": "rm -r /Applications/VV.app; cp -R dist/mac/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv",
+    "build:link": "rm -rf /Applications/VV.app; cp -R dist/mac-universal/VV.app /Applications; ln -s -f /Applications/VV.app/Contents/Resources/bin/vv /usr/local/bin/vv",
     "build": "npm-run-all clean webpack:prod build:local build:link",
     "release:open-github": "open https://github.com/vv-vim/vv/releases",
     "release": "npm-run-all clean webpack:prod build:release release:open-github",
@@ -34,8 +34,8 @@
     "start": "electron ."
   },
   "browserslist": [
-    "chrome 98",
-    "node 16"
+    "chrome 122",
+    "node 20"
   ],
   "devDependencies": {
     "@types/jest": "^26.0.20",
@@ -43,10 +43,10 @@
     "@types/node": "^16.0.0",
     "chalk": "^4.1.0",
     "dotenv": "^8.2.0",
-    "electron": "^17",
-    "electron-builder": "^22.9.1",
+    "electron": "^29",
+    "electron-builder": "^24.13.3",
     "electron-notarize": "^1.0.0",
-    "html-webpack-plugin": "^4.3.0",
+    "html-webpack-plugin": "^5.6.0",
     "js-yaml": "^3.14.0",
     "node-fetch": "^2.6.7"
   },
@@ -55,6 +55,7 @@
     "@vvim/nvim": "0.0.1",
     "electron-store": "^7.0.2",
     "electron-updater": "^4.3.5",
+    "emoji-regex": "^10.3.0",
     "html2plaintext": "^2.1.2",
     "lodash": "^4.17.21",
     "semver": "^7.3.4"

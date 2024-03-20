@@ -32,7 +32,10 @@ const build = {
   ],
   mac: {
     category: 'public.app-category.developer-tools',
-    target: 'dir',
+    target: {
+      target: 'dir',
+      arch: 'universal',
+    },
   },
 };
 

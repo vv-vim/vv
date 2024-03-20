@@ -1,4 +1,4 @@
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 
 const rendererConfig = require('./webpack.renderer.config');
 const mainConfig = require('./webpack.main.config');
