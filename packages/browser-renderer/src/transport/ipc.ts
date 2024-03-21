@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { memoize } from 'lodash';
+import memoize from 'lodash/memoize';
 
 import { ipcRenderer } from 'src/preloaded/electron';
 import type { PreloadedIpcRenderer } from 'src/preloaded/electron';

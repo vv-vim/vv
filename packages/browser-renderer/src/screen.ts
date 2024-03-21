@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import isEqual from 'lodash/isEqual';
 
 import emojiRegex from 'emoji-regex';
 

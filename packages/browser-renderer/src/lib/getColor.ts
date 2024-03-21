@@ -1,6 +1,6 @@
 /* eslint-disable no-bitwise */
 
-import { memoize } from 'lodash';
+import memoize from 'lodash/memoize';
 
 /**
  * Get color by number, for example hex number `0xFF0000` becomes `rgb(255,0,0)`

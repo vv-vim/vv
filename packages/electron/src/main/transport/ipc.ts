@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { EventEmitter } from 'events';
-import { memoize } from 'lodash';
+import memoize from 'lodash/memoize';
 
 import { Transport, Args } from '@vvim/nvim';
 
