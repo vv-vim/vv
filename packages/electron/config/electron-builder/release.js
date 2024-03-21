@@ -1,3 +1,7 @@
+// Notarize needs APP_ID, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, TEAM_ID env variables.
+// Github repo to release is automatically detected from package.json.
+// GH_TOKEN env variable is required to upload release.
+
 const build = require('./build.js');
 
 const publish = {
@@ -8,15 +12,10 @@ const publish = {
       target: 'default',
       arch: 'universal',
     },
-    hardenedRuntime: true,
-    gatekeeperAssess: false,
-    entitlements: 'config/electron-builder/entitlements.mac.plist',
-    entitlementsInherit: 'config/electron-builder/entitlements.mac.plist',
+    notarize: {
+      teamId: process.env.TEAM_ID,
+    },
   },
-  dmg: {
-    sign: false,
-  },
-  afterSign: 'scripts/notarize.js',
 };
 
 module.exports = publish;
