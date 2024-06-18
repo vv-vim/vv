@@ -50,6 +50,6 @@
   "dependencies": {
     "lodash": "^4.17.21",
     "msgpack-lite": "^0.1.26",
-    "ws": "^7.4.6"
+    "ws": "^7.5.10"
   }
 }
