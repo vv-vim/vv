@@ -123,7 +123,7 @@ function! VVsetItem(name)
 
   if has_key(g:vv_settings, l:name)
     let g:vv_settings[l:name] = l:value
-    call rpcnotify(0, "vv:set", l:name, l:value)
+    call rpcnotify(get(g:, "vv_channel", 1), "vv:set", l:name, l:value)
   else
     echoerr "Unknown option: ".l:name
   endif
@@ -131,7 +131,7 @@ endfunction
 
 function! VVsettings()
   for key in keys(g:vv_settings)
-    call rpcnotify(0, "vv:set", key, g:vv_settings[key])
+    call rpcnotify(get(g:, "vv_channel", 1), "vv:set", key, g:vv_settings[key])
   endfor
 endfunction
 

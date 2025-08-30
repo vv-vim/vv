@@ -49,7 +49,7 @@ const createEmptyWindow = (isDebug = false) => {
     show: isDebug,
     fullscreenable: false,
     // frame: false,
-    // roundCornders: false,
+    // roundedCorners: false,
     webPreferences: {
       preload: join(app.getAppPath(), isDev('./', '../'), 'src/main/preload.js'),
     },
