@@ -43,7 +43,7 @@ type Char = {
   hlId?: number;
 };
 
-const DEFAULT_FONT_FAMILY = 'monospace';
+const DEFAULT_FONT_FAMILY = 'Courier New';
 
 const DEFAULT_FG_COLOR = 'rgb(255,255,255)';
 const DEFAULT_BG_COLOR = 'rgb(0,0,0)';
@@ -456,7 +456,7 @@ const screen = ({
   };
 
   const recalculateHighlightTable = () => {
-    ((Object.keys(highlightTable) as unknown) as number[]).forEach((id) => {
+    (Object.keys(highlightTable) as unknown as number[]).forEach((id) => {
       if (id > 0) {
         const {
           foreground,
@@ -475,7 +475,7 @@ const screen = ({
         const bg = getColor(background, highlightTable[0]?.calculated?.bgColor) as string;
         const sp = getColor(special, highlightTable[0]?.calculated?.spColor) as string;
 
-        highlightTable[(id as unknown) as number].calculated = {
+        highlightTable[id as unknown as number].calculated = {
           fgColor: r ? bg : fg,
           bgColor: r ? fg : bg,
           spColor: sp,

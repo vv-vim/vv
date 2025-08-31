@@ -3,7 +3,8 @@ module.exports = {
   plugins: ['jest'],
   extends: [
     'airbnb-base',
-    'plugin:prettier/recommended',
+    // Temporary disable it until upgrade to the Prettier 3
+    // 'plugin:prettier/recommended',
     'plugin:jest/recommended',
     'plugin:jest/style',
     'plugin:import/typescript',
@@ -34,7 +35,7 @@ module.exports = {
       plugins: ['jest', '@typescript-eslint'],
       extends: [
         'airbnb-base',
-        'plugin:prettier/recommended',
+        // 'plugin:prettier/recommended',
         'plugin:jest/recommended',
         'plugin:jest/style',
         'plugin:import/typescript',
@@ -65,6 +66,18 @@ module.exports = {
             ts: 'never',
           },
         ],
+
+        // Styling. Remove after prettier upgrade
+        'object-curly-newline': 'off',
+        'function-paren-newline': 'off',
+        'implicit-arrow-linebreak': 'off',
+        'arrow-body-style': 'off',
+        'max-len': 'off',
+        'no-confusing-arrow': 'off',
+        quotes: 'off',
+        'operator-linebreak': 'off',
+        'quote-props': 'off',
+        indent: 'off',
       },
     },
   ],
@@ -101,5 +114,17 @@ module.exports = {
         ts: 'never',
       },
     ],
+
+    // Styling. Remove after prettier upgrade
+    'object-curly-newline': 'off',
+    'function-paren-newline': 'off',
+    'implicit-arrow-linebreak': 'off',
+    'arrow-body-style': 'off',
+    'max-len': 'off',
+    'no-confusing-arrow': 'off',
+    quotes: 'off',
+    'operator-linebreak': 'off',
+    'quote-props': 'off',
+    indent: 'off',
   },
 };

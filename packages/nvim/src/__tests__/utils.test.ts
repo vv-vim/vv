@@ -1,12 +1,10 @@
 import { execSync } from 'child_process';
 
-import { mocked } from 'ts-jest/utils';
-
 import { shellEnv, nvimVersion, resetCache } from 'src/utils';
 
 jest.mock('child_process');
 
-const mockedExecSync = mocked((execSync as unknown) as () => string);
+const mockedExecSync = jest.mocked((execSync as unknown) as () => string);
 
 describe('utils', () => {
   beforeEach(() => {
