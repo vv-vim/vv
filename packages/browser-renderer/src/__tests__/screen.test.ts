@@ -1,5 +1,9 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
+/** @jest-environment node */
+
+import puppeteer from 'puppeteer';
 import { PORT } from 'config/jest/testServer';
+
+import type { Browser, Page } from 'puppeteer';
 
 describe('Screen', () => {
   jest.setTimeout(30000);
@@ -16,7 +20,7 @@ describe('Screen', () => {
   });
 
   afterAll(async () => {
-    await browser.close();
+    // await browser.close();
   });
 
   beforeEach(async () => {
@@ -30,6 +34,8 @@ describe('Screen', () => {
 
     await page.goto(`http://localhost:${PORT}`);
     await page.waitForSelector('input');
+    await page.keyboard.type(':VVset fontfamily=Courier\\ New');
+    await page.keyboard.press('Enter');
   });
 
   afterEach(async () => {

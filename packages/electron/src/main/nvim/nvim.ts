@@ -42,6 +42,10 @@ const initNvim = ({
   focusAutocmd({ win, nvim });
   backgroundColor({ win, transport });
 
+  nvim
+    .request('nvim_get_api_info')
+    .then(([channelId]: [string]) => nvim.setVar('vv_channel', channelId));
+
   nvim.on('vv:vim_enter', () => {
     win.show();
   });

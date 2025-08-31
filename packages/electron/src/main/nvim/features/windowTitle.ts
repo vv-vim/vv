@@ -22,10 +22,12 @@ const initWindowTitle = ({ nvim, win }: { win: BrowserWindow; nvim: Nvim }): voi
   nvim.command('set titlestring&'); // Set default titlestring
 
   // Send current file name to client on buffer enter
-  nvim.command('autocmd BufEnter * call rpcnotify(0, "vv:filename", expand(\'%:p\'))');
+  nvim.command(
+    'autocmd BufEnter * call rpcnotify(get(g:, "vv_channel", 1), "vv:filename", expand("%:p"))',
+  );
 
   // Filename don't fire on startup, doing it manually
-  nvim.command('call rpcnotify(0, "vv:filename", expand("%:p"))');
+  nvim.command('call rpcnotify(get(g:, "vv_channel", 1), "vv:filename", expand("%:p"))');
 };
 
 export default initWindowTitle;

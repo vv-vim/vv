@@ -8,7 +8,9 @@ import initMouse from 'src/input/mouse';
 import hideMouseCursor from 'src/features/hideMouseCursor';
 
 const mockTransport = new EventEmitter();
-jest.mock('src/transport/transport', () => () => mockTransport);
+jest.mock('src/transport/transport', () => {
+  return jest.fn().mockImplementation(() => mockTransport);
+});
 
 jest.mock('@vvim/nvim');
 jest.mock('src/screen', () => jest.fn(() => 'fakeScreen'));

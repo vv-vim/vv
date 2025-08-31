@@ -2,6 +2,7 @@
 // Github repo to release is automatically detected from package.json.
 // GH_TOKEN env variable is required to upload release.
 
+// eslint-disable-next-line import/extensions
 const build = require('./build.js');
 
 const publish = {

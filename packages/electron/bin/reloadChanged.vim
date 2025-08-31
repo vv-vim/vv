@@ -14,7 +14,7 @@ function! VVenableReloadChanged(enabled)
   if a:enabled
     augroup ReloadChanged
       autocmd!
-      autocmd FileChangedShell * call rpcnotify(0, "vv:file_changed", { "name": expand("<afile>"), "bufnr": expand("<abuf>") })
+      autocmd FileChangedShell * call rpcnotify(get(g:, "vv_channel", 1), "vv:file_changed", { "name": expand("<afile>"), "bufnr": expand("<abuf>") })
       autocmd CursorHold * checktime
     augroup END
   else

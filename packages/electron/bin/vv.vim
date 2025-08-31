@@ -1,12 +1,14 @@
 let g:vv = 1
 
-source <sfile>:h/vvset.vim
-source <sfile>:h/reloadChanged.vim
-source <sfile>:h/openInProject.vim
+let s:dir = expand('<sfile>:p:h')
+
+execute 'source ' . fnameescape(s:dir . '/vvset.vim')
+execute 'source ' . fnameescape(s:dir . '/reloadChanged.vim')
+execute 'source ' . fnameescape(s:dir . '/openInProject.vim')
 
 set termguicolors
 
-autocmd VimEnter * call rpcnotify(0, "vv:vim_enter")
+autocmd VimEnter * call rpcnotify(get(g:, 'vv_channel', 1), "vv:vim_enter")
 
 " Send unsaved buffers to client
 function! VVunsavedBuffers()

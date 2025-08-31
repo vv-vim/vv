@@ -4,7 +4,7 @@ source <sfile>:h/vvset.vim
 
 set termguicolors
 
-autocmd VimEnter * call rpcnotify(0, "vv:vim_enter")
+autocmd VimEnter * call rpcnotify(get(g:, "vv_channel", 1), "vv:vim_enter")
 
 " Send unsaved buffers to client
 function! VVunsavedBuffers()
