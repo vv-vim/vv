@@ -56,7 +56,7 @@
     "electron-updater": "^4.3.5",
     "emoji-regex": "^10.3.0",
     "html2plaintext": "^2.1.2",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "semver": "^7.5.2"
   }
 }

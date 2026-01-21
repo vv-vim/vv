@@ -47,7 +47,7 @@
     "strict-event-emitter-types": "^2.0.0"
   },
   "dependencies": {
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "msgpack-lite": "^0.1.26",
     "ws": "^7.4.6"
   }
