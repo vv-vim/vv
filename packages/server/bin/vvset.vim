@@ -32,6 +32,52 @@ let g:vv_default_settings = {
 
 let g:vv_settings = deepcopy(g:vv_default_settings)
 
+" Guard against infinite recursion when syncing fontfamily/fontsize and &guifont.
+let g:vv_syncing_font = 0
+
+" Apply VV's current fontfamily + fontsize to nvim's &guifont.
+" Builds "<family-1>:h<size>,<family-2>,..." so :set guifont? matches VV.
+function! s:SyncGuifont()
+  if g:vv_syncing_font | return | endif
+  let l:parts = split(get(g:vv_settings, 'fontfamily', ''), ',')
+  if empty(l:parts) | return | endif
+  let l:size = get(g:vv_settings, 'fontsize', '')
+  let l:first = escape(l:parts[0], ' \')
+  if l:size !=# '' && l:size != 0
+    let l:first .= ':h' . l:size
+  endif
+  let l:rest = map(l:parts[1:], 'escape(v:val, " \\")')
+  let l:guifont = empty(l:rest) ? l:first : l:first . ',' . join(l:rest, ',')
+  let g:vv_syncing_font = 1
+  try
+    execute 'set guifont=' . l:guifont
+  catch
+  endtry
+  let g:vv_syncing_font = 0
+endfunction
+
+" Parse &guifont and apply its first entry's family + :h<size> to VV.
+function! s:SyncFromGuifont(value)
+  if g:vv_syncing_font || a:value ==# '' | return | endif
+  let l:first = split(a:value, ',')[0]
+  let l:family = substitute(l:first, ':h.*$', '', '')
+  if l:family ==# '' | return | endif
+  let l:size = matchstr(l:first, ':h\zs[0-9.]\+')
+  let g:vv_syncing_font = 1
+  call VVsetItem('fontfamily=' . l:family)
+  if l:size !=# ''
+    call VVsetItem('fontsize=' . l:size)
+  endif
+  let g:vv_syncing_font = 0
+endfunction
+
+augroup VVFontSync
+  autocmd!
+  autocmd OptionSet guifont call s:SyncFromGuifont(v:option_new)
+  " Catch &guifont set in init.vim — OptionSet does not fire during startup.
+  autocmd VimEnter * call s:SyncFromGuifont(&guifont)
+augroup END
+
 " Custom VVset command, mimic default set command (:help set) with
 " settings specified in g:vv_default_settings
 function! VVset(...)
@@ -124,6 +170,9 @@ function! VVsetItem(name)
   if has_key(g:vv_settings, l:name)
     let g:vv_settings[l:name] = l:value
     call rpcnotify(get(g:, "vv_channel", 1), "vv:set", l:name, l:value)
+    if l:name ==# 'fontfamily' || l:name ==# 'fontsize'
+      call s:SyncGuifont()
+    endif
   else
     echoerr "Unknown option: ".l:name
   endif

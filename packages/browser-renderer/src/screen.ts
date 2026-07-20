@@ -443,18 +443,6 @@ const screen = ({
     cursorEl.style.transform = `translate(${left}px, ${top}px)`;
   };
 
-  const optionSet = {
-    guifont: (newFont: string) => {
-      const [newFontFamily, newFontSize] = newFont.trim().split(':h');
-      if (newFontFamily && newFontFamily !== '') {
-        nvim.command(`VVset fontfamily=${newFontFamily.replace(/_/g, '\\ ')}`);
-        if (newFontSize && newFontFamily !== '') {
-          nvim.command(`VVset fontsize=${newFontSize}`);
-        }
-      }
-    },
-  };
-
   const recalculateHighlightTable = () => {
     (Object.keys(highlightTable) as unknown as number[]).forEach((id) => {
       if (id > 0) {
@@ -573,16 +561,8 @@ const screen = ({
       modeInfoSet = props[0][1].reduce((r, modeInfo) => ({ ...r, [modeInfo.name]: modeInfo }), {});
     },
 
-    option_set: (options) => {
-      options.forEach(([option, value]) => {
-        // @ts-expect-error TODO
-        if (optionSet[option]) {
-          // @ts-expect-error TODO
-          optionSet[option](value);
-        } else {
-          // console.warn('Unknown option', option, value); // eslint-disable-line no-console
-        }
-      });
+    option_set: () => {
+      /* empty */
     },
 
     mode_change: (modes) => {
