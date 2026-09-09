@@ -46,7 +46,7 @@
     "electron": "^29",
     "electron-builder": "^24.13.3",
     "html-webpack-plugin": "^5.6.0",
-    "js-yaml": "^3.14.0",
+    "js-yaml": "^3.15.2",
     "node-fetch": "^2.6.7"
   },
   "dependencies": {
